@@ -5,10 +5,10 @@ namespace DSLive\Forms;
 use DScribe\Form\Form,
     DSLive\Models\User;
 
-class LoginForm extends Form {
+class ResetPasswordForm extends Form {
 
     public function __construct() {
-        parent::__construct('loginForm');
+        parent::__construct('forgotPasswordForm');
 
         $this->setModel(new User);
         $this->setAttribute('method', 'POST');
@@ -17,7 +17,7 @@ class LoginForm extends Form {
             'name' => 'email',
             'type' => 'text',
             'options' => array(
-                'label' => 'Email',
+                'label' => 'Email'
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus'
@@ -30,6 +30,19 @@ class LoginForm extends Form {
             'options' => array(
                 'label' => 'Password'
             ),
+            'attributes' => array(
+                'autofocus' => 'autofocus'
+            )
+        ));
+
+        $this->add(array(
+            'name' => 'confirm',
+            'type' => 'password',
+            'options' => array(
+                'label' => 'Confirm Password'
+            ),
+            'attributes' => array(
+            )
         ));
 
         $this->add(array(
@@ -41,7 +54,7 @@ class LoginForm extends Form {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Login',
+                'value' => 'Reset Password',
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'
@@ -59,6 +72,14 @@ class LoginForm extends Form {
             'password' => array(
                 'required' => true,
                 'NotEmpty' => array(),
+                'MinLength' => array(
+                    'value' => 8
+                ),
+            ),
+            'confirm' => array(
+                'Match' => array(
+                    'element' => 'password'
+                ),
             ),
         );
     }

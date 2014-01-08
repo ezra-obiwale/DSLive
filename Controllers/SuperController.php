@@ -110,6 +110,7 @@ abstract class SuperController extends AController {
         $repository = $this->service
                 ->getRepository();
         $order = $this->order;
+        
         if (!is_array($order)) {
             $order = array($order);
         }
@@ -128,7 +129,7 @@ abstract class SuperController extends AController {
         $this->view->variables(array(
             'models' => $repository->fetchAll(),
         ));
-
+        
         return $this->request->isAjax() ?
                 $this->view->partial() :
                 $this->view;
@@ -136,11 +137,41 @@ abstract class SuperController extends AController {
 
     /**
      * Create a new model
-     * @param array $variables Additiona variables to send to the view file
+     * @param array $variables Additional variables to send to the view file
+     * @param array $modifyForm May contain the following keys:
+     *
+     * <b>ignoreFilters (array)</b> - Array of filters to ignore when validating the form <br />
+     * <b>removeElements (array)</b> - Array of elements to remove from the form altogether<br />
+     * <b>setElements (array)</b> - Array of keys as property to edit. Use (dot) to indicate
+     *      path to actual property to edit in case value of first property is an object
+     *      e.g. <i>'options.value' => 'no value for the element'</i>
+     * 
+     * @param array $redirect May contain any of keys [(string) module, (string) 
+     * controller, (string) action, (array) params
      * @return View
      */
-    public function newAction(array $variables = array(), array $redirect = array()) {
+    public function newAction(array $variables = array(), array $modifyForm = array(), array $redirect = array()) {
         $form = $this->service->getForm();
+
+        foreach ($modifyForm as $type => $typeArray) {
+            switch ($type) {
+                case 'ignoreFilters':
+                    foreach ($typeArray as $name) {
+                        $form->ignoreFilter($name);
+                    }
+                    break;
+                case 'removeElements':
+                    foreach ($typeArray as $name) {
+                        $form->remove($name);
+                    }
+                    break;
+                case 'setElements':
+                    foreach ($typeArray as $elem => $part) {
+                        $this->modifyElement($form->get($elem), $part);
+                    }
+                    break;
+            }
+        }
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
@@ -155,7 +186,7 @@ abstract class SuperController extends AController {
                     $form->reset();
                 }
                 else {
-                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : 'in', (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
                 }
             }
             else {
@@ -188,6 +219,9 @@ abstract class SuperController extends AController {
      * <b>setElements (array)</b> - Array of keys as property to edit. Use (dot) to indicate
      *      path to actual property to edit in case value of first property is an object
      *      e.g. <i>'options.value' => 'no value for the element'</i>
+     * 
+     * @param array $redirect May contain any of keys [(string) module, (string) 
+     * controller, (string) action, (array) params
      * @return View
      */
     public function editAction($id, array $variables = array(), array $modifyForm = array(), array $redirect = array()) {
@@ -224,7 +258,7 @@ abstract class SuperController extends AController {
                             ->sendJson('Save successful');
                 }
                 $this->flash()->setSuccessMessage('Save successful');
-                $this->redirect((isset($redirect['module'])) ? $redirect['module'] : 'in', (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+                $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
             }
             else {
                 if ($this->request->isAjax()) {
@@ -306,7 +340,7 @@ abstract class SuperController extends AController {
                 }
                 $this->flash()->setErrorMessage('Delete failed');
             }
-            $this->redirect((isset($redirect['module'])) ? $redirect['module'] : 'in', (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+            $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }
 
         $this->view->variables(array_merge(array(
