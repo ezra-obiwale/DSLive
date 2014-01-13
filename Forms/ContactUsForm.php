@@ -2,46 +2,58 @@
 
 namespace DSLive\Forms;
 
-use DScribe\Form\Form,
-    DSLive\Models\User;
+use DScribe\Form\Form;
 
-class ResetPasswordForm extends Form {
+class ContactUsForm extends Form {
 
     public function __construct() {
-        parent::__construct('forgotPasswordForm');
+        parent::__construct('contactUsForm');
 
-        $this->setModel(new User);
         $this->setAttribute('method', 'POST');
 
         $this->add(array(
-            'name' => 'email',
+            'name' => 'fullName',
             'type' => 'text',
             'options' => array(
-                'label' => 'Email'
+                'label' => 'Full Name',
             ),
             'attributes' => array(
-                'autofocus' => 'autofocus'
+                'autofocus' => 'autofocus',
+                'class' => 'span8'
             )
         ));
 
         $this->add(array(
-            'name' => 'password',
-            'type' => 'password',
+            'name' => 'email',
+            'type' => 'email',
             'options' => array(
-                'label' => 'Password'
+                'label' => 'Email',
             ),
             'attributes' => array(
-                'autofocus' => 'autofocus'
+                'class' => 'span8'
             )
         ));
 
         $this->add(array(
-            'name' => 'confirm',
-            'type' => 'password',
+            'name' => 'title',
+            'type' => 'text',
             'options' => array(
-                'label' => 'Confirm Password'
+                'label' => 'Title',
             ),
             'attributes' => array(
+                'class' => 'span8'
+            )
+        ));
+
+        $this->add(array(
+            'name' => 'message',
+            'type' => 'textarea',
+            'options' => array(
+                'label' => 'Message'
+            ),
+            'attributes' => array(
+                'rows' => 8,
+                'class' => 'span8'
             )
         ));
 
@@ -54,7 +66,7 @@ class ResetPasswordForm extends Form {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Reset Password',
+                'value' => 'Login',
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'
@@ -64,22 +76,22 @@ class ResetPasswordForm extends Form {
 
     public function filters() {
         return array(
+            'fullName' => array(
+                'required' => true,
+                'NotEmpty' => array(),
+            ),
             'email' => array(
                 'required' => true,
                 'NotEmpty' => array(),
                 'Email' => array(),
             ),
-            'password' => array(
+            'title' => array(
                 'required' => true,
                 'NotEmpty' => array(),
-                'MinLength' => array(
-                    'value' => 8
-                ),
             ),
-            'confirm' => array(
-                'Match' => array(
-                    'element' => 'password'
-                ),
+            'message' => array(
+                'required' => true,
+                'NotEmpty' => array(),
             ),
         );
     }

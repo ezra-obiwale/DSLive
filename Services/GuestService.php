@@ -24,6 +24,7 @@ class GuestService extends AService {
     protected $loginForm;
     protected $registerForm;
     protected $resetPasswordForm;
+    protected $contactUsForm;
     private $settingsRepository;
 
     protected function init() {
@@ -40,6 +41,9 @@ class GuestService extends AService {
             ),
             'resetPasswordForm' => array(
                 'class' => 'DSLive\Forms\ResetPasswordForm'
+            ),
+            'contactUsForm' => array(
+                'class' => 'DSLive\Forms\ContactUsForm'
             ),
             'settingsRepository' => array(
                 'class' => 'DScribe\Core\Repository',
@@ -70,6 +74,14 @@ class GuestService extends AService {
      */
     public function getResetPasswordForm() {
         return $this->resetPasswordForm;
+    }
+
+    public function getContactUsForm() {
+        return $this->contactUsForm;
+    }
+    
+    public function contactUs(\Object $data) {
+        // @todo send mail to admin
     }
 
     public function register(User $model, View $view) {

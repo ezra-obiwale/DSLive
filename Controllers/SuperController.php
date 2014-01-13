@@ -110,7 +110,7 @@ abstract class SuperController extends AController {
         $repository = $this->service
                 ->getRepository();
         $order = $this->order;
-        
+
         if (!is_array($order)) {
             $order = array($order);
         }
@@ -129,7 +129,7 @@ abstract class SuperController extends AController {
         $this->view->variables(array(
             'models' => $repository->fetchAll(),
         ));
-        
+
         return $this->request->isAjax() ?
                 $this->view->partial() :
                 $this->view;
@@ -172,8 +172,13 @@ abstract class SuperController extends AController {
                     break;
             }
         }
+        
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
+            $this->checkFiles();
+            if ($this->request->getFiles()->notEmpty()) {
+                $form->setData($this->request->getFiles());
+            }
             if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
                 if ($this->request->isAjax()) {
                     $this->ajaxResponse()
@@ -206,6 +211,14 @@ abstract class SuperController extends AController {
         return $this->request->isAjax() ?
                 $this->view->partial() :
                 $this->view;
+    }
+    
+    private function checkFiles() {
+        foreach ($this->request->getFiles()->toArray() as $name => $data) {
+            if (empty($data->name)) {
+                $this->request->getFiles()->remove($name);
+            }
+        }
     }
 
     /**
@@ -251,6 +264,10 @@ abstract class SuperController extends AController {
         $form->setModel($model);
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
+            $this->checkFiles();
+            if ($this->request->getFiles()->notEmpty()) {
+                $form->setData($this->request->getFiles());
+            }
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 if ($this->request->isAjax()) {
                     $this->ajaxResponse()
@@ -309,7 +326,7 @@ abstract class SuperController extends AController {
      */
     public function viewAction($id) {
         $this->view->variables(array(
-            'model' => $this->service->findOne($id),
+            'model' => (is_object($id) && is_a($id, 'DBScribe\Row')) ? $id : $this->service->findOne($id),
         ));
 
         return $this->request->isAjax() ?

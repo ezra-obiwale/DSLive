@@ -18,25 +18,23 @@ class Page {
      * Creates a carousel collection of media
      * 
      * @param ArrayCollection $media
+     * @param array $attrs Attributes of the carousel
      * @return string
      */
-    public static function mediaCarousel(ArrayCollection $media) {
+    public static function mediaCarousel(ArrayCollection $media, $attrs = array()) {
         $items = array();
         $fo = new FileOut();
         if ($media && !is_bool($media)) {
             foreach ($media as $key => $medium) {
                 $items[] = array(
-                    'img' => $fo(method_exists($medium, 'getPath') ? $medium->getPath() : $medium->path, array(
-                        'attrs' => array(
-                            'style' => 'max-height:340px',
-                        )
-                    )),
+                    'img' => $fo(method_exists($medium, 'getPath') ? $medium->getPath() : $medium->path),
                     'caption' => '<h4>' . (method_exists($medium, 'getName') ? $medium->getName() : $medium->name) . '</h4><p>' . (method_exists($medium, 'getDescription') ? $medium->getDescription() : $medium->description) . '</p>',
                     'active' => ($key === 0),
                 );
             }
         }
-        return TwBootstrap::carousel($items, array('class' => ''));
+        
+        return TwBootstrap::carousel($items, $attrs);
     }
 
     /**
@@ -48,6 +46,14 @@ class Page {
      */
     public static function mediaCarouselFromDB($table = 'media', array $criteria = array()) {
         return self::mediaCarousel(Engine::getDB()->table($table)->select($criteria));
+    }
+    
+    public static function carouselFromModelsWithMedia(ArrayCollection $objects) {
+        $media = new ArrayCollection();
+        foreach ($objects as $object) {
+            $media->add($object->media()->first());
+        }
+        return self::mediaCarousel($media);
     }
 
     public static function social(array $links) {
@@ -65,8 +71,10 @@ class Page {
                 ->table('category')
                 ->orderBy('position')
                 ->orderBy('name')
-                ->select(array(array('status' => 1)));
-
+                ->customWhere('parent IS NULL')
+                ->select(array(array(
+                'status' => 1,
+        )));
         ob_start();
         ?>
         <ul class="nav">
@@ -76,7 +84,17 @@ class Page {
                     continue;
                 $pages = $category->page(array(
                     'orderBy' => 'position',
+                    'where' => array(array(
+                            'status' => 1
+                        ))
                 ));
+                $subCategories = $category->category(array(
+                    'orderBy' => 'position',
+                    'where' => array(array(
+                            'status' => 1
+                        ))
+                ));
+
                 $active = false;
                 ob_start();
                 foreach ($pages as $page) {
@@ -89,40 +107,42 @@ class Page {
                 $lis = ob_get_clean();
                 ?>
                 <li class="dropdown <?= $active ? 'active' : '' ?>">
-                    <a href="#" <?= ($pages->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
+                    <a href="#" <?= ($pages->count() || $subCategories->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                         <?= $lis ?>
+                        <?php
+                        if ($subCategories->count()) {
+                            foreach ($subCategories as $sub) {
+                                $pages = $sub->page(array(
+                                    'orderBy' => 'position',
+                                    'where' => array(array(
+                                            'status' => 1
+                                        ))
+                                ));
+                                $active = false;
+                                ob_start();
+                                foreach ($pages as $page) {
+                                    if ($model && $model->getId() === $page->id)
+                                        $active = true;
+                                    ?>
+                                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                                    <?php
+                                }
+                                $lis = ob_get_clean();
+                                ?>
+                                <li class="dropdown-submenu <?= $active ? 'active' : '' ?>">
+                                    <a href="#" tabindex="-1"><?= $sub->name ?></b></a>
+                                    <ul class="dropdown-menu">
+                                        <?= $lis ?>
+                                    </ul>
+                                </li>
+                                <?php
+                            }
+                        }
+                        ?>
                     </ul>
                 </li>
                 <?php
-                $subCategories = $category->category(array(
-                    'orderBy' => 'position'
-                ));
-                if ($subCategories->count()) {
-                    foreach ($subCategories as $sub) {
-                        $pages = $sub->page(array(
-                            'orderBy' => 'position'
-                        ));
-                        $active = false;
-                        ob_start();
-                        foreach ($pages as $page) {
-                            if ($model && $model->getId() === $page->id)
-                                $active = true;
-                            ?>
-                            <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
-                            <?php
-                        }
-                        $lis = ob_get_clean();
-                        ?>
-                        <li <?= $active ? 'class="active"' : '' ?>>
-                            <a href="#" <?= ($pages->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
-                            <ul class="dropdown-submenu">
-                                <?= $lis ?>
-                            </ul>
-                        </li>
-                        <?php
-                    }
-                }
             }
             ?>
             <li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>

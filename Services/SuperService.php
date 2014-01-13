@@ -81,6 +81,19 @@ abstract class SuperService extends AService {
     }
 
     /**
+     * Finds a row from database with the given criteria
+     * @param array $criteria
+     * @return mixed
+     */
+    public function findOneWhere($criteria, $exception = true) {
+        $model = $this->repository->findOneWhere($criteria);
+        if (!$model && $exception)
+            throw new Exception('Required page was not found');
+        $this->model = $model;
+        return $this->model;
+    }
+
+    /**
      * Inserts data into the database
      * @param IModel $model
      * @param Object $files

@@ -16,6 +16,12 @@ abstract class File extends Model {
     private $badExtensions;
     private $maxSize;
 
+    /**
+     * The name of the property to use as the name of the file when saving to filesystem
+     * @var string
+     */
+    private $altNameProperty;
+
     abstract public function __construct();
 
     /**
@@ -48,6 +54,16 @@ abstract class File extends Model {
         }
 
         $this->extensions[$property] = $extensions;
+        return $this;
+    }
+
+    /**
+     * Sets the name of the property to use as the name of the file when saving to filesystem
+     * @param string $altNameProperty
+     * @return \DSLive\Models\File
+     */
+    final public function setAltNameProperty($altNameProperty) {
+        $this->altNameProperty = $altNameProperty;
         return $this;
     }
 
@@ -140,7 +156,9 @@ abstract class File extends Model {
                 }
             }
 
-            $savePath = $dir . DIRECTORY_SEPARATOR . time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($info['name']));
+            $name = ($this->altNameProperty !== null) ? preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{$this->altNameProperty})) . '.' . $extension :
+                    time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($info['name']));
+            $savePath = $dir . DIRECTORY_SEPARATOR . $name;
 
             if (move_uploaded_file($info['tmpName'], $savePath)) {
                 $this->unlink($ppt);
@@ -178,11 +196,12 @@ abstract class File extends Model {
      * @return boolean
      */
     final public function extensionIsOk($property, $extension) {
+        $extension = strtolower($extension);
         if (isset($this->extensions [$property]) && !in_array($extension, $this->extensions[$property]))
             return false;
         if (isset($this->badExtensions [$property]) && in_array($extension, $this->badExtensions[$property]))
             return false;
-        
+
         return $extension;
     }
 

@@ -17,7 +17,6 @@ class GuestController extends AController {
     }
 
     public function indexAction() {
-        
     }
 
     public function registerAction() {
@@ -43,6 +42,14 @@ class GuestController extends AController {
     }
 
     public function loginAction($module = null, $controller = null, $action = null, $params = null) {
+        if (!$this->userIdentity()->isGuest()) {
+            if ($module !== null) {
+                $params = ($params === null) ? array() : explode(':', $params);
+                $this->redirect($module, $controller, $action, $params);
+            }
+            $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
+        }
+        
         $form = $this->service->getLoginForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
@@ -97,6 +104,23 @@ class GuestController extends AController {
             $this->redirect($module, $controller, $action, $params);
         }
         $this->redirect('guest', 'index', 'login');
+    }
+    
+    public function contactUsAction() {
+        $form = $this->service->getContactUsForm();
+        if ($this->request->isPost()) {
+            $form->setData($this->request->getPost());
+            if ($form->isValid() && $this->service->contactUs($form->getData())) {
+                $this->flash()->setSuccessMessage('Your message has been sent successfully. Thank you.');
+            }
+            else {
+                $this->flash()->setErrorMessage('Send message failed.');               
+            }
+        }
+        return $this->view->variables(array(
+            'title' => 'Contact Us',
+            'form' => $form,
+        ))->file('misc', 'form');
     }
 
 }
