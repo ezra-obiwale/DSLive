@@ -1,7 +1,5 @@
 <?php
 
-use DSLive\Stdlib\Util;
-
 /*
  */
 
@@ -26,7 +24,7 @@ class FileOut {
         $attributes = isset($options['attributes']) ? $options['attributes'] : $attributes;
 
         if (!is_array($attributes)) {
-            throw new Exception('Attributes for the filename must be an array');
+            throw new \Exception('Attributes for the filename must be an array');
         }
         if (!isset($attributes['width']))
             $attributes['width'] = '100%';
@@ -46,7 +44,7 @@ class FileOut {
         $content = file_get_contents($filename);
 
 
-        return '<img src="data:' . Util::getMimeType($filename) . ';base64, ' . base64_encode($content) . '" ' . $this->parseAttributes($attributes) . ' />';
+        return '<img src="data:' . mime_content_type($filename) . ';base64, ' . base64_encode($content) . '" ' . $this->parseAttributes($attributes) . ' />';
     }
 
     private function parseAttributes($attributes) {

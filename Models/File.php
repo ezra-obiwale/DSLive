@@ -22,11 +22,6 @@ abstract class File extends Model {
      */
     private $altNameProperty;
 
-    /**
-     * @DBS\String (size=50, nullable=true)
-     */
-    protected $mime;
-
     abstract public function __construct();
 
     /**
@@ -189,7 +184,7 @@ abstract class File extends Model {
 
         if (!$this->sizeIsOk($info['size']))
             return false;
-        $this->mime = $info['type'];
+
         $info = pathinfo($info['name']);
         return $this->extensionIsOk($property, $info['extension']);
     }
@@ -256,15 +251,6 @@ abstract class File extends Model {
             return unlink($this->$property);
 
         return true;
-    }
-
-    public function getMime() {
-        return $this->mime;
-    }
-
-    public function setMime($mime) {
-        $this->mime = $mime;
-        return $this;
     }
 
 }

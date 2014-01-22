@@ -55,9 +55,6 @@ class RegisterForm extends Form {
             'options' => array(
                 'value' => 'Register'
             ),
-            'attributes' => array(
-                'class' => 'btn btn-success'
-            )
         ));
     }
 

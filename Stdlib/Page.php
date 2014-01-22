@@ -1,6 +1,7 @@
 <?php
 
-use DBScribe\ArrayCollection,
+use Cms\Models\Slide,
+    DBScribe\ArrayCollection,
     DScribe\Core\Engine,
     DScribe\View\Renderer;
 
@@ -21,7 +22,7 @@ class Page {
      * @param array $attrs Attributes of the carousel
      * @return string
      */
-    public static function mediaCarousel(ArrayCollection $media, $attrs = array()) {
+    public static function mediaCarousel(ArrayCollection $media, array $attrs = array()) {
         $items = array();
         $fo = new FileOut();
         if ($media && !is_bool($media)) {
@@ -33,7 +34,7 @@ class Page {
                 );
             }
         }
-        
+
         return TwBootstrap::carousel($items, $attrs);
     }
 
@@ -44,16 +45,16 @@ class Page {
      * @param array $criteria
      * @return string
      */
-    public static function mediaCarouselFromDB($table = 'media', array $criteria = array()) {
-        return self::mediaCarousel(Engine::getDB()->table($table)->select($criteria));
+    public static function mediaCarouselFromDB($table = 'media', array $criteria = array(), array $attrs = array()) {
+        return self::mediaCarousel(Engine::getDB()->table($table)->select($criteria), $attrs);
     }
-    
-    public static function carouselFromModelsWithMedia(ArrayCollection $objects) {
+
+    public static function carouselFromModelsWithMedia(ArrayCollection $objects, array $attrs = array()) {
         $media = new ArrayCollection();
         foreach ($objects as $object) {
             $media->add($object->media()->first());
         }
-        return self::mediaCarousel($media);
+        return self::mediaCarousel($media, $attrs);
     }
 
     public static function social(array $links) {
@@ -145,10 +146,78 @@ class Page {
                 <?php
             }
             ?>
-            <li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>
+            <!--<li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>-->
         </ul>
         <?php
         return ob_get_clean();
+    }
+
+    public static function cleanContent($content) {
+        $sep = '_:DS:_';
+        self::insertSlides($content, $sep);
+        self::insertForms($content, $sep);
+        return $content;
+    }
+
+    private static function insertSlides(&$content, $sep) {
+        foreach (self::getSlides($sep, $content) as $slide) {
+            $attrs = array('id' => $slide->getCodeName());
+            if ($slide->getWidth()) {
+                $attrs['style'] = 'width:' . $slide->getWidth();
+            }
+            if ($slide->getHeight()) {
+                if (isset($attrs['style']))
+                    $attrs['style'] .= ';height:' . $slide->getHeight();
+                else
+                    $attrs['style'] = 'height:' . $slide->getHeight();
+            }
+            $content = str_replace('{slide' . $sep . $slide->getCodeName() . '}', self::mediaCarousel($slide->media(), $attrs), $content);
+        }
+    }
+
+    private static function insertForms(&$content, $sep) {
+        foreach (self::getForms($sep, $content) as $formAttrs) {
+            if (empty($formAttrs))
+                continue;
+            $formModel = new $formAttrs[1];
+            if ($post = Session::fetch('post')) {
+                $formModel->setData($post);
+//                Session::remove('post');
+                if ($errors = Session::fetch('postErrors')) {
+                    $formModel->setErrors($errors);
+//                    Session::remove('postErrors');
+                }
+            }
+            $currentPath = serialize(Engine::getUrls());
+            ob_start();
+            echo TwbForm::horizontal($formModel->setAttribute('action', $formModel->getAttribute('action') . '/' . urlencode($currentPath)));
+            $content = str_replace('{form' . $sep . join($sep, $formAttrs) . '}', ob_get_clean(), $content);
+        }
+    }
+
+    private static function getSlides($sep, $content) {
+        $slides = array();
+        $pos = stripos($content, 'slide' . $sep);
+        if (!empty($pos)) {
+            $slideStr = substr($content, $pos, stripos($content, '}', $pos) - $pos);
+            $codeName = str_replace('slide' . $sep, '', $slideStr);
+            $slides[] = array('codeName' => $codeName);
+        }
+        return Engine::getDB()->table('slide', new Slide())->select($slides);
+    }
+
+    private static function getForms($sep, $content, $offset = 0) {
+        $forms = array();
+        $pos = stripos($content, '{form' . $sep, $offset);
+        if (!empty($pos)) {
+            $endPos = stripos($content, '}', $pos) - $pos - 1;
+            $formStr = substr($content, $pos + 1, $endPos);
+            $attrs = explode($sep, $formStr);
+            unset($attrs[0]);
+            $forms[] = $attrs;
+//            $forms = array_merge($forms, $content, $this->getForms($sep, $endPos));
+        }
+        return $forms;
     }
 
 }

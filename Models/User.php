@@ -62,13 +62,13 @@ class User extends AUser {
     /**
      * @DBS\Boolean (default=1, nullable=true)
      */
-    protected $active;
+    private $active;
 
     public function __construct() {
         $this->setTableName('user');
         $this->stdFile = new \DSLive\Stdlib\File;
         $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif', 'bmp'));
-        $this->stdFile->setMaxSize('500kb');
+        $this->stdFile->setMaxSize('350kb');
     }
 
     public function getId() {
@@ -95,7 +95,6 @@ class User extends AUser {
 
     public function setPassword($password) {
         $this->password = $password;
-        return $this;
     }
 
     public function setFirstName($firstName) {
@@ -205,15 +204,6 @@ class User extends AUser {
 
     public function unlink() {
         return $this->stdFile->unlink($this->picture);
-    }
-    
-    public function setMaxSize($size) {
-        $this->stdFile->setMaxSize($size);
-        return $this;
-    }
-    
-    public function getMaxSize() {
-        return $this->stdFile->getMaxSize();
     }
 
 }

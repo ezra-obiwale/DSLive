@@ -2,9 +2,9 @@
 
 namespace DSLive\Services;
 
-use DBScribe\Util,
-    DScribe\Core\AService,
+use DScribe\Core\AService,
     DScribe\Core\Engine,
+    DScribe\Core\Repository,
     DScribe\View\View,
     DSLive\Forms\LoginForm,
     DSLive\Forms\RegisterForm,
@@ -12,27 +12,23 @@ use DBScribe\Util,
     DSLive\Models\AdminUser,
     DSLive\Models\Settings,
     DSLive\Models\User,
-    DSLive\Stdlib\Util as DSU,
     Email,
-    In\Models\User as IMU,
-    Object,
-    Session;
+    Util;
 
 class GuestService extends AService {
 
     const NOTIFY_REG = 'registration';
     const NOTIFY_CONFIRM = 'confirmation';
     const NOTIFY_PSWD_RESET = 'password-reset';
-    const NOTIFY_PSWD_RESET_SUCCESS = 'password-reset-success';
 
     protected $loginForm;
     protected $registerForm;
     protected $resetPasswordForm;
     protected $contactUsForm;
-    protected $settingsRepository;
+    private $settingsRepository;
 
     protected function init() {
-        $this->setModel(new IMU);
+        $this->setModel(new User);
     }
 
     protected function inject() {
@@ -83,20 +79,12 @@ class GuestService extends AService {
     public function getContactUsForm() {
         return $this->contactUsForm;
     }
-
-    public function contactUs(Object $data) {
-        $email = new Email();
-        $to = Engine::getDB()->table('settings')->select(array(array('key' => 'email')))->first()->value;
-        $domain = Engine::getConfig('app', 'name');
-        $email->addTo($to);
-        $email->sendFrom(trim($data->email));
-        $message = ucwords(trim($data->fullName)) . " sent you a message on " . Util::createTimestamp() . "\n\r\n\r" . trim($data->message);
-//        $email->setText($message);
-        $email->setHTML($message, array('autoSetText' => true));
-        return $email->send($domain . ': ' . trim($data->title));
+    
+    public function contactUs(\Object $data) {
+        // @todo send mail to admin
     }
 
-    public function register(User $model, View $view, $setup = false, $flush = true) {
+    public function register(User $model, View $view) {
         $model->hashPassword();
         if ($this->repository->findOneBy('email', $model->getEmail()))
             return false;
@@ -107,55 +95,58 @@ class GuestService extends AService {
             $model = $_model;
         }
 
-        $model->setActive((Engine::getServer() !== 'development' || $setup));
-
-        if ($this->repository->insert($model)->execute()) {
-            if (!$this->sendEmail($model)) {
+        $model->setActive(Engine::getServer() === 'production');
+        if ($this->repository->insert($model)->execute() && Engine::getServer() === 'production') {
+            $configConfirm = Engine::getConfig('DsLive', 'register', 'confirm', false);
+            if ($configConfirm && $configConfirm['active']) {
+                $content = $view->getOutput($configConfirm['template']['module'], $configConfirm['template']['controller'], $configConfirm['template']['action'], array(md5($model->getEmail() . '&' . $model->getPassword())));
+                $from = (!empty($configConfirm['from'])) ? $configConfirm['from'] : 'noreply@' . $_SERVER['HTTP_HOST'] . '.com';
+                $email = new Email($from, $model->getEmail());
+                if (!$email->setHTML($content)->send(Engine::getConfig('app', 'name') . ': Confirm Registration')) {
+                    return false;
+                }
+            }
+            else {
                 return false;
             }
         }
-        return ($flush) ? $this->flush() : true;
+        return $this->flush();
     }
 
     public function confirmRegistration($id, $email) {
         $user = $this->repository->findOneWhere(array(array('id' => $id, 'email' => $email)));
         if (NULL !== $user) {
             $user->setActive(TRUE);
-            $this->repository->update($user)->execute();
+            $this->repository->update($user);
             $this->flush();
 
-            $this->sendEmail($user, self::NOTIFY_CONFIRM);
+            $this->sendEmail(self::NOTIFY_CONFIRM, $user);
         }
 
         return $user;
     }
 
-    public function resetPassword(IMU $model, $id, $reset) {
-        if (!$reset) { //just requesting
-            $model = $this->getRepository()->findOneBy('email', $model->getEmail());
-            if (!$model) {
-                return false;
-            }
-            $model->setReset(Util::createGUID());
-            if ($this->repository->update($model)->execute()) {
-                if (!$this->sendEmail($model, self::NOTIFY_PSWD_RESET)) {
+    public function resetPassword(User $model, $id, $password) {
+        if (!$password) {
+            $model->setPassword($model->hashPassword(Util::randomPassword(12)));
+            if ($this->repository->update($model, 'email')->execute() && Engine::getServer() === 'production') {
+                $configReset = Engine::getConfig('DsLive', 'register', 'reset', false);
+                if ($configReset && $configReset['active']) {
+                    $content = $view->getOutput($configReset['template']['module'], $configReset['template']['controller'], $configReset['template']['action'], array(md5($model->getEmail() . '&' . $model->getPassword())));
+                    $from = (!empty($configReset['from'])) ? $configReset['from'] : 'noreply@' . $_SERVER['HTTP_HOST'] . '.com';
+                    $email = new Email($from, $model->getEmail());
+                    if (!$email->setHTML($content)->send(Engine::getConfig('app', 'name') . ': Confirm Registration')) {
+                        return false;
+                    }
+                }
+                else {
                     return false;
                 }
             }
         }
-        else { //reseting password now
-            $password = $model->getPassword();
-            $model->setId($id)->setReset($reset)->setPassword(null);
-            $model = $this->getRepository()->findOneWhere(array($model));
-            if (!$model) {
-                return false;
-            }
-            $model->setPassword($password)->hashPassword()->setReset('');
-            if ($this->repository->update($model)->execute()) {
-                if (!$this->sendEmail($model, self::NOTIFY_PSWD_RESET_SUCCESS)) {
-                    return false;
-                }
-            }
+        else {
+            $model->setId($id);
+            $this->repository->update($model);
         }
         return $this->flush();
     }
@@ -164,8 +155,6 @@ class GuestService extends AService {
         $model->hashPassword();
         $this->model = $this->repository->findOneWhere($model);
         if ($this->model) {
-            if (!$this->model->getActive())
-                return false;
             $this->model->update();
             $this->repository->update($this->model, 'id');
         }
@@ -173,33 +162,15 @@ class GuestService extends AService {
     }
 
     private function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
-        if (Engine::getServer() === 'development')
-            return true;
-
-        $email = new Email();
-        $reg = Engine::getDB()->table('notification')->select(array(array('type' => 'email', 'name' => $notifyType)))->first();
-        if (!$reg)
-            return false;
-        //@change that of userService->sendAccessCode() too
-//        $email->setHTML($reg->message, array('autoSetText' => true));
-        $email->setText(DSU::prepareMessage($reg->message, $user));
-        $webMasterEmail = Engine::getDB()->table('settings')->select(array(array('key' => 'email')))->first();
-        if (!$webMasterEmail)
-            return false;
-        $email->sendFrom($webMasterEmail->value);
+        $email = new \Email();
+        $webMasterName = Engine::getConfig('app', 'webmaster', 'name', false);
+        $webMasterEmail = Engine::getConfig('app', 'webmaster', 'email');
+        $email->sendFrom((isset($webMasterName)) ? $webMasterName . "<" . $webMasterEmail . ">" : $webMasterEmail);
         $email->addTo($user->getEmail());
-
-        if ($reg->messageTitle) {
-            $title = $reg->messageTitle;
-        }
-        else {
-            $title = Engine::getConfig('app', 'name') . ' - ' . ucwords(str_replace(array('-', '_'), ' ', $notifyType));
-        }
-
-        if (!$email->send($title)) {
+        $email->setHTML($this->getEmailContent($notifyType));
+        if (!$email->setHTML($content)->send(Engine::getConfig('app', 'name') . ': Confirm Registration')) {
             return false;
         }
-        return true;
     }
 
     private function getEmailContent($notifyType) {
@@ -250,16 +221,16 @@ class GuestService extends AService {
     }
 
     public static function beforeLogout($class, $method, array $methodParams = array()) {
-        $beforeLogout = Session::fetch('bL');
+        $beforeLogout = \Session::fetch('bL');
         if (!$beforeLogout) {
             $beforeLogout = array();
         }
         $beforeLogout[$class][$method] = $methodParams;
-        Session::save('bL', $beforeLogout);
+        \Session::save('bL', $beforeLogout);
     }
 
     public function doBeforeLogout() {
-        foreach (Session::fetch('bL') as $class => $methodsArray) {
+        foreach (\Session::fetch('bL') as $class => $methodsArray) {
             foreach ($methodsArray as $method => $params) {
                 call_user_func_array(array($class, $method), $params);
             }

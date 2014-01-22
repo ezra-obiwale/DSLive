@@ -151,7 +151,6 @@ abstract class SuperService extends AService {
      */
     public function delete($flush = true) {
         try {
-            //@todo find a way to delete attached files
             $deleted = $this->repository->delete($this->model)->execute();
             if ($flush) {
                 return $this->flush();
