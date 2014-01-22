@@ -3,7 +3,7 @@
 namespace DSLive\Forms;
 
 use DScribe\Form\Form,
-    DSLive\Models\User;
+    In\Models\User;
 
 class ResetPasswordForm extends Form {
 

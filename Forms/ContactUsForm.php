@@ -66,7 +66,7 @@ class ContactUsForm extends Form {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Login',
+                'value' => 'Send',
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'

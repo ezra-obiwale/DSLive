@@ -174,11 +174,12 @@ abstract class SuperController extends AController {
         }
         
         if ($this->request->isPost()) {
-            $form->setData($this->request->getPost());
+            $data = $this->request->getPost()->toArray();
             $this->checkFiles();
             if ($this->request->getFiles()->notEmpty()) {
-                $form->setData($this->request->getFiles());
+                $data = array_merge($data, $this->request->getFiles()->toArray());
             }
+            $form->setData($data);
             if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
                 if ($this->request->isAjax()) {
                     $this->ajaxResponse()
@@ -263,11 +264,12 @@ abstract class SuperController extends AController {
 
         $form->setModel($model);
         if ($this->request->isPost()) {
-            $form->setData($this->request->getPost());
+            $data = $this->request->getPost()->toArray();
             $this->checkFiles();
             if ($this->request->getFiles()->notEmpty()) {
-                $form->setData($this->request->getFiles());
+                $data = array_merge($data, $this->request->getFiles()->toArray());
             }
+            $form->setData($data);
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 if ($this->request->isAjax()) {
                     $this->ajaxResponse()
