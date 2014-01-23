@@ -11,20 +11,22 @@ class GuestController extends AController {
      * @var \DSLive\Services\GuestService
      */
     protected $service;
+    private $setup = false;
 
     public function noCache() {
         return array('login', 'register');
     }
 
     public function indexAction() {
+        
     }
 
     public function registerAction() {
         $form = $this->service->getRegisterForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
-            if ($form->isValid() && ($this->service->register($form->getModel(), $this->view))) {
-                $this->flash()->setSuccessMessage('Registration successful. You may now login');
+            if ($form->isValid() && $this->service->register($form->getModel(), $this->view, $this->setup)) {
+                $this->flash()->setSuccessMessage('Registration successful. Please check your email account to confirm your registration');
                 $this->redirect('guest', 'index', 'login');
             }
             $this->flash()->setErrorMessage('Registration failed. Please check your entries and try again');
@@ -53,7 +55,7 @@ class GuestController extends AController {
             }
             $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
         }
-        
+
         $form = $this->service->getLoginForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
@@ -74,12 +76,12 @@ class GuestController extends AController {
     }
 
     public function resetPasswordAction($id = null, $password = null) {
-        $form = $this->service->getForgotPasswordForm();
+        $form = $this->service->getResetPasswordForm();
         if ($id === null || $password === null) {
             $form->remove('password')->remove('confirm');
         }
         else {
-            if (!$this->service->getRepository()->findOneWhere(array(array('id' => $id, 'password' => $password)))) {
+            if (!$this->service->getRepository()->findOneWhere(array(array('id' => $id, 'reset' => $password)))) {
                 throw new \Exception('The page you\'re looking for does not exist');
             }
             $form->remove('email');
@@ -89,7 +91,7 @@ class GuestController extends AController {
             if ($form->isValid() && ($this->service->resetPassword($form->getModel(), $id, $password))) {
                 $this->flash()->setSuccessMessage((isset($id) && isset($password)) ?
                                 'Password reset successfully. You may now login' :
-                                'Check your email address for further instructions');
+                                'Password reset initiated. Please check your email address for further instructions');
                 $this->redirect('guest', 'index', 'login');
             }
             $this->flash()->setErrorMessage('Password reset failed.');
@@ -109,7 +111,7 @@ class GuestController extends AController {
         }
         $this->redirect('guest', 'index', 'login');
     }
-    
+
     public function contactUsAction() {
         $form = $this->service->getContactUsForm();
         if ($this->request->isPost()) {
@@ -118,13 +120,21 @@ class GuestController extends AController {
                 $this->flash()->setSuccessMessage('Your message has been sent successfully. Thank you.');
             }
             else {
-                $this->flash()->setErrorMessage('Send message failed.');               
+                $this->flash()->setErrorMessage('Send message failed.');
             }
         }
         return $this->view->variables(array(
-            'title' => 'Contact Us',
-            'form' => $form,
-        ))->file('misc', 'form');
+                    'title' => 'Contact Us',
+                    'form' => $form,
+                ))->file('misc', 'form');
+    }
+
+    public function setupAction() {
+        if ($this->service->getRepository()->limit(1)->select()->execute()->first()) {
+            $this->redirect('guest', 'index', 'login');
+        }
+        $this->setup = true;
+        return $this->registerAction();
     }
 
 }
