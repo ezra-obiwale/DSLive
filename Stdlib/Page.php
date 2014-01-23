@@ -203,7 +203,8 @@ class Page {
             $codeName = str_replace('slide' . $sep, '', $slideStr);
             $slides[] = array('codeName' => $codeName);
         }
-        return Engine::getDB()->table('slide', new Slide())->select($slides);
+        
+        return (!empty($slides)) ? Engine::getDB()->table('slide', new Slide())->select($slides) : array();
     }
 
     private static function getForms($sep, $content, $offset = 0) {

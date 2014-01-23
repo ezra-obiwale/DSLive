@@ -13,6 +13,9 @@ use DScribe\Core\AService,
     DSLive\Models\Settings,
     DSLive\Models\User,
     Email,
+    In\Models\Admission,
+    Object,
+    Session,
     Util;
 
 class GuestService extends AService {
@@ -80,7 +83,7 @@ class GuestService extends AService {
         return $this->contactUsForm;
     }
     
-    public function contactUs(\Object $data) {
+    public function contactUs(Object $data) {
         // @todo send mail to admin
     }
 
@@ -221,20 +224,25 @@ class GuestService extends AService {
     }
 
     public static function beforeLogout($class, $method, array $methodParams = array()) {
-        $beforeLogout = \Session::fetch('bL');
+        $beforeLogout = Session::fetch('bL');
         if (!$beforeLogout) {
             $beforeLogout = array();
         }
         $beforeLogout[$class][$method] = $methodParams;
-        \Session::save('bL', $beforeLogout);
+        Session::save('bL', $beforeLogout);
     }
 
     public function doBeforeLogout() {
-        foreach (\Session::fetch('bL') as $class => $methodsArray) {
+        foreach (Session::fetch('bL') as $class => $methodsArray) {
             foreach ($methodsArray as $method => $params) {
                 call_user_func_array(array($class, $method), $params);
             }
         }
+    }
+    
+    public function getAdmissionEntree($id) {
+        $adRepo = new Repository(new Admission);
+        return $adRepo->findOne($id);
     }
 
 }
