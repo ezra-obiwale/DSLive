@@ -36,9 +36,13 @@ class GuestController extends AController {
     }
 
     public function confirmRegistrationAction($id, $email) {
-        return $this->view->variables(array(
-                    'user' => $this->service->confirmRegistration($id, $email)
-        ));
+        if ($this->service->confirmRegistration($id, $email)) {
+            $this->flash()->setSuccessMessage('Your registration has been confirmed. You may now log in to continue');
+        }
+        else {
+            $this->flash()->setErrorMessage('Confirm registration failed');
+        }
+        $this->redirect('guest', 'index', 'login');
     }
 
     public function loginAction($module = null, $controller = null, $action = null, $params = null) {
