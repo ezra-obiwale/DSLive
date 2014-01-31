@@ -66,7 +66,7 @@ class Page {
         }
         return $return . '</ul>';
     }
-
+    
     public static function cmsLinks(Renderer $renderer, $model = null) {
         $categories = Engine::getDB()
                 ->table('category')
@@ -182,10 +182,10 @@ class Page {
             $formModel = new $formAttrs[1];
             if ($post = Session::fetch('post')) {
                 $formModel->setData($post);
-//                Session::remove('post');
+                Session::remove('post');
                 if ($errors = Session::fetch('postErrors')) {
                     $formModel->setErrors($errors);
-//                    Session::remove('postErrors');
+                    Session::remove('postErrors');
                 }
             }
             $currentPath = serialize(Engine::getUrls());

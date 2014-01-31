@@ -10,7 +10,6 @@ use DScribe\Core\AService,
 abstract class SuperService extends AService {
 
     protected $form;
-    
     /**
      * @todo
      * @var array

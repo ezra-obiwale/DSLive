@@ -50,6 +50,10 @@ abstract class SuperController extends AController {
         $this->order = 'id';
     }
 
+    public function noCache() {
+        return array('index', 'edit', 'delete');
+    }
+
     public function accessDenied($action, $args = array()) {
         if ($this->request->isAjax()) {
             return $this->ajaxResponse()
@@ -172,7 +176,7 @@ abstract class SuperController extends AController {
                     break;
             }
         }
-        
+
         if ($this->request->isPost()) {
             $data = $this->request->getPost()->toArray();
             $this->checkFiles();
@@ -213,7 +217,7 @@ abstract class SuperController extends AController {
                 $this->view->partial() :
                 $this->view;
     }
-    
+
     private function checkFiles() {
         foreach ($this->request->getFiles()->toArray() as $name => $data) {
             if (empty($data->name)) {

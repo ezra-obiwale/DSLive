@@ -133,68 +133,66 @@ class Util {
     }
 
     public static function getMimeType($filename) {
-        if (!function_exists('mime_content_type')) {
-
-            function mime_content_type($filename) {
-                if (!is_file($filename)) {
-                    $error = 'Error: File not found';
-                    if (defined('__ADMIN_DEBUG')) {
-                        $error .= ' mime_content_type(): ' . $filename;
-                    }
-                    return $error;
+//        if (!function_exists('mime_content_type')) {
+//            function mime_content_type($filename) {
+        if (!is_file($filename)) {
+            $error = 'Error: File not found';
+            if (defined('__ADMIN_DEBUG')) {
+                $error .= ' mime_content_type(): ' . $filename;
+            }
+            return $error;
+        }
+        elseif (function_exists('finfo_open')) {
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+            if (!$finfo) {
+                $error = 'Error: Unable to verify MIME content type';
+                if (defined('__ADMIN_DEBUG')) {
+                    $error .= ' finfo(): Opening magic.mime database may have failed';
                 }
-                elseif (function_exists('finfo_open')) {
-                    $finfo = @finfo_open(FILEINFO_MIME_TYPE);
-                    if (!$finfo) {
-                        $error = 'Error: Unable to verify MIME content type';
-                        if (defined('__ADMIN_DEBUG')) {
-                            $error .= ' finfo(): Opening magic.mime database may have failed';
-                        }
-                        return $error;
-                    }
-                    if ($mimetype = @finfo_file($finfo, $filename)) {
-                        finfo_close($finfo);
-                        return $mimetype;
-                    }
-                    else {
-                        $error = 'Error: Unable to verify MIME content type';
-                        if (defined('__ADMIN_DEBUG')) {
-                            $error .= ' Error executing finfo() for ' . $filename;
-                        } return $error;
-                    }
-                }
-                elseif (function_exists('exec') && function_exists('escapeshellarg')) {
-                    if ($execmime = trim(@exec('file -bi ' . @escapeshellarg($filename)))) {
-                        return $execmime;
-                    }
-                    else {
-                        $error = 'Error: Unable to verify MIME content type';
-                        if (defined('__ADMIN_DEBUG')) {
-                            $error .= ' exec()/escapeshellarg() can not open ' . $filename;
-                        } return $error;
-                    }
-                }
-                elseif (function_exists('pathinfo')) {
-                    if ($pathinfo = @pathinfo($filename)) {
-                        $imagetypes = array('gif', 'jpeg', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tif', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm', 'ico');
-                        if (in_array($pathinfo['extension'], $imagetypes) && getimagesize($file)) {
-                            $size = getimagesize($filename);
-                            return $size['mime'];
-                        }
-                    }
-                    else {
-                        $error = 'Error: Unable to verify MIME content type';
-                        if (defined('__ADMIN_DEBUG')) {
-                            $error .= ' pathinfo() can not open ' . $filename;
-                        } return $error;
-                    }
-                }
-                else {
-                    return 'application/octet-stream';
+                return $error;
+            }
+            if ($mimetype = @finfo_file($finfo, $filename)) {
+                finfo_close($finfo);
+                return $mimetype;
+            }
+            else {
+                $error = 'Error: Unable to verify MIME content type';
+                if (defined('__ADMIN_DEBUG')) {
+                    $error .= ' Error executing finfo() for ' . $filename;
+                } return $error;
+            }
+        }
+        elseif (function_exists('exec') && function_exists('escapeshellarg')) {
+            if ($execmime = trim(@exec('file -bi ' . @escapeshellarg($filename)))) {
+                return $execmime;
+            }
+            else {
+                $error = 'Error: Unable to verify MIME content type';
+                if (defined('__ADMIN_DEBUG')) {
+                    $error .= ' exec()/escapeshellarg() can not open ' . $filename;
+                } return $error;
+            }
+        }
+        elseif (function_exists('pathinfo')) {
+            if ($pathinfo = @pathinfo($filename)) {
+                $imagetypes = array('gif', 'jpeg', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tif', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm', 'ico');
+                if (in_array($pathinfo['extension'], $imagetypes) && getimagesize($filename)) {
+                    $size = getimagesize($filename);
+                    return $size['mime'];
                 }
             }
-
+            else {
+                $error = 'Error: Unable to verify MIME content type';
+                if (defined('__ADMIN_DEBUG')) {
+                    $error .= ' pathinfo() can not open ' . $filename;
+                } return $error;
+            }
+        }
+        else {
+            return 'application/octet-stream';
         }
     }
 
+//        }
+//    }
 }
