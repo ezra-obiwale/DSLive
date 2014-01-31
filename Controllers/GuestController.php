@@ -42,8 +42,9 @@ class GuestController extends AController {
     public function confirmRegistrationAction($id, $email) {
         if ($this->service->confirmRegistration($id, $email)) {
             $this->flash()->setSuccessMessage('Your registration has been confirmed. You may now log in to continue');
-        } else {
-            $this->flash()->setErrorMessage('Confirm registration failed');            
+        }
+        else {
+            $this->flash()->setErrorMessage('Confirm registration failed');
         }
         $this->redirect('guest', 'index', 'login');
     }

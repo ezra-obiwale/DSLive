@@ -50,6 +50,10 @@ abstract class SuperController extends AController {
         $this->order = 'id';
     }
 
+    public function noCache() {
+        return array('index', 'edit', 'delete');
+    }
+
     public function accessDenied($action, $args = array()) {
         if ($this->request->isAjax()) {
             return $this->ajaxResponse()
