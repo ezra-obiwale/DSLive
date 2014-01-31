@@ -14,11 +14,13 @@ class GuestController extends AController {
     private $setup = false;
 
     public function noCache() {
-        return false;
+        return array('login', 'register');
     }
 
     public function indexAction() {
-        
+        if (!$this->userIdentity()->isGuest()) {
+            $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
+        }
     }
 
     public function registerAction() {
