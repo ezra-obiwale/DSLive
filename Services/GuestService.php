@@ -12,7 +12,6 @@ use DBScribe\Util,
     DSLive\Models\AdminUser,
     DSLive\Models\Settings,
     DSLive\Models\User,
-    DSLive\Stdlib\Util as DSU,
     Email,
     In\Models\User as IMU,
     Object,
@@ -172,7 +171,7 @@ class GuestService extends AService {
         return $this->model;
     }
 
-    private function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
+    protected function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
         if (Engine::getServer() === 'development')
             return true;
 
@@ -181,12 +180,10 @@ class GuestService extends AService {
         if (!$reg)
             return false;
         //@change that of userService->sendAccessCode() too
-//        $email->setHTML($reg->message, array('autoSetText' => true));
-        $email->setText(DSU::prepareMessage($reg->message, $user));
+        $email->setHTML(nl2br($reg->message));
         $webMasterEmail = Engine::getDB()->table('settings')->select(array(array('key' => 'email')))->first();
-        if (!$webMasterEmail)
-            return false;
-        $email->sendFrom($webMasterEmail->value);
+        if ($webMasterEmail)
+            $email->sendFrom($webMasterEmail->value);
         $email->addTo($user->getEmail());
 
         if ($reg->messageTitle) {

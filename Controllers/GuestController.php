@@ -13,13 +13,9 @@ class GuestController extends AController {
     protected $service;
     private $setup = false;
 
-    public function noCache() {
-        return array('login', 'register');
-    }
-
     public function indexAction() {
-        if (!$this->userIdentity()->isGuest()) {
-            $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
+        if ($this->request->isAjax()) {
+            return $this->view->partial();
         }
     }
 
@@ -33,10 +29,12 @@ class GuestController extends AController {
             }
             $this->flash()->setErrorMessage('Registration failed. Please check your entries and try again');
         }
-        return $this->view->variables(array(
-                    'title' => 'Register',
-                    'form' => $form,
-                ))->file('misc', 'form');
+        $this->view->variables(array(
+            'title' => 'Register',
+            'form' => $form,
+        ))->file('misc', 'form');
+
+        return ($this->request->isAjax()) ? $this->view->partial() : $this->view;
     }
 
     public function confirmRegistrationAction($id, $email) {
@@ -45,6 +43,9 @@ class GuestController extends AController {
         }
         else {
             $this->flash()->setErrorMessage('Confirm registration failed');
+        }
+        if ($this->request->isAjax()) {
+            die($this->view->getOutput('guest', 'index', 'login'));
         }
         $this->redirect('guest', 'index', 'login');
     }
@@ -71,10 +72,11 @@ class GuestController extends AController {
             }
             $this->flash()->setErrorMessage('Login failed. Please check your entries and try again');
         }
-        return $this->view->variables(array(
-                    'title' => 'Login',
-                    'form' => $form,
-                ))->file('misc', 'form');
+        $this->view->variables(array(
+            'title' => 'Login',
+            'form' => $form,
+        ))->file('misc', 'form');
+        return ($this->request->isAjax()) ? $this->view->partial() : $this->view;
     }
 
     public function resetPasswordAction($id = null, $password = null) {
@@ -98,10 +100,11 @@ class GuestController extends AController {
             }
             $this->flash()->setErrorMessage('Password reset failed.');
         }
-        return $this->view->variables(array(
-                    'title' => 'Reset Password',
-                    'form' => $form,
-                ))->file('misc', 'form');
+        $this->view->variables(array(
+            'title' => 'Reset Password',
+            'form' => $form,
+        ))->file('misc', 'form');
+        return ($this->request->isAjax()) ? $this->view->partial() : $this->view;
     }
 
     public function logoutAction($module = null, $controller = null, $action = null, $params = null) {
@@ -110,6 +113,9 @@ class GuestController extends AController {
         if ($module !== null) {
             $params = ($params === null) ? array() : explode(':', $params);
             $this->redirect($module, $controller, $action, $params);
+        }
+        if ($this->request->isAjax()) {
+            die($this->view->getOutput('guest', 'index', 'login'));
         }
         $this->redirect('guest', 'index', 'login');
     }
@@ -125,10 +131,11 @@ class GuestController extends AController {
                 $this->flash()->setErrorMessage('Send message failed.');
             }
         }
-        return $this->view->variables(array(
+        $this->view->variables(array(
                     'title' => 'Contact Us',
                     'form' => $form,
                 ))->file('misc', 'form');
+        return ($this->request->isAjax()) ? $this->view->partial() : $this->view;
     }
 
     public function setupAction() {
