@@ -67,7 +67,7 @@ class Page {
         return $return . '</ul>';
     }
 
-    public static function cmsLinks(Renderer $renderer, $model = null) {
+    public static function cmsLinks(Renderer $renderer, $model = null, array $additionalLinks = array()) {
         $categories = Engine::getDB()
                 ->table('category')
                 ->orderBy('position')
@@ -145,8 +145,27 @@ class Page {
                 </li>
                 <?php
             }
+            foreach ($additionalLinks as $link => $label) {
+                if (!is_array($label)) {
+                    ?>
+                    <li><a href="<?= $link ?>"><?= $label ?></a></li>
+                    <?php
+                }
+                else {
+                    if (empty($label['liAttrs'])) {
+                        $label['liAttrs'] = array();
+                    }
+                    if (empty($label['linkAttrs'])) {
+                        $label['linkAttrs'] = array();
+                    }
+                    ?>
+                    <li <?= TwBootstrap::parseAttributes($label['liAttrs']) ?>>
+                        <a <?= TwBootstrap::parseAttributes($label['linkAttrs']) ?> href="<?= $link ?>"><?= $label['label'] ?></a>
+                    </li>
+                    <?php
+                }
+            }
             ?>
-            <li><a class="no-ajax" target="_blank" href="http://mail.google.com/a/adesoyecollege.org">WEBMAIL</a></li>
         <!--<li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>-->
         </ul>
         <?php

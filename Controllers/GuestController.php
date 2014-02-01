@@ -13,6 +13,10 @@ class GuestController extends AController {
     protected $service;
     private $setup = false;
 
+    public function noCache() {
+        return array('login', 'register', 'setup', 'contact-us', 'reset-password');
+    }
+
     public function indexAction() {
         if ($this->request->isAjax()) {
             return $this->view->partial();
