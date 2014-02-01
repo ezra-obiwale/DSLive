@@ -66,8 +66,8 @@ class Page {
         }
         return $return . '</ul>';
     }
-    
-    public static function cmsLinks(Renderer $renderer, $model = null) {
+
+    public static function cmsLinks(Renderer $renderer, $model = null, array $additionalLinks = array()) {
         $categories = Engine::getDB()
                 ->table('category')
                 ->orderBy('position')
@@ -78,7 +78,7 @@ class Page {
         )));
         ob_start();
         ?>
-        <ul class="nav">
+        <ul class="nav cms-nav">
             <?php
             foreach ($categories as $category) {
                 if ($category->name === '-- None --')
@@ -102,7 +102,7 @@ class Page {
                     if ($model && $model->getId() === $page->id)
                         $active = true;
                     ?>
-                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
                     <?php
                 }
                 $lis = ob_get_clean();
@@ -126,7 +126,7 @@ class Page {
                                     if ($model && $model->getId() === $page->id)
                                         $active = true;
                                     ?>
-                                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
                                     <?php
                                 }
                                 $lis = ob_get_clean();
@@ -145,8 +145,28 @@ class Page {
                 </li>
                 <?php
             }
+            foreach ($additionalLinks as $link => $label) {
+                if (!is_array($label)) {
+                    ?>
+                    <li><a href="<?= $link ?>"><?= $label ?></a></li>
+                    <?php
+                }
+                else {
+                    if (empty($label['liAttrs'])) {
+                        $label['liAttrs'] = array();
+                    }
+                    if (empty($label['linkAttrs'])) {
+                        $label['linkAttrs'] = array();
+                    }
+                    ?>
+                    <li <?= TwBootstrap::parseAttributes($label['liAttrs']) ?>>
+                        <a <?= TwBootstrap::parseAttributes($label['linkAttrs']) ?> href="<?= $link ?>"><?= $label['label'] ?></a>
+                    </li>
+                    <?php
+                }
+            }
             ?>
-            <!--<li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>-->
+        <!--<li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>-->
         </ul>
         <?php
         return ob_get_clean();
@@ -154,12 +174,12 @@ class Page {
 
     public static function cleanContent($content) {
         $sep = '_:DS:_';
-        self::insertSlides($content, $sep);
-        self::insertForms($content, $sep);
+        $content = self::insertSlides($content, $sep);
+        $content = self::insertForms($content, $sep);
         return $content;
     }
 
-    private static function insertSlides(&$content, $sep) {
+    public static function insertSlides($content, $sep = '_:DS:_') {
         foreach (self::getSlides($sep, $content) as $slide) {
             $attrs = array('id' => $slide->getCodeName());
             if ($slide->getWidth()) {
@@ -173,9 +193,10 @@ class Page {
             }
             $content = str_replace('{slide' . $sep . $slide->getCodeName() . '}', self::mediaCarousel($slide->media(), $attrs), $content);
         }
+        return $content;
     }
 
-    private static function insertForms(&$content, $sep) {
+    public static function insertForms($content, $sep = '_:DS:_') {
         foreach (self::getForms($sep, $content) as $formAttrs) {
             if (empty($formAttrs))
                 continue;
@@ -193,6 +214,7 @@ class Page {
             echo TwbForm::horizontal($formModel->setAttribute('action', $formModel->getAttribute('action') . '/' . urlencode($currentPath)));
             $content = str_replace('{form' . $sep . join($sep, $formAttrs) . '}', ob_get_clean(), $content);
         }
+        return $content;
     }
 
     private static function getSlides($sep, $content) {
@@ -203,7 +225,7 @@ class Page {
             $codeName = str_replace('slide' . $sep, '', $slideStr);
             $slides[] = array('codeName' => $codeName);
         }
-        
+
         return (!empty($slides)) ? Engine::getDB()->table('slide', new Slide())->select($slides) : array();
     }
 
@@ -218,6 +240,7 @@ class Page {
             $forms[] = $attrs;
 //            $forms = array_merge($forms, $content, $this->getForms($sep, $endPos));
         }
+
         return $forms;
     }
 
