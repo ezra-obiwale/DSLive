@@ -14,7 +14,7 @@ class GuestController extends AController {
     private $setup = false;
 
     public function noCache() {
-        return array('login', 'register');
+        return array('login', 'register', 'setup', 'contact-us', 'reset-password');
     }
 
     public function indexAction() {
