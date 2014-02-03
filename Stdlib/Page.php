@@ -102,14 +102,14 @@ class Page {
                     if ($model && $model->getId() === $page->id)
                         $active = true;
                     ?>
-                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a class="auto" tabindex="-1" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
                     <?php
                 }
                 $lis = ob_get_clean();
                 ?>
                 <li class="dropdown <?= $active ? 'active' : '' ?>">
-                    <a href="#" <?= ($pages->count() || $subCategories->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
+                    <a tabindex="-1" href="#" <?= ($pages->count() || $subCategories->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
                         <?= $lis ?>
                         <?php
                         if ($subCategories->count()) {
@@ -126,14 +126,14 @@ class Page {
                                     if ($model && $model->getId() === $page->id)
                                         $active = true;
                                     ?>
-                                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a tabindex="-1" class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
                                     <?php
                                 }
                                 $lis = ob_get_clean();
                                 ?>
                                 <li class="dropdown-submenu <?= $active ? 'active' : '' ?>">
-                                    <a href="#" tabindex="-1"><?= $sub->name ?></b></a>
-                                    <ul class="dropdown-menu">
+                                    <a href="#" tabindex="-1"class="dropdown-toggle" data-toggle="dropdown"><?= $sub->name ?></b></a>
+                                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
                                         <?= $lis ?>
                                     </ul>
                                 </li>
@@ -148,7 +148,7 @@ class Page {
             foreach ($additionalLinks as $link => $label) {
                 if (!is_array($label)) {
                     ?>
-                    <li><a href="<?= $link ?>"><?= $label ?></a></li>
+                    <li><a tabindex="-1" href="<?= $link ?>"><?= $label ?></a></li>
                     <?php
                 }
                 else {
@@ -160,7 +160,7 @@ class Page {
                     }
                     ?>
                     <li <?= TwBootstrap::parseAttributes($label['liAttrs']) ?>>
-                        <a <?= TwBootstrap::parseAttributes($label['linkAttrs']) ?> href="<?= $link ?>"><?= $label['label'] ?></a>
+                        <a tabindex="-1" <?= TwBootstrap::parseAttributes($label['linkAttrs']) ?> href="<?= $link ?>"><?= $label['label'] ?></a>
                     </li>
                     <?php
                 }
