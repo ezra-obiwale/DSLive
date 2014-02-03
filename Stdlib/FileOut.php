@@ -1,5 +1,7 @@
 <?php
 
+use DSLive\Stdlib\Util;
+
 /*
  */
 
@@ -41,11 +43,10 @@ class FileOut {
             }
         }
 
-        return '<img src="/' . $this->cleanFilename($filename) . '" ' . $this->parseAttributes($attributes) . ' />';
-    }
+        $content = file_get_contents($filename);
 
-    private function cleanFilename($filename) {
-        return stristr($filename, 'media');
+
+        return '<img src="data:' . Util::getMimeType($filename) . ';base64, ' . base64_encode($content) . '" ' . $this->parseAttributes($attributes) . ' />';
     }
 
     private function parseAttributes($attributes) {
