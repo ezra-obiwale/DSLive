@@ -1,5 +1,7 @@
 <?php
 
+use DScribe\Core\Engine;
+
 /*
  */
 
@@ -41,7 +43,7 @@ class FileOut {
             }
         }
 
-        return '<img src="/' . $this->cleanFilename($filename) . '" ' . $this->parseAttributes($attributes) . ' />';
+        return '<img src="' . Engine::getServerPath() . $this->cleanFilename($filename) . '" ' . $this->parseAttributes($attributes) . ' />';
     }
 
     private function cleanFilename($filename) {
