@@ -18,10 +18,6 @@ class GuestController extends AController {
     }
 
     public function indexAction() {
-        if (!$this->userIdentity()->isGuest() && !$this->request->isAjax()) {
-            $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
-        }
-
         if ($this->request->isAjax()) {
             $this->view->partial();
         }
