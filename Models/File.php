@@ -23,7 +23,7 @@ abstract class File extends Model {
     private $altNameProperty;
 
     /**
-     * @DBS\String (size=50, nullable=true)
+     * @DBS\String (nullable=true)
      */
     protected $mime;
 
@@ -154,24 +154,26 @@ abstract class File extends Model {
             if (!$extension)
                 return false;
 
-            $dir = DATA . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $extension;
-            if (!is_dir($dir)) {
-                if (!mkdir($dir, 0777, true)) {
-                    throw new \Exception('Permission denied to directory "' . DATA . '"');
+            $name = is_array($info['name']) ? $info['name'] : array($info['name']);
+            $savePaths = array();
+            foreach ($extension as $ky => $ext) {
+                $dir = DATA . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext;
+                if (!is_dir($dir)) {
+                    if (!mkdir($dir, 0777, true)) {
+                        throw new \Exception('Permission denied to directory "' . DATA . '"');
+                    }
                 }
+
+                $nam = ($this->altNameProperty !== null) ? preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{$this->altNameProperty})) . '.' . $ext :
+                        time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
+
+                if (!move_uploaded_file($info['tmp_name'][$ky], $dir . DIRECTORY_SEPARATOR . $nam))
+                    return false;
+                $savePaths[] = $dir . DIRECTORY_SEPARATOR . $nam;
             }
 
-            $name = ($this->altNameProperty !== null) ? preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{$this->altNameProperty})) . '.' . $extension :
-                    time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($info['name']));
-            $savePath = $dir . DIRECTORY_SEPARATOR . $name;
-
-            if (move_uploaded_file($info['tmpName'], $savePath)) {
-                $this->unlink($ppt);
-                $this->$ppt = $savePath;
-            }
-            else {
-                return false;
-            }
+            $this->unlink($ppt);
+            $this->$ppt = (count($savePaths) > 1) ? serialize($savePaths) : $savePaths[0];
         }
 
         return true;
@@ -184,14 +186,18 @@ abstract class File extends Model {
      * @return boolean
      */
     final public function fileIsOk($property, array $info) {
-        if ($info['error'] !== UPLOAD_ERR_OK)
-            return false;
+        $error = is_array($info['error']) ? $info['error'] : array($info['error']);
+        foreach ($error as $err) {
+            if ($err !== UPLOAD_ERR_OK) {
+                return false;
+            }
+        }
 
         if (!$this->sizeIsOk($info['size']))
             return false;
-        $this->mime = $info['type'];
-        $info = pathinfo($info['name']);
-        return $this->extensionIsOk($property, $info['extension']);
+
+        $this->mime = is_array($info['type']) ? serialize($info['type']) : $info[type];
+        return $this->extensionIsOk($property, $info['name']);
     }
 
     /**
@@ -200,14 +206,20 @@ abstract class File extends Model {
      * @param string $extension
      * @return boolean
      */
-    final public function extensionIsOk($property, $extension) {
-        $extension = strtolower($extension);
-        if (isset($this->extensions [$property]) && !in_array($extension, $this->extensions[$property]))
-            return false;
-        if (isset($this->badExtensions [$property]) && in_array($extension, $this->badExtensions[$property]))
-            return false;
+    final public function extensionIsOk($property, $name) {
+        $name = is_array($name) ? $name : array($name);
+        $extensions = array();
+        foreach ($name as $nm) {
+            $info = pathinfo($nm);
+            $extension = strtolower($info['extension']);
+            if (isset($this->extensions[$property]) && !in_array($extension, $this->extensions[$property]))
+                return false;
+            if (isset($this->badExtensions[$property]) && in_array($extension, $this->badExtensions[$property]))
+                return false;
 
-        return $extension;
+            $extensions[] = $extension;
+        }
+        return $extensions;
     }
 
     /**
@@ -216,8 +228,11 @@ abstract class File extends Model {
      * @return boolean
      */
     final public function sizeIsOk($size) {
-        if ($size > $this->getMaxSize()) {
-            return false;
+        $size = is_array($size) ? $size : array($size);
+        foreach ($size as $sz) {
+            if ($sz > $this->getMaxSize()) {
+                return false;
+            }
         }
 
         return true;

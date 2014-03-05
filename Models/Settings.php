@@ -2,9 +2,7 @@
 
 namespace DSLive\Models;
 
-use DBScribe\Util,
-    DScribe\Core\AModel,
-    Exception;
+use DSLive\Models\Model;
 
 /**
  * Description of Model

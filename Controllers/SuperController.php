@@ -51,7 +51,7 @@ abstract class SuperController extends AController {
     }
 
     public function noCache() {
-        return array('index', 'edit', 'delete');
+        return array('index', 'new', 'edit', 'delete');
     }
 
     public function accessDenied($action, $args = array()) {

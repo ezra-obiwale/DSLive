@@ -16,7 +16,7 @@ class RegisterForm extends Form {
 
         $this->add(array(
             'name' => 'email',
-            'type' => 'text',
+            'type' => 'email',
             'options' => array(
                 'label' => 'Email'
             ),

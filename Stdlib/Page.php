@@ -28,7 +28,7 @@ class Page {
         if ($media && !is_bool($media)) {
             foreach ($media as $key => $medium) {
                 $items[] = array(
-                    'img' => $fo(method_exists($medium, 'getPath') ? $medium->getPath() : $medium->path),
+                    'img' => $fo(($medium && method_exists($medium, 'getPath')) ? $medium->getPath() : $medium->path),
                     'caption' => '<h4>' . (method_exists($medium, 'getName') ? $medium->getName() : $medium->name) . '</h4><p>' . (method_exists($medium, 'getDescription') ? $medium->getDescription() : $medium->description) . '</p>',
                     'active' => ($key === 0),
                 );
@@ -67,12 +67,14 @@ class Page {
         return $return . '</ul>';
     }
 
-    public static function cmsLinks(Renderer $renderer, $model = null, array $additionalLinks = array()) {
+    public static function cmsLinks(Renderer $renderer, $id = null, array $additionalLinks = array()) {
         $categories = Engine::getDB()
                 ->table('category')
                 ->orderBy('position')
                 ->orderBy('name')
                 ->customWhere('parent IS NULL')
+//                ->join('category')
+//                ->join('page')
                 ->select(array(array(
                 'status' => 1,
         )));
@@ -99,10 +101,10 @@ class Page {
                 $active = false;
                 ob_start();
                 foreach ($pages as $page) {
-                    if ($model && $model->getId() === $page->id)
+                    if ($id === $page->id)
                         $active = true;
                     ?>
-                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a class="auto" tabindex="-1" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                    <li <?= ($id === $page->id) ? 'class="active"' : '' ?>><a class="auto" tabindex="-1" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
                     <?php
                 }
                 $lis = ob_get_clean();
@@ -123,10 +125,10 @@ class Page {
                                 $active = false;
                                 ob_start();
                                 foreach ($pages as $page) {
-                                    if ($model && $model->getId() === $page->id)
+                                    if ($id === $page->id)
                                         $active = true;
                                     ?>
-                                    <li <?= ($model && $model->getId() === $page->id) ? 'class="active"' : '' ?>><a tabindex="-1" class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                                    <li <?= ($id === $page->id) ? 'class="active"' : '' ?>><a tabindex="-1" class="auto" href="<?= $renderer->url('cms', 'page', 'view', array($sub->link, $page->link)) ?>"><?= $page->title ?></a></li>
                                     <?php
                                 }
                                 $lis = ob_get_clean();
@@ -176,7 +178,7 @@ class Page {
         $sep = '_:DS:_';
         $content = self::insertSlides($content, $sep);
         $content = self::insertForms($content, $sep);
-        return $content;
+        return str_replace('../../../../media', '/media', $content);
     }
 
     public static function insertSlides($content, $sep = '_:DS:_') {
@@ -225,7 +227,6 @@ class Page {
             $codeName = str_replace('slide' . $sep, '', $slideStr);
             $slides[] = array('codeName' => $codeName);
         }
-
         return (!empty($slides)) ? Engine::getDB()->table('slide', new Slide())->select($slides) : array();
     }
 

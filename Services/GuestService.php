@@ -6,6 +6,7 @@ use DBScribe\Util,
     DScribe\Core\AService,
     DScribe\Core\Engine,
     DScribe\View\View,
+    DSLive\Forms\ContactUsForm,
     DSLive\Forms\LoginForm,
     DSLive\Forms\RegisterForm,
     DSLive\Forms\ResetPasswordForm,
@@ -35,25 +36,11 @@ class GuestService extends AService {
         $this->setModel(new IMU);
     }
 
-    protected function inject() {
-        return array(
-            'loginForm' => array(
-                'class' => 'DSLive\Forms\LoginForm'
-            ),
-            'registerForm' => array(
-                'class' => 'DSLive\Forms\RegisterForm'
-            ),
-            'resetPasswordForm' => array(
-                'class' => 'DSLive\Forms\ResetPasswordForm'
-            ),
-            'contactUsForm' => array(
-                'class' => 'DSLive\Forms\ContactUsForm'
-            ),
-            'settingsRepository' => array(
-                'class' => 'DScribe\Core\Repository',
-                'params' => array(new Settings())
-            )
-        );
+    public function getSettingsRepository() {
+        if ($this->settingsRepository)
+            $this->settingsRepository = new \DScribe\Core\Repository(new Settings());
+        
+        return $this->settingsRepository;
     }
 
     /**
@@ -61,6 +48,9 @@ class GuestService extends AService {
      * @return RegisterForm
      */
     public function getRegisterForm() {
+        if (!$this->registerForm)
+            $this->registerForm = new RegisterForm ();
+
         return $this->registerForm;
     }
 
@@ -69,6 +59,8 @@ class GuestService extends AService {
      * @return LoginForm
      */
     public function getLoginForm() {
+        if (!$this->loginForm)
+            $this->loginForm = new LoginForm();
         return $this->loginForm;
     }
 
@@ -77,10 +69,14 @@ class GuestService extends AService {
      * @return ResetPasswordForm
      */
     public function getResetPasswordForm() {
+        if (!$this->resetPasswordForm)
+            $this->resetPasswordForm = new ResetPasswordForm();
         return $this->resetPasswordForm;
     }
 
     public function getContactUsForm() {
+        if (!$this->contactUsForm)
+            $this->contactUsForm = new ContactUsForm();
         return $this->contactUsForm;
     }
 
@@ -264,6 +260,23 @@ class GuestService extends AService {
                 call_user_func_array(array($class, $method), $params);
             }
         }
+    }
+
+    public function getErrorMessage($code) {
+        $codes = array(
+            400 => array('400 Bad Request', 'The request cannot be fulfilled due to bad syntax.'),
+            401 => array('401 Login Error', 'It appears that the password and/or user-name you entered was incorrect.'),
+            403 => array('403 Forbidden', 'Sorry, you do not have access to this resource.'),
+            404 => array('404 Missing', 'We\'re sorry, but the page you\'re looking for is missing, hiding, or maybe we moved it somewhere else and forgot to tell you.'),
+            405 => array('405 Method Not Allowed', 'The method specified in the Request-Line is not allowed for the specified resource.'),
+            408 => array('408 Request Timeout', 'Your browser failed to send a request in the time allowed by the server.'),
+            414 => array('414 URL To Long', 'The URL you entered is longer than the maximum length.'),
+            500 => array('500 Internal Server Error', 'The request was unsuccessful due to an unexpected condition encountered by the server.'),
+            502 => array('502 Bad Gateway', 'The server received an invalid response from the upstream server while trying to fulfill the request.'),
+            504 => array('504 Gateway Timeout', 'The upstream server failed to send a request in the time allowed by the server.'),
+        );
+
+        return (isset($codes[$code])) ? $codes[$code] : array('Unknown Error', 'Your request generated an unknown error');
     }
 
 }

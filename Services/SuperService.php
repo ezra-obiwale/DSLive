@@ -29,21 +29,16 @@ abstract class SuperService extends AService {
                 $this->getModule() . '\Forms\\' . $this->getClassName() . 'Form' : null;
     }
 
-    protected function inject() {
-        $defaultFormName = $this->getDefaultFormName();
-        return $defaultFormName ?
-                array(
-            'form' => array(
-                'class' => $defaultFormName,
-            )
-                ) : array();
-    }
-
     /**
      * Allows public access to form
      * @return \DScibe\Form\Form
      */
     public function getForm() {
+        if (!$this->form) {
+            $defaultFormName = $this->getDefaultFormName();
+            $this->form = new $defaultFormName;
+        }
+        
         return $this->form;
     }
 

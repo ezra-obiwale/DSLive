@@ -151,4 +151,26 @@ class GuestController extends AController {
         return $this->registerAction();
     }
 
+    public function errorAction($code) {
+        $this->layout = 'guest-2-columns';
+        return $this->view->variables(array(
+                    'error' => $this->service->getErrorMessage($code)
+        ));
+    }
+
+    /**
+     * Saves/Fetches a value to/from session. Used for ajax sessioning only
+     * @param string $name
+     * @param mixed $value
+     */
+    public function asssnAction($key, $value = null) {
+        if ($this->request->isAjax()) {
+            if ($value !== null)
+                \Session::save($key, $value);
+            else {
+                die(\Session::fetch($key));
+            }
+        }
+    }
+
 }
