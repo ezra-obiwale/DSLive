@@ -1,8 +1,9 @@
 {
-    "name": "d-scribe/d-s-live",
+    "name": "d-scribe/ds-live",
     "type": "library",
     "description": "Extension of default core classes and provision of addition utility classes",
     "license": "MIT",
+    "keywords": ["dscribe", "dslive", "extension", "library"],
     "authors": [
         {
             "name": "Ezra Obiwale",
@@ -14,6 +15,11 @@
     "require": {
         "php": ">=5.3.0",
         "d-scribe/core": "dev-master",
-        "d-scribe/d-b-scribe": "dev-master"
+        "d-scribe/db-scribe": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "DSLive": "src/"
+        }
     }
 }
