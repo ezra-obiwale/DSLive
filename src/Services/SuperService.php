@@ -38,7 +38,7 @@ abstract class SuperService extends AService {
             $defaultFormName = $this->getDefaultFormName();
             $this->form = new $defaultFormName;
         }
-        
+
         return $this->form;
     }
 
@@ -59,8 +59,9 @@ abstract class SuperService extends AService {
         $model = $this->repository->findOneBy($column, $value);
         if (!$model && $exception)
             throw new Exception('Required page was not found');
+        if ($model)
         $this->model = $model;
-        return $this->model;
+        return $model;
     }
 
     /**
@@ -72,8 +73,9 @@ abstract class SuperService extends AService {
         $model = $this->repository->findOne($id);
         if (!$model && $exception)
             throw new Exception('Required page was not found');
+        if ($model)
         $this->model = $model;
-        return $this->model;
+        return $model;
     }
 
     /**
@@ -85,8 +87,9 @@ abstract class SuperService extends AService {
         $model = $this->repository->findOneWhere($criteria);
         if (!$model && $exception)
             throw new Exception('Required page was not found');
-        $this->model = $model;
-        return $this->model;
+        if ($model)
+            $this->model = $model;
+        return $model;
     }
 
     /**
@@ -94,6 +97,7 @@ abstract class SuperService extends AService {
      * @param IModel $model
      * @param Object $files
      * @return boolean
+     * @todo Set first parameter as form so one can fetch either model or data
      */
     public function create(IModel $model, Object $files = null, $flush = true) {
         if (method_exists($model, 'uploadFiles') && !$model->uploadFiles($files))
@@ -113,16 +117,18 @@ abstract class SuperService extends AService {
      * @param IModel $model
      * @param Object $files
      * @return boolean
+     * @todo Set first parameter as form so one can fetch either model or data
      */
     public function save(IModel $model, Object $files = null, $flush = true) {
         if (!is_object($files)) {
             $files = new \Object();
         }
         $_files = array_values($files->toArray());
-        if ($files->count() && !empty($_files[0]->tmpName)) {
+        if ($files->count() && !empty($_files[0]->tmp_name) && method_exists($model, 'uploadFiles')) {
             if (method_exists($model, 'unlink')) {
                 foreach ($files->toArray() as $name => $content) {
-                    $model->unlink($name);
+                    $method = 'get' . $name;
+                    $model->unlink($model->$method());
                 }
             }
             if (method_exists($model, 'uploadFiles')) {

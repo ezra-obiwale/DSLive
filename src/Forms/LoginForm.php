@@ -49,7 +49,7 @@ class LoginForm extends Form {
         ));
     }
 
-    public function filters() {
+    public function getFilters() {
         return array(
             'email' => array(
                 'required' => true,

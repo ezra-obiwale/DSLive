@@ -2,8 +2,7 @@
 
 namespace DSLive\Services;
 
-use DScribe\Core\IModel,
-    DSLive\Forms\PasswordForm,
+use DSLive\Forms\PasswordForm,
     DSLive\Models\User,
     Object;
 
@@ -56,12 +55,8 @@ class UserService extends SuperService {
 
         $this->model->setPassword($model->new);
         $this->model->hashPassword();
-        $this->repository->update($this->model, 'id')->execute();
+        $this->repository->update($this->model)->execute();
         return $this->flush();
     }
-    
-    public function save(IModel $model, Object $files = null, $flush = true) {
-        die('here');
-        parent::save($model, $files, $flush);
-    }
+
 }

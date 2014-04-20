@@ -106,13 +106,13 @@ class File {
             if (!self::fileIsOk($ppt, $info))
                 return false;
 
-            $dir = DATA . $ppt;
+            $dir = ROOT . 'public' . DIRECTORY_SEPARATOR . $ppt;
             if (!is_dir($dir)) {
-                if (!mkdir($dir))
-                    throw new \Exception('Permission denied to directory "' . DATA . '"');
+                if (!mkdir($dir, 0777, true))
+                    throw new \Exception('Permission denied to directory "' . $dir . '"');
             }
 
-            $savePath = DATA . $ppt . DIRECTORY_SEPARATOR . time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($info['name']));
+            $savePath = $dir . DIRECTORY_SEPARATOR . time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($info['name']));
 
             if (move_uploaded_file($info['tmpName'], $savePath)) {
                 self::unlink($ppt);
@@ -207,7 +207,7 @@ class File {
 
         return true;
     }
-    
+
     final public static function getMime() {
         
     }

@@ -27,6 +27,13 @@ abstract class File extends Model {
      */
     protected $mime;
 
+    /**
+     * Indicates whether to overwrite files with new if an existing file is found
+     * @var boolean
+     */
+    private $overwrite = true;
+    private $maxFileNumber;
+
     abstract public function __construct();
 
     /**
@@ -129,6 +136,15 @@ abstract class File extends Model {
         return $this->parseSize($this->maxSize);
     }
 
+    public function getMaxFileNumber() {
+        return $this->maxFileNumber;
+    }
+
+    public function setMaxFileNumber($maxFileNumber) {
+        $this->maxFileNumber = $maxFileNumber;
+        return $this;
+    }
+
     /**
      * Uploads files to the server
      * @param array|\Object $files
@@ -155,27 +171,44 @@ abstract class File extends Model {
                 return false;
 
             $name = is_array($info['name']) ? $info['name'] : array($info['name']);
+
             $savePaths = array();
+            $cnt = 1;
             foreach ($extension as $ky => $ext) {
-                $dir = DATA . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext;
+                $dir = ROOT . 'public' . DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR;
                 if (!is_dir($dir)) {
                     if (!mkdir($dir, 0777, true)) {
-                        throw new \Exception('Permission denied to directory "' . DATA . '"');
+                        throw new \Exception('Permission denied to directory "' . ROOT . 'public/"');
                     }
                 }
 
-                $nam = ($this->altNameProperty !== null) ? preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{$this->altNameProperty})) . '.' . $ext :
-                        time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
+                if ($this->altNameProperty !== null) {
+                    $nam = preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{$this->altNameProperty})) . '_';
 
-                if (!move_uploaded_file($info['tmp_name'][$ky], $dir . DIRECTORY_SEPARATOR . $nam))
+                    if (!$this->overwrite) {
+                        while (is_readable($dir . $nam . $cnt . '.' . $ext)) {
+                            $cnt++;
+                        }
+                    }
+                    $nam .= $cnt . '.' . $ext;
+                }
+                else {
+                    $nam = time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
+                }
+
+                $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
+                $source = $tmpName[$ky];
+                if (!move_uploaded_file($source, $dir . $nam)) {
                     return false;
-                $savePaths[] = $dir . DIRECTORY_SEPARATOR . $nam;
+                }
+                $savePaths[$cnt] = $dir . $nam;
+                $cnt++;
             }
 
             $this->unlink($ppt);
-            $this->$ppt = (count($savePaths) > 1) ? serialize($savePaths) : $savePaths[0];
+            $sp = array_values($savePaths);
+            $this->$ppt = (count($savePaths) > 1) ? serialize($savePaths) : $sp[0];
         }
-
         return true;
     }
 
@@ -196,7 +229,7 @@ abstract class File extends Model {
         if (!$this->sizeIsOk($info['size']))
             return false;
 
-        $this->mime = is_array($info['type']) ? serialize($info['type']) : $info[type];
+        $this->mime = is_array($info['type']) ? serialize($info['type']) : $info['type'];
         return $this->extensionIsOk($property, $info['name']);
     }
 
@@ -279,6 +312,15 @@ abstract class File extends Model {
 
     public function setMime($mime) {
         $this->mime = $mime;
+        return $this;
+    }
+
+    public function getOverwrite() {
+        return $this->overwrite;
+    }
+
+    public function setOverwrite($overwrite) {
+        $this->overwrite = $overwrite;
         return $this;
     }
 

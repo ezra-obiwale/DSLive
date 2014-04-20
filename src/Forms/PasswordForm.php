@@ -52,7 +52,7 @@ class PasswordForm extends Form {
         ));
     }
 
-    public function filters() {
+    public function getFilters() {
         return array(
             'old' => array(
                 'required' => true,

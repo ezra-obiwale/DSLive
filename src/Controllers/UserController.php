@@ -9,6 +9,22 @@ class UserController extends SuperController {
      */
     protected $service;
 
+    /**
+     *
+     * @var array
+     */
+    protected $guest;
+
+    public function init() {
+        parent::init();
+        $this->guest['module'] = 'guest';
+        $this->guest['controller'] = 'index';
+    }
+
+    public function noCache() {
+        return array_merge(parent::noCache(), array('edit-password', 'profile', 'edit-profile'));
+    }
+
     public function accessRules() {
         return array(
             array('allow', array(
@@ -17,12 +33,12 @@ class UserController extends SuperController {
             array('allow',
                 array(
                     'role' => '@',
-                    'actions' => array('profile', 'edit-profile', 'edit-password', 'preferences', 'set-access-code'),
+                    'actions' => array('profile', 'edit-profile', 'edit-password'),
                 )),
             array('deny'),
         );
     }
-    
+
     public function indexAction() {
         $this->order = 'firstName';
         return parent::indexAction();
@@ -35,11 +51,12 @@ class UserController extends SuperController {
     }
 
     public function profileAction() {
-        return array('model' => $this->currentUser);
+        return array('model' => $this->service->findOne($this->currentUser->getId()));
     }
 
     public function editProfileAction() {
-        $model = $this->currentUser;
+        $model = $this->service->findOne($this->currentUser->getId());
+
         $this->service->setModel($model);
         $form = $this->service->getForm()
                 ->remove('password')
@@ -48,11 +65,11 @@ class UserController extends SuperController {
                 ->setModel($model);
         $form->get('email')->attributes->add(array('readonly' => 'readonly'));
         if ($this->request->isPost()) {
-            $form->setData($this->request->getPost(), true);
+            $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 $this->resetUserIdentity($this->service->getModel());
                 $this->flash()->setSuccessMessage('Profile saved successfully');
-                $this->redirect('in', 'user', 'profile');
+                $this->redirect($this->getModule(), 'user', 'profile');
             }
             else {
                 $this->flash()->setErrorMessage('Save profile failed');
@@ -65,23 +82,23 @@ class UserController extends SuperController {
     }
 
     public function editPasswordAction() {
-        $model = $this->currentUser;
+        $model = $this->service->findOne($this->currentUser->getId());
         $this->service->setModel($model);
         $form = $this->service->getPasswordForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->changePassword($form->getData())) {
                 $this->flash()->setSuccessMessage('Password changed successfully. Please login to continue');
-                $this->redirect('guest', 'index', 'logout', array('in', 'user', 'profile'));
+                $this->redirect($this->guest['module'], $this->guest['controller'], 'logout', array('in', 'user', 'profile'));
             }
             else {
                 $this->flash()->setErrorMessage('Change password failed');
             }
         }
-        return array(
-            'model' => $model,
-            'form' => $form,
-        );
+        return $this->view->variables(array(
+                    'model' => $model,
+                    'form' => $form,
+        ));
     }
 
 }

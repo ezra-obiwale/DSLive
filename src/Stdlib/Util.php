@@ -40,10 +40,11 @@ class Util {
      * @return array
      */
     public static function fetchCountries() {
-        if (!is_readable(DATA . 'worldCountries.csv'))
+        $countries = VENDOR . 'DSLive' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'worldCountries.csv';
+        if (!is_readable($countries))
             return array();
 
-        $countries = explode(',', file_get_contents(DATA . 'worldCountries.csv'));
+        $countries = explode(',', file_get_contents($countries));
         sort($countries);
         return $countries;
     }

@@ -74,7 +74,7 @@ class ContactUsForm extends Form {
         ));
     }
 
-    public function filters() {
+    public function getFilters() {
         return array(
             'fullName' => array(
                 'required' => true,

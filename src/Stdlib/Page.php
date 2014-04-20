@@ -27,14 +27,32 @@ class Page {
         $fo = new FileOut();
         if ($media && !is_bool($media)) {
             foreach ($media as $key => $medium) {
-                $items[] = array(
-                    'img' => $fo(($medium && method_exists($medium, 'getPath')) ? $medium->getPath() : $medium->path),
-                    'caption' => '<h4>' . (method_exists($medium, 'getName') ? $medium->getName() : $medium->name) . '</h4><p>' . (method_exists($medium, 'getDescription') ? $medium->getDescription() : $medium->description) . '</p>',
+                $caption = '';
+                $name = (method_exists($medium, 'getName') ? $medium->getName() : $medium->name);
+                $id = preg_replace('/[^a-zA-Z0-9]/', '-', isset($attrs['class']) ? $attrs['class'] . ' ' . $name : $name);
+                if (!isset($attrs['name']) || (isset($attrs['name']) && $attrs['name'])) {
+                    $caption .= '<h4>' . $name . '</h4>';
+                }
+                $description = (method_exists($medium, 'getDescription') ? $medium->getDescription() : $medium->description);
+                if ((!isset($attrs['description']) || (isset($attrs['description']) && $attrs['description'])) && $description) {
+                    $caption .= '<p>' . $description . '</p>';
+                }
+                $items[$key] = array(
+                    'img' => $fo(($medium && method_exists($medium, 'getPath')) ? $medium->getPath() : $medium->path, array(
+                        'attrs' => array(
+                            'id' => $id,
+                        )
+                    )),
                     'active' => ($key === 0),
                 );
+
+                if (!empty($caption) && (!isset($attrs['caption']) || (isset($attrs['caption']) && $attrs['caption']))) {
+                    $items[$key]['caption'] = $caption;
+                }
             }
         }
 
+        unset($attrs['name']);
         return TwBootstrap::carousel($items, $attrs);
     }
 
@@ -72,7 +90,7 @@ class Page {
                 ->table('category')
                 ->orderBy('position')
                 ->orderBy('name')
-                ->customWhere('parent IS NULL')
+                ->customWhere('category.parent IS NULL')
 //                ->join('category')
 //                ->join('page')
                 ->select(array(array(
@@ -193,6 +211,7 @@ class Page {
                 else
                     $attrs['style'] = 'height:' . $slide->getHeight();
             }
+            $attrs['name'] = false;
             $content = str_replace('{slide' . $sep . $slide->getCodeName() . '}', self::mediaCarousel($slide->media(), $attrs), $content);
         }
         return $content;
@@ -202,15 +221,13 @@ class Page {
         foreach (self::getForms($sep, $content) as $formAttrs) {
             if (empty($formAttrs))
                 continue;
-            $formModel = new $formAttrs[1];
-            if ($post = Session::fetch('post')) {
-                $formModel->setData($post);
-                Session::remove('post');
-                if ($errors = Session::fetch('postErrors')) {
-                    $formModel->setErrors($errors);
-                    Session::remove('postErrors');
-                }
+
+            if ($formModel = \Session::fetch('form')) {
+                \Session::remove('form');
             }
+            else
+                $formModel = new $formAttrs[1];
+
             $currentPath = serialize(Engine::getUrls());
             ob_start();
             echo TwbForm::horizontal($formModel->setAttribute('action', $formModel->getAttribute('action') . '/' . urlencode($currentPath)));

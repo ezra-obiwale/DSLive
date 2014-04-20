@@ -1,10 +1,5 @@
 <?php
 
-use DScribe\Core\Engine;
-
-/*
- */
-
 /**
  * Description of FileOut
  *
@@ -35,19 +30,19 @@ class FileOut {
         elseif (isset($attributes['alt']) && !isset($attributes['title']))
             $attributes['title'] = $attributes['alt'];
 
-        if (!is_readable($filename)) {
-            $filename = DATA . 'defaults' . DIRECTORY_SEPARATOR . 'headQ.png';
-            if (!isset($attributes['width'])) {
-                $attributes['style'] = (!isset($attributes['style'])) ?
-                        'margin-left:20%;width:60%;' : $attributes['style'] . ';margin-left:20%;width:60%';
-            }
-        }
-
-        return '<img src="' . Engine::getServerPath() . $this->cleanFilename($filename) . '" ' . $this->parseAttributes($attributes) . ' />';
+        return '<img src="' . $this->cleanFilename($filename) . '" ' . $this->parseAttributes($attributes) . ' />';
     }
 
     private function cleanFilename($filename) {
-        return stristr($filename, 'media');
+        if ($file = str_replace('protected/data', '', stristr($filename, 'protected/data'))) {
+            $public = ROOT . 'public' . $file;
+            if (!is_readable($public)) {
+                copy($filename, $public);
+            }
+            return str_replace('protected/data', '', $file);
+        }
+        
+        return substr(stristr($filename, 'public/'), 6);
     }
 
     private function parseAttributes($attributes) {

@@ -81,17 +81,6 @@ class UserForm extends Form {
         ));
 
         $this->add(array(
-            'name' => 'phone',
-            'type' => 'tel',
-            'options' => array(
-                'label' => 'Phone Number'
-            ),
-            'attributes' => array(
-                'maxLength' => 20
-            )
-        ));
-
-        $this->add(array(
             'name' => 'picture',
             'type' => 'file',
             'options' => array(
@@ -130,14 +119,14 @@ class UserForm extends Form {
         ));
     }
 
-    public function filters() {
+    public function getFilters() {
         return array(
             'email' => array(
-                'required' => true,
+                'required' => array(),
                 'Email' => array(),
             ),
             'password' => array(
-                'required' => true,
+                'required' => array(),
             ),
             'confirm' => array(
                 'Match' => array(
@@ -145,13 +134,13 @@ class UserForm extends Form {
                 )
             ),
             'firstName' => array(
-                'required' => true,
+                'required' => array(),
             ),
             'lastName' => array(
-                'required' => true,
+                'required' => array(),
             ),
             'role' => array(
-                'required' => true,
+                'required' => array(),
             ),
         );
     }

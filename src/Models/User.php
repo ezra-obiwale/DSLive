@@ -2,11 +2,9 @@
 
 namespace DSLive\Models;
 
-use DBScribe\Util,
-    DScribe\Core\AUser,
-    Exception;
+use DBScribe\Util;
 
-class User extends AUser {
+class User extends SuperUser {
 
     /**
      * @DBS\String (size=36, primary=true)
@@ -17,21 +15,6 @@ class User extends AUser {
      * @DBS\String (size="100")
      */
     protected $email;
-
-    /**
-     * @DBS\String (size="50")
-     */
-    protected $password;
-
-    /**
-     * @DBS\String (size="40", nullable=true)
-     */
-    protected $firstName;
-
-    /**
-     * @DBS\String (size="40", nullable=true)
-     */
-    protected $lastName;
 
     /**
      * @DBS\Timestamp
@@ -54,22 +37,9 @@ class User extends AUser {
     protected $picture;
 
     /**
-     * File class
-     * @var \DSLive\Stdlib\File
-     */
-    private $stdFile;
-
-    /**
      * @DBS\Boolean (default=1, nullable=true)
      */
     protected $active;
-
-    public function __construct() {
-        $this->setTableName('user');
-        $this->stdFile = new \DSLive\Stdlib\File;
-        $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif', 'bmp'));
-        $this->stdFile->setMaxSize('500kb');
-    }
 
     public function getId() {
         return $this->id;
@@ -87,33 +57,6 @@ class User extends AUser {
 
     public function getEmail() {
         return $this->email;
-    }
-
-    public function getPassword() {
-        return $this->password;
-    }
-
-    public function setPassword($password) {
-        $this->password = $password;
-        return $this;
-    }
-
-    public function setFirstName($firstName) {
-        $this->firstName = $firstName;
-        return $this;
-    }
-
-    public function getFirstName() {
-        return $this->firstName;
-    }
-
-    public function setLastName($lastName) {
-        $this->lastName = $lastName;
-        return $this;
-    }
-
-    public function getLastName() {
-        return $this->lastName;
     }
 
     public function getRegisterDate() {
@@ -139,6 +82,7 @@ class User extends AUser {
 
     public function setPicture($picture) {
         $this->picture = $picture;
+        return $this;
     }
 
     public function getActive() {
@@ -151,11 +95,6 @@ class User extends AUser {
     }
 
     // ------- helpers -----------
-
-    public function getFullName($withEmail = false) {
-        $fullName = $this->firstName . ' ' . $this->lastName;
-        return ($withEmail) ? $fullName . ' (' . $this->email . ')' : $fullName;
-    }
 
     /**
      * Hashes the password
@@ -180,7 +119,7 @@ class User extends AUser {
             $this->id = Util::createGUID();
 
         if ($this->registerDate === null)
-            $this->registerDate = Util::createTimestamp();;
+            $this->registerDate = Util::createTimestamp();
     }
 
     /**
@@ -188,32 +127,6 @@ class User extends AUser {
      */
     public function update() {
         $this->lastLogin = Util::createTimestamp();
-    }
-
-    public function updateFiles($files) {
-        if (!$this->stdFile)
-            $this->__construct();
-
-        if ($path = $this->stdFile->uploadFiles($files)) {
-            if (!is_bool($path))
-                $this->setPicture($path);
-            return true;
-        }
-
-        return false;
-    }
-
-    public function unlink() {
-        return $this->stdFile->unlink($this->picture);
-    }
-    
-    public function setMaxSize($size) {
-        $this->stdFile->setMaxSize($size);
-        return $this;
-    }
-    
-    public function getMaxSize() {
-        return $this->stdFile->getMaxSize();
     }
 
 }
