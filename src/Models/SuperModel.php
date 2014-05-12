@@ -44,4 +44,8 @@ class SuperModel extends AModel {
         return Util::createTimestamp($dateString, $format);
     }
 
+    public function parseBoolean($property, $on = 'Yes', $off = 'No') {
+        return ($this->$property == 1) ? $on : $off;
+    }
+
 }

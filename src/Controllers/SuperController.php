@@ -54,7 +54,7 @@ abstract class SuperController extends AController {
         return array('index', 'new', 'edit', 'delete');
     }
 
-    public function accessDenied($action, $args = array(), array $redirect = array()) {
+    public function accessDenied($action, $args = array()) {
         if ($this->request->isAjax()) {
             return $this->ajaxResponse()
                             ->sendJson('You do not have permision to this action/page', AjaxResponse::STATUS_FAILURE);
@@ -64,18 +64,12 @@ abstract class SuperController extends AController {
             throw new Exception('You do not have the required permission to view this page');
 
         $this->flash()->setErrorMessage('Please login to continue');
-
-        $redirect['module'] = isset($redirect['module']) ? $redirect['module'] : 'guest';
-        $redirect['controller'] = isset($redirect['controller']) ? $redirect['controller'] : 'index';
-        $redirect['action'] = isset($redirect['action']) ? $redirect['action'] : 'login';
-        $this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], array(
+        $this->redirect('guest', 'index', 'login', array(
             Util::camelToHyphen($this->getModule()),
             Util::camelToHyphen($this->getClassName()),
             Util::camelToHyphen($action),
             join(':', $args)
-                ), (isset($redirect['hash'])) ?
-                        $redirect['hash'] :
-                        null);
+        ));
     }
 
     public function accessRules() {
@@ -184,10 +178,10 @@ abstract class SuperController extends AController {
         }
 
         if ($this->request->isPost()) {
-            $data = $this->request->getPost()->toArray();
+            $data = $this->request->getPost();
             $this->checkFiles();
             if ($this->request->getFiles()->notEmpty()) {
-                $data = array_merge($data, $this->request->getFiles()->toArray());
+                $data->add($this->request->getFiles()->toArray());
             }
             $form->setData($data);
             if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
@@ -202,17 +196,7 @@ abstract class SuperController extends AController {
                     $form->reset();
                 }
                 else {
-                    $this->redirect((isset($redirect['module'])) ?
-                                    $redirect['module'] :
-                                    \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ?
-                                    $redirect['controller'] :
-                                    \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ?
-                                    $redirect['action'] :
-                                    'index', (isset($redirect['params'])) ?
-                                    $redirect['params'] :
-                                    array(), (isset($redirect['hash'])) ?
-                                    $redirect['hash'] :
-                                    null);
+                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
                 }
             }
             else {
@@ -284,10 +268,10 @@ abstract class SuperController extends AController {
 
         $form->setModel($model);
         if ($this->request->isPost()) {
-            $data = $this->request->getPost()->toArray();
+            $data = $this->request->getPost();
             $this->checkFiles();
             if ($this->request->getFiles()->notEmpty()) {
-                $data = array_merge($data, $this->request->getFiles()->toArray());
+                $data->add($this->request->getFiles()->toArray());
             }
             $form->setData($data);
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
@@ -297,17 +281,7 @@ abstract class SuperController extends AController {
                             ->sendJson('Save successful');
                 }
                 $this->flash()->setSuccessMessage('Save successful');
-                $this->redirect((isset($redirect['module'])) ?
-                                $redirect['module'] :
-                                \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ?
-                                $redirect['controller'] :
-                                \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ?
-                                $redirect['action'] :
-                                'index', (isset($redirect['params'])) ?
-                                $redirect['params'] :
-                                array(), (isset($redirect['hash'])) ?
-                                $redirect['hash'] :
-                                null);
+                $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
             }
             else {
                 if ($this->request->isAjax()) {
@@ -373,7 +347,7 @@ abstract class SuperController extends AController {
      * @return View
      */
     public function deleteAction($id, $confirm = null, array $variables = array(), array $redirect = array()) {
-        $model = $this->service->findOne($id);
+        $model = (is_object($id)) ? $id : $this->service->findOne($id);
         if ($confirm == 1) {
             if ($this->service->delete()) {
                 if ($this->request->isAjax()) {
@@ -389,17 +363,7 @@ abstract class SuperController extends AController {
                 }
                 $this->flash()->setErrorMessage('Delete failed');
             }
-            $this->redirect((isset($redirect['module'])) ?
-                            $redirect['module'] :
-                            \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ?
-                            $redirect['controller'] :
-                            \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ?
-                            $redirect['action'] :
-                            'index', (isset($redirect['params'])) ?
-                            $redirect['params'] :
-                            array(), (isset($redirect['hash'])) ?
-                            $redirect['hash'] :
-                            null);
+            $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }
 
         $this->view->variables(array_merge(array(

@@ -12,7 +12,6 @@ class GuestController extends AController {
      */
     protected $service;
     private $setup = false;
-    protected $dashBoardModule = 'in';
 
     public function noCache() {
         return false;
@@ -30,7 +29,7 @@ class GuestController extends AController {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->register($form->getModel(), $this->view, $this->setup)) {
                 $this->flash()->setSuccessMessage('Registration successful. Please check your email account to confirm your registration');
-                $this->redirect($this->getModule(), $this->getClassName(), 'login');
+                $this->redirect('guest', 'index', 'login');
             }
             $this->flash()->setErrorMessage('Registration failed. Please check your entries and try again');
         }
@@ -50,7 +49,7 @@ class GuestController extends AController {
         else {
             $this->flash()->setErrorMessage('Confirm registration failed');
         }
-        $this->redirect($this->getModule(), $this->getClassName(), 'login');
+        $this->redirect('guest', 'index', 'login');
     }
 
     public function loginAction($module = null, $controller = null, $action = null, $params = null) {
@@ -59,7 +58,7 @@ class GuestController extends AController {
                 $params = ($params === null) ? array() : explode(':', $params);
                 $this->redirect($module, $controller, $action, $params);
             }
-            $this->redirect($this->dashBoardModule, 'dashboard', $this->userIdentity()->getUser()->getRole());
+            $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
         }
 
         $form = $this->service->getLoginForm();
@@ -71,9 +70,9 @@ class GuestController extends AController {
                     $params = ($params === null) ? array() : explode(':', $params);
                     $this->redirect($module, $controller, $action, $params);
                 }
-                $this->redirect($this->dashBoardModule, 'dashboard', $model->getRole());
+                $this->redirect('in', 'dashboard', $model->getRole());
             }
-            $this->flash()->setErrorMessage('Login failed. Please check your entries and try again');
+            $this->flash()->setMessage('Login failed. Please check your entries and try again');
         }
         $this->view->variables(array(
             'title' => 'Login',
@@ -101,7 +100,7 @@ class GuestController extends AController {
                 $this->flash()->setSuccessMessage((isset($id) && isset($password)) ?
                                 'Password reset successfully. You may now login' :
                                 'Password reset initiated. Please check your email address for further instructions');
-                $this->redirect($this->getModule(), $this->getClassName(), 'login');
+                $this->redirect('guest', 'index', 'login');
             }
             $this->flash()->setErrorMessage('Password reset failed.');
         }
@@ -121,7 +120,7 @@ class GuestController extends AController {
             $params = ($params === null) ? array() : explode(':', $params);
             $this->redirect($module, $controller, $action, $params);
         }
-        $this->redirect($this->getModule(), $this->getClassName(), 'login');
+        $this->redirect('guest', 'index', 'login');
     }
 
     public function contactUsAction() {
@@ -147,7 +146,7 @@ class GuestController extends AController {
 
     public function setupAction() {
         if ($this->service->getRepository()->limit(1)->select()->execute()->first()) {
-                $this->redirect($this->getModule(), $this->getClassName(), 'login');
+            $this->redirect('guest', 'index', 'login');
         }
         $this->setup = true;
         return $this->registerAction();

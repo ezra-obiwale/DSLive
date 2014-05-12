@@ -111,6 +111,7 @@ class Page {
                 ));
                 $subCategories = $category->category(array(
                     'orderBy' => 'position',
+                    'push' => true,
                     'where' => array(array(
                             'status' => 1
                         ))
@@ -186,7 +187,6 @@ class Page {
                 }
             }
             ?>
-        <!--<li><a href="<?= $renderer->url('cms', 'media', 'gallery') ?>">PHOTO GALLERY</a></li>-->
         </ul>
         <?php
         return ob_get_clean();
@@ -199,9 +199,12 @@ class Page {
         return str_replace('../../../../media', '/media', $content);
     }
 
-    public static function insertSlides($content, $sep = '_:DS:_') {
+    public static function insertSlides($content, $sep = '_:DS:_', $attrs = array()) {
+        if (!$sep)
+            $sep = '_:DS:_';
+
         foreach (self::getSlides($sep, $content) as $slide) {
-            $attrs = array('id' => $slide->getCodeName());
+            $attrs['id'] = $slide->getCodeName();
             if ($slide->getWidth()) {
                 $attrs['style'] = 'width:' . $slide->getWidth();
             }
@@ -212,7 +215,9 @@ class Page {
                     $attrs['style'] = 'height:' . $slide->getHeight();
             }
             $attrs['name'] = false;
-            $content = str_replace('{slide' . $sep . $slide->getCodeName() . '}', self::mediaCarousel($slide->media(), $attrs), $content);
+            $content = str_replace('{slide' . $sep . $slide->getCodeName() . '}', self::mediaCarousel($slide->media(array(
+                                'orderBy' => 'name'
+                            )), $attrs), $content);
         }
         return $content;
     }

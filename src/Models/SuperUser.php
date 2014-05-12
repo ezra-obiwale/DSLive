@@ -2,8 +2,7 @@
 
 namespace DSLive\Models;
 
-use DScribe\Core\AUser,
-    DSLive\Stdlib\File;
+use DScribe\Core\AUser;
 
 abstract class SuperUser extends AUser {
 
@@ -30,7 +29,7 @@ abstract class SuperUser extends AUser {
 
     public function __construct() {
         $this->setTableName('user');
-        $this->stdFile = new File;
+        $this->stdFile = new \DSLive\Stdlib\File;
         $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif', 'bmp'));
         $this->stdFile->setMaxSize('500kb');
     }

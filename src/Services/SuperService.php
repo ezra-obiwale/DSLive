@@ -35,8 +35,8 @@ abstract class SuperService extends AService {
      */
     public function getForm() {
         if (!$this->form) {
-            $defaultFormName = $this->getDefaultFormName();
-            $this->form = new $defaultFormName;
+            if ($defaultFormName = $this->getDefaultFormName())
+                $this->form = new $defaultFormName;
         }
 
         return $this->form;
@@ -59,9 +59,8 @@ abstract class SuperService extends AService {
         $model = $this->repository->findOneBy($column, $value);
         if (!$model && $exception)
             throw new Exception('Required page was not found');
-        if ($model)
         $this->model = $model;
-        return $model;
+        return $this->model;
     }
 
     /**
@@ -73,9 +72,8 @@ abstract class SuperService extends AService {
         $model = $this->repository->findOne($id);
         if (!$model && $exception)
             throw new Exception('Required page was not found');
-        if ($model)
         $this->model = $model;
-        return $model;
+        return $this->model;
     }
 
     /**
@@ -87,9 +85,8 @@ abstract class SuperService extends AService {
         $model = $this->repository->findOneWhere($criteria);
         if (!$model && $exception)
             throw new Exception('Required page was not found');
-        if ($model)
-            $this->model = $model;
-        return $model;
+        $this->model = $model;
+        return $this->model;
     }
 
     /**
@@ -103,13 +100,14 @@ abstract class SuperService extends AService {
         if (method_exists($model, 'uploadFiles') && !$model->uploadFiles($files))
             return false;
 
-        $created = $this->repository->insert($model)->execute();
-        if ($flush) {
-            return $this->flush();
+        if ($this->repository->insert($model)->execute()) {
+            if ($flush)
+                $this->flush();
+
+            return $model;
         }
-        else {
-            return $created;
-        }
+
+        return false;
     }
 
     /**
@@ -124,27 +122,25 @@ abstract class SuperService extends AService {
             $files = new \Object();
         }
         $_files = array_values($files->toArray());
-        if ($files->count() && !empty($_files[0]->tmp_name) && method_exists($model, 'uploadFiles')) {
+        if ($files->count() && !empty($_files[0]->tmpName) && method_exists($model, 'uploadFiles')) {
             if (method_exists($model, 'unlink')) {
                 foreach ($files->toArray() as $name => $content) {
                     $method = 'get' . $name;
                     $model->unlink($model->$method());
                 }
             }
-            if (method_exists($model, 'uploadFiles')) {
-                if (!$model->uploadFiles($files))
-                    return false;
-            }
+
+            if (!$model->uploadFiles($files))
+                return false;
+        }
+        if ($this->repository->update($model, 'id')->execute()) {
+            if ($flush)
+                $this->flush();
+
+            return $model;
         }
 
-        $saved = $this->repository->update($model, 'id')->execute();
-
-        if ($flush) {
-            return $this->flush();
-        }
-        else {
-            return $saved;
-        }
+        return false;
     }
 
     /**

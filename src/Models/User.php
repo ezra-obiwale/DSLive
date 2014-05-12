@@ -27,7 +27,7 @@ class User extends SuperUser {
     protected $lastLogin;
 
     /**
-     * @DBS\String (size="15")
+     * @DBS\String (size="20")
      */
     protected $role;
 
@@ -37,7 +37,7 @@ class User extends SuperUser {
     protected $picture;
 
     /**
-     * @DBS\Boolean (default=1, nullable=true)
+     * @DBS\Boolean (nullable=true)
      */
     protected $active;
 

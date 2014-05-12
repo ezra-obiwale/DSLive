@@ -5,7 +5,6 @@ namespace DSLive\Services;
 use DBScribe\Util,
     DScribe\Core\AService,
     DScribe\Core\Engine,
-    DScribe\Core\Repository,
     DScribe\View\View,
     DSLive\Forms\ContactUsForm,
     DSLive\Forms\LoginForm,
@@ -16,6 +15,7 @@ use DBScribe\Util,
     DSLive\Models\User,
     DSLive\Stdlib\Util as DSU,
     Email,
+    In\Models\User as IMU,
     Object,
     Session;
 
@@ -33,12 +33,12 @@ class GuestService extends AService {
     protected $settingsRepository;
 
     protected function init() {
-        $this->setModel(new User);
+        $this->setModel(new IMU);
     }
 
     public function getSettingsRepository() {
         if ($this->settingsRepository)
-            $this->settingsRepository = new Repository(new Settings());
+            $this->settingsRepository = new \DScribe\Core\Repository(new Settings());
 
         return $this->settingsRepository;
     }
@@ -167,9 +167,7 @@ class GuestService extends AService {
             if (!$this->model->getActive())
                 return false;
             $this->model->update();
-            if ($this->repository->update($this->model)->execute()) {
-                $this->flush();
-            }
+            $this->repository->update($this->model, 'id');
         }
         return $this->model;
     }
