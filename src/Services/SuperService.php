@@ -122,18 +122,17 @@ abstract class SuperService extends AService {
             $files = new \Object();
         }
         $_files = array_values($files->toArray());
-        if ($files->count() && !empty($_files[0]->tmpName) && method_exists($model, 'uploadFiles')) {
+        if ($files->count() && ((is_array($_files[0]->error) && $_files[0]->error[0] !== UPLOAD_ERR_NO_FILE) || (!is_array($_files[0]->error) && $_files[0]->error !== UPLOAD_ERR_NO_FILE)) && method_exists($model, 'uploadFiles')) {
             if (method_exists($model, 'unlink')) {
                 foreach ($files->toArray() as $name => $content) {
                     $method = 'get' . $name;
                     $model->unlink($model->$method());
                 }
             }
-
             if (!$model->uploadFiles($files))
                 return false;
         }
-        if ($this->repository->update($model, 'id')->execute()) {
+        if ($this->repository->update($model)->execute()) {
             if ($flush)
                 $this->flush();
 
@@ -164,6 +163,12 @@ abstract class SuperService extends AService {
                         ' is being used in another part of the application';
             }
             return false;
+        }
+    }
+
+    public function upsert(IModel $model, $where = 'id', $flush = true) {
+        if ($this->repository->upsert(array($model), $where)->execute()) {
+            return ($flush) ? $this->flush() : true;
         }
     }
 

@@ -175,9 +175,10 @@ abstract class File extends Model {
             $savePaths = array();
             $cnt = 1;
             foreach ($extension as $ky => $ext) {
-                $dir = ROOT . 'public' . DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR;
-                if (!is_dir($dir)) {
-                    if (!mkdir($dir, 0777, true)) {
+                $public = ROOT . 'public';
+                $dir = DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR;
+                if (!is_dir($public . $dir)) {
+                    if (!mkdir($public . $dir, 0777, true)) {
                         throw new \Exception('Permission denied to directory "' . ROOT . 'public/"');
                     }
                 }
@@ -197,8 +198,8 @@ abstract class File extends Model {
                 }
 
                 $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
-                $source = $tmpName[$ky];
-                if (!move_uploaded_file($source, $dir . $nam)) {
+                $source = is_array($tmpName) ? $tmpName[$ky] : $tmpName;
+                if (!move_uploaded_file($source, $public . $dir . $nam)) {
                     return false;
                 }
                 $savePaths[$cnt] = $dir . $nam;
@@ -209,7 +210,7 @@ abstract class File extends Model {
             $sp = array_values($savePaths);
             $this->$ppt = (count($savePaths) > 1) ? serialize($savePaths) : $sp[0];
         }
-        return true;
+        return $savePaths;
     }
 
     /**

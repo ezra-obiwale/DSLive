@@ -38,6 +38,12 @@ abstract class SuperController extends AController {
      *  either Repository::ORDER_ASC  or Repository::ORDER_DESC
      */
     protected $order;
+    private $userIsLive;
+    /**
+     *
+     * @var \DSLive\Services\SuperService
+     */
+    protected $service;
 
     /**
      * Clones current user into property $currentUser
@@ -50,11 +56,23 @@ abstract class SuperController extends AController {
         $this->order = 'id';
     }
 
+    public function getCurrentUserFromDB() {
+        if (!$this->userIsLive && $this->currentUser->getId()) {
+            $userRepo = new Repository(new \Cms\Models\User);
+            $user = $userRepo->findOne($this->currentUser->getId());
+            if ($user)
+                $this->currentUser = $user;
+
+            $this->userIsLive = true;
+        }
+        return $this->currentUser;
+    }
+
     public function noCache() {
         return array('index', 'new', 'edit', 'delete');
     }
 
-    public function accessDenied($action, $args = array()) {
+    public function accessDenied($action, $args = array(), $redirect) {
         if ($this->request->isAjax()) {
             return $this->ajaxResponse()
                             ->sendJson('You do not have permision to this action/page', AjaxResponse::STATUS_FAILURE);
@@ -64,7 +82,7 @@ abstract class SuperController extends AController {
             throw new Exception('You do not have the required permission to view this page');
 
         $this->flash()->setErrorMessage('Please login to continue');
-        $this->redirect('guest', 'index', 'login', array(
+        $this->redirect($redirect['module'] ? $redirect['module'] : 'guest', $redirect['controller'] ? $redirect['controller'] : 'index', $redirect['action'] ? $redirect['action'] : 'login', array(
             Util::camelToHyphen($this->getModule()),
             Util::camelToHyphen($this->getClassName()),
             Util::camelToHyphen($action),
@@ -156,7 +174,7 @@ abstract class SuperController extends AController {
      */
     public function newAction(array $variables = array(), array $modifyForm = array(), array $redirect = array()) {
         $form = $this->service->getForm();
-
+        
         foreach ($modifyForm as $type => $typeArray) {
             switch ($type) {
                 case 'ignoreFilters':

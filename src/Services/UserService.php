@@ -60,8 +60,4 @@ class UserService extends SuperService {
         return $this->flush();
     }
     
-    public function save(IModel $model, Object $files = null, $flush = true) {
-        die('here');
-        parent::save($model, $files, $flush);
-    }
 }

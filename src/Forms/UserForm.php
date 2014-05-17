@@ -9,8 +9,8 @@ class UserForm extends Form {
     public function __construct() {
         parent::__construct('userForm');
 
-        $user = class_exists('\In\Models\User') ? '\In\Models\User' : '\DSLive\Models\User';
-        $this->setModel(new $user);
+        $user = class_exists('\In\Models\User') ? new \In\Models\User : new \DSLive\Models\User;
+        $this->setModel($user);
 
         $this->setAttributes(array(
             'method' => 'post',
@@ -21,7 +21,7 @@ class UserForm extends Form {
             'name' => 'MAX_FILE_SIZE',
             'type' => 'hidden',
             'attributes' => array(
-                'value' => $this->getModel()->getMaxSize(),
+                'value' => $user->getMaxSize(),
             )
         ));
 
@@ -81,17 +81,6 @@ class UserForm extends Form {
         ));
 
         $this->add(array(
-            'name' => 'phone',
-            'type' => 'tel',
-            'options' => array(
-                'label' => 'Phone Number'
-            ),
-            'attributes' => array(
-                'maxLength' => 20
-            )
-        ));
-
-        $this->add(array(
             'name' => 'picture',
             'type' => 'file',
             'options' => array(
@@ -109,6 +98,18 @@ class UserForm extends Form {
                     'Subscriber' => 'subscriber',
                     'Editor' => 'editor',
                     'Admin' => 'admin'
+                )
+            )
+        ));
+
+        $this->add(array(
+            'name' => 'active',
+            'type' => 'select',
+            'options' => array(
+                'label' => 'Status',
+                'values' => array(
+                    'Inactive' => 0,
+                    'Active' => 1
                 )
             )
         ));

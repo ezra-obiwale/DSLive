@@ -27,9 +27,9 @@ class GuestController extends AController {
         $form = $this->service->getRegisterForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
-            if ($form->isValid() && $this->service->register($form->getModel(), $this->view, $this->setup)) {
+            if ($form->isValid() && $this->service->register($form->getModel(), $this->setup)) {
                 $this->flash()->setSuccessMessage('Registration successful. Please check your email account to confirm your registration');
-                $this->redirect('guest', 'index', 'login');
+                $this->redirect($this->getModule(), $this->getClassName(), 'login');
             }
             $this->flash()->setErrorMessage('Registration failed. Please check your entries and try again');
         }
@@ -49,7 +49,7 @@ class GuestController extends AController {
         else {
             $this->flash()->setErrorMessage('Confirm registration failed');
         }
-        $this->redirect('guest', 'index', 'login');
+        $this->redirect($this->getModule(), $this->getClassName(), 'login');
     }
 
     public function loginAction($module = null, $controller = null, $action = null, $params = null) {
@@ -58,7 +58,8 @@ class GuestController extends AController {
                 $params = ($params === null) ? array() : explode(':', $params);
                 $this->redirect($module, $controller, $action, $params);
             }
-            $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
+            else
+                $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());
         }
 
         $form = $this->service->getLoginForm();
@@ -66,11 +67,9 @@ class GuestController extends AController {
             $form->setData($this->request->getPost());
             if ($form->isValid() && ($model = $this->service->login($form->getModel()))) {
                 $this->resetUserIdentity($model);
-                if ($module !== null) {
-                    $params = ($params === null) ? array() : explode(':', $params);
-                    $this->redirect($module, $controller, $action, $params);
-                }
-                $this->redirect('in', 'dashboard', $model->getRole());
+                $params = ($params === null) ? array() : explode(':', $params);
+                $this->redirect($module ? $module : $this->getModule(), $controller ?
+                                $controller : 'dashboard', $action ? $action : $model->getRole(), $params);
             }
             $this->flash()->setMessage('Login failed. Please check your entries and try again');
         }
@@ -100,7 +99,7 @@ class GuestController extends AController {
                 $this->flash()->setSuccessMessage((isset($id) && isset($password)) ?
                                 'Password reset successfully. You may now login' :
                                 'Password reset initiated. Please check your email address for further instructions');
-                $this->redirect('guest', 'index', 'login');
+                $this->redirect($this->getModule(), $this->getClassName(), 'login');
             }
             $this->flash()->setErrorMessage('Password reset failed.');
         }
@@ -120,7 +119,7 @@ class GuestController extends AController {
             $params = ($params === null) ? array() : explode(':', $params);
             $this->redirect($module, $controller, $action, $params);
         }
-        $this->redirect('guest', 'index', 'login');
+        $this->redirect($this->getModule(), $this->getClassName(), 'login');
     }
 
     public function contactUsAction() {
@@ -146,7 +145,7 @@ class GuestController extends AController {
 
     public function setupAction() {
         if ($this->service->getRepository()->limit(1)->select()->execute()->first()) {
-            $this->redirect('guest', 'index', 'login');
+            $this->redirect($this->getModule(), $this->getClassName(), 'login');
         }
         $this->setup = true;
         return $this->registerAction();

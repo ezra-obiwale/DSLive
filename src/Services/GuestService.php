@@ -96,11 +96,10 @@ class GuestService extends AService {
         return $email->send($domain . ': ' . trim($data->title));
     }
 
-    public function register(User $model, View $view, $setup = false, $flush = true) {
+    public function register(User $model, $setup = false, $flush = true) {
         $model->hashPassword();
         if ($this->repository->findOneBy('email', $model->getEmail()))
             return false;
-
         if (!$this->repository->fetchAll()->count()) {
             $_model = new AdminUser();
             $_model->populate($model->toArray());
@@ -110,8 +109,9 @@ class GuestService extends AService {
         $model->setActive((Engine::getServer() !== 'development' || $setup));
 
         if ($this->repository->insert($model)->execute()) {
-            if (!$this->sendEmail($model)) {
-                return false;
+            if (Engine::getServer() === 'production' && !$this->sendEmail($model)) {
+                //@todo: show email not sent message
+//                return false;
             }
         }
         return ($flush) ? $this->flush() : true;
@@ -166,8 +166,9 @@ class GuestService extends AService {
         if ($this->model) {
             if (!$this->model->getActive())
                 return false;
+
             $this->model->update();
-            $this->repository->update($this->model, 'id');
+            $this->repository->update($this->model)->execute();
         }
         return $this->model;
     }
