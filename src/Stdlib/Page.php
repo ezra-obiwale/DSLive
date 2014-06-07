@@ -194,7 +194,8 @@ class Page {
 
     public static function cleanContent($content) {
         $sep = '_:DS:_';
-        $content = self::insertSlides($content, $sep);
+        if ($cont = self::insertSlides($content, $sep))
+            $content = $cont;
         $content = self::insertForms($content, $sep);
         return str_replace('../../../../media', '/media', $content);
     }
@@ -203,8 +204,8 @@ class Page {
         if (!$sep)
             $sep = '_:DS:_';
 
-        foreach (self::getSlides($sep, $content) as $slide) {
-            $attrs['id'] = $slide->getCodeName();
+        $slides = self::getSlides($sep, $content);
+        foreach ($slides as $slide) {
             if ($slide->getWidth()) {
                 $attrs['style'] = 'width:' . $slide->getWidth();
             }
@@ -219,7 +220,7 @@ class Page {
                                 'orderBy' => 'name'
                             )), $attrs), $content);
         }
-        return $content;
+        return ($slides && $slides->count()) ? $content : null;
     }
 
     public static function insertForms($content, $sep = '_:DS:_') {

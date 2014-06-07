@@ -27,6 +27,11 @@ abstract class SuperUser extends AUser {
      */
     private $stdFile;
 
+    /**
+     * @DBS\String (nullable=true)
+     */
+    protected $mime;
+
     public function __construct() {
         $this->setTableName('user');
         $this->stdFile = new \DSLive\Stdlib\File;
@@ -63,6 +68,15 @@ abstract class SuperUser extends AUser {
 
     abstract public function setPicture($picture);
 
+    public function setMime($mime) {
+        $this->mime = $mime;
+        return $this;
+    }
+
+    public function getMime() {
+        return $this->mime;
+    }
+
     // ------- helpers -----------
 
     public function getFullName($withEmail = false) {
@@ -90,8 +104,16 @@ abstract class SuperUser extends AUser {
             $this->__construct();
 
         if ($path = $this->stdFile->uploadFiles($files)) {
-            if (!is_bool($path))
-                $this->setPicture($path);
+            if (!is_bool($path)) {
+                if (is_array($path)) {
+                    $path = array_values($path);
+                    $this->setPicture($path[0]);
+                }
+                else
+                    $this->setPicture($path);
+            }
+
+            $this->mime = $this->stdFile->getMime();
             return true;
         }
 
@@ -116,6 +138,13 @@ abstract class SuperUser extends AUser {
 
     protected function getStdFile() {
         return $this->stdFile;
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrors() {
+        return $this->stdFile->getErrors();
     }
 
 }

@@ -23,6 +23,12 @@ use DScribe\Core\AController,
 abstract class SuperController extends AController {
 
     /**
+     *
+     * @var \DSLive\Services\SuperService
+     */
+    protected $service;
+
+    /**
      * A clone of the current user
      * @var User
      */
@@ -39,11 +45,6 @@ abstract class SuperController extends AController {
      */
     protected $order;
     private $userIsLive;
-    /**
-     *
-     * @var \DSLive\Services\SuperService
-     */
-    protected $service;
 
     /**
      * Clones current user into property $currentUser
@@ -72,7 +73,7 @@ abstract class SuperController extends AController {
         return array('index', 'new', 'edit', 'delete');
     }
 
-    public function accessDenied($action, $args = array(), $redirect) {
+    public function accessDenied($action, $args = array(), array $redirect = array()) {
         if ($this->request->isAjax()) {
             return $this->ajaxResponse()
                             ->sendJson('You do not have permision to this action/page', AjaxResponse::STATUS_FAILURE);
@@ -81,7 +82,7 @@ abstract class SuperController extends AController {
         if (!$this->currentUser->is('guest'))
             throw new Exception('You do not have the required permission to view this page');
 
-        $this->flash()->setErrorMessage('Please login to continue');
+        $this->flash()->addMessage('Please login to continue');
         $this->redirect($redirect['module'] ? $redirect['module'] : 'guest', $redirect['controller'] ? $redirect['controller'] : 'index', $redirect['action'] ? $redirect['action'] : 'login', array(
             Util::camelToHyphen($this->getModule()),
             Util::camelToHyphen($this->getClassName()),
@@ -114,14 +115,6 @@ abstract class SuperController extends AController {
             $return[] = $action;
         }
         return $return;
-    }
-
-    /**
-     * Creates a new AjaxResponse Object
-     * @return AjaxResponse
-     */
-    protected function ajaxResponse() {
-        return new AjaxResponse;
     }
 
     /**
@@ -174,7 +167,7 @@ abstract class SuperController extends AController {
      */
     public function newAction(array $variables = array(), array $modifyForm = array(), array $redirect = array()) {
         $form = $this->service->getForm();
-        
+
         foreach ($modifyForm as $type => $typeArray) {
             switch ($type) {
                 case 'ignoreFilters':
@@ -203,11 +196,6 @@ abstract class SuperController extends AController {
             }
             $form->setData($data);
             if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
-                if ($this->request->isAjax()) {
-                    $this->ajaxResponse()
-                            ->setAction(AjaxResponse::ACTION_RESET_WAIT)
-                            ->sendJson('Save successful');
-                }
                 $this->flash()->setSuccessMessage('Save successful');
 
                 if (isset($this->request->getPost()->saveAndNew)) {
@@ -218,12 +206,9 @@ abstract class SuperController extends AController {
                 }
             }
             else {
-                if ($this->request->isAjax()) {
-                    $this->ajaxResponse()
-                            ->setErrors($form->prepareErrorMsgs())
-                            ->sendJson('Save failed', AjaxResponse::STATUS_FAILURE, AjaxResponse::ACTION_WAIT);
-                }
-                $this->flash()->setErrorMessage('Save failed');
+                $this->flash()
+                        ->setErrorMessage('Save failed')
+                        ->addErrorMessage($this->service->getErrors());
             }
         }
 
@@ -236,7 +221,7 @@ abstract class SuperController extends AController {
                 $this->view;
     }
 
-    private function checkFiles() {
+    protected function checkFiles() {
         foreach ($this->request->getFiles()->toArray() as $name => $data) {
             if (empty($data->name)) {
                 $this->request->getFiles()->remove($name);
@@ -284,7 +269,7 @@ abstract class SuperController extends AController {
             }
         }
 
-        $form->setModel($model);
+        $form->setModel(clone $model);
         if ($this->request->isPost()) {
             $data = $this->request->getPost();
             $this->checkFiles();
@@ -293,20 +278,13 @@ abstract class SuperController extends AController {
             }
             $form->setData($data);
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
-                if ($this->request->isAjax()) {
-                    $this->ajaxResponse()
-                            ->setAction(AjaxResponse::ACTION_WAIT)
-                            ->sendJson('Save successful');
-                }
                 $this->flash()->setSuccessMessage('Save successful');
                 $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
             }
             else {
-                if ($this->request->isAjax()) {
-                    $this->ajaxResponse()
-                            ->sendJson('Save failed', AjaxResponse::STATUS_FAILURE, AjaxResponse::ACTION_WAIT);
-                }
-                $this->flash()->setErrorMessage('Save failed');
+                $this->flash()
+                        ->setErrorMessage('Save failed')
+                        ->addErrorMessage($this->service->getErrors());
             }
         }
 
@@ -368,18 +346,12 @@ abstract class SuperController extends AController {
         $model = (is_object($id)) ? $id : $this->service->findOne($id);
         if ($confirm == 1) {
             if ($this->service->delete()) {
-                if ($this->request->isAjax()) {
-                    $this->ajaxResponse()
-                            ->sendJson('Delete successful');
-                }
                 $this->flash()->setSuccessMessage('Delete successful');
             }
             else {
-                if ($this->request->isAjax()) {
-                    $this->ajaxResponse()
-                            ->sendJson('Delete failed', AjaxResponse::STATUS_FAILURE, AjaxResponse::ACTION_WAIT);
-                }
-                $this->flash()->setErrorMessage('Delete failed');
+                $this->flash()
+                        ->setErrorMessage('Delete failed')
+                        ->addErrorMessage($this->service->getErrors());
             }
             $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }

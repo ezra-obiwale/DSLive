@@ -20,7 +20,7 @@ class SuperModel extends AModel {
      * @param string|array $property If string, the property value is used. If array,
      * the values of the array elements as properties are joined together with space and
      * used.
-     * @param string $property
+     * @param string $format
      * @return string
      * @throws \Exception
      */

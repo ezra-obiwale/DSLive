@@ -1,8 +1,5 @@
 <?php
 
-/*
- */
-
 namespace DSLive\Models;
 
 /**
@@ -33,6 +30,13 @@ abstract class File extends Model {
      */
     private $overwrite = true;
     private $maxFileNumber;
+
+    /**
+     * The names of the image being upload
+     * @var array
+     */
+    private $names;
+    private $errors;
 
     abstract public function __construct();
 
@@ -146,6 +150,14 @@ abstract class File extends Model {
     }
 
     /**
+     * Fetches the names of the files uploaded without the extensions
+     * @return array
+     */
+    final public function getFileNames() {
+        return $this->names;
+    }
+
+    /**
      * Uploads files to the server
      * @param array|\Object $files
      * @return boolean
@@ -183,19 +195,21 @@ abstract class File extends Model {
                     }
                 }
 
+                $nam = '';
                 if ($this->altNameProperty !== null) {
-                    $nam = preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{$this->altNameProperty})) . '_';
+                    $nam = preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{'get' . $this->altNameProperty}())) . '_';
 
                     if (!$this->overwrite) {
                         while (is_readable($dir . $nam . $cnt . '.' . $ext)) {
                             $cnt++;
                         }
                     }
-                    $nam .= $cnt . '.' . $ext;
+                    $this->names[] = $nam . $cnt;
                 }
                 else {
-                    $nam = time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
+                    $cnt = time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
                 }
+                $nam .= $cnt . '.' . $ext;
 
                 $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
                 $source = is_array($tmpName) ? $tmpName[$ky] : $tmpName;
@@ -223,12 +237,15 @@ abstract class File extends Model {
         $error = is_array($info['error']) ? $info['error'] : array($info['error']);
         foreach ($error as $err) {
             if ($err !== UPLOAD_ERR_OK) {
+                $this->errors[] = 'File not found';
                 return false;
             }
         }
 
-        if (!$this->sizeIsOk($info['size']))
+        if (!$this->sizeIsOk($info['size'])) {
+            $this->errors[] = 'File size too big';
             return false;
+        }
 
         $this->mime = is_array($info['type']) ? serialize($info['type']) : $info['type'];
         return $this->extensionIsOk($property, $info['name']);
@@ -246,10 +263,10 @@ abstract class File extends Model {
         foreach ($name as $nm) {
             $info = pathinfo($nm);
             $extension = strtolower($info['extension']);
-            if (isset($this->extensions[$property]) && !in_array($extension, $this->extensions[$property]))
+            if ((isset($this->extensions[$property]) && !in_array($extension, $this->extensions[$property])) || (isset($this->badExtensions[$property]) && in_array($extension, $this->badExtensions[$property]))) {
+                $this->errors[] = 'File extension not allowed';
                 return false;
-            if (isset($this->badExtensions[$property]) && in_array($extension, $this->badExtensions[$property]))
-                return false;
+            }
 
             $extensions[] = $extension;
         }
@@ -307,22 +324,48 @@ abstract class File extends Model {
         return true;
     }
 
+    /**
+     * Fetches the mime attribute of the file
+     * @return string
+     */
     public function getMime() {
         return $this->mime;
     }
 
+    /**
+     * Sets the mime attribute of the file
+     * @param string $mime
+     * @return \DSLive\Models\File
+     */
     public function setMime($mime) {
         $this->mime = $mime;
         return $this;
     }
 
+    /**
+     * Fetches the overwrite option
+     * @return boolean
+     */
     public function getOverwrite() {
         return $this->overwrite;
     }
 
+    /**
+     * Indicates whether to overwrite file if existing or not
+     * @param boolean $overwrite
+     * @return \DSLive\Models\File
+     */
     public function setOverwrite($overwrite) {
         $this->overwrite = $overwrite;
         return $this;
+    }
+
+    /**
+     * Fetches the errors that occurred during file upload
+     * @return array
+     */
+    final public function getErrors() {
+        return $this->errors;
     }
 
 }

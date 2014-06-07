@@ -5,7 +5,10 @@ namespace DSLive\Services;
 use DBScribe\Util,
     DScribe\Core\AService,
     DScribe\Core\Engine,
+    DScribe\Core\Repository,
+    DScribe\Form\Form,
     DScribe\View\View,
+    DSLive\Controllers\GuestController,
     DSLive\Forms\ContactUsForm,
     DSLive\Forms\LoginForm,
     DSLive\Forms\RegisterForm,
@@ -15,6 +18,7 @@ use DBScribe\Util,
     DSLive\Models\User,
     DSLive\Stdlib\Util as DSU,
     Email,
+    Exception,
     In\Models\User as IMU,
     Object,
     Session;
@@ -32,13 +36,18 @@ class GuestService extends AService {
     protected $contactUsForm;
     protected $settingsRepository;
 
+    /**
+     * @var array
+     */
+    private $errors;
+
     protected function init() {
         $this->setModel(new IMU);
     }
 
     public function getSettingsRepository() {
         if ($this->settingsRepository)
-            $this->settingsRepository = new \DScribe\Core\Repository(new Settings());
+            $this->settingsRepository = new Repository(new Settings());
 
         return $this->settingsRepository;
     }
@@ -96,7 +105,17 @@ class GuestService extends AService {
         return $email->send($domain . ': ' . trim($data->title));
     }
 
-    public function register(User $model, $setup = false, $flush = true) {
+    /**
+     * 
+     * @param \DScribe\View\View $view
+     * @param array $controllerPath Array with keys module and controller
+     * @param \DScribe\Form\Form $form
+     * @param boolean $setup
+     * @param boolean $flush
+     * @return boolean
+     */
+    public function register(View $view, $controllerPath, Form $form, $setup = false, $flush = true) {
+        $model = $form->getModel();
         $model->hashPassword();
         if ($this->repository->findOneBy('email', $model->getEmail()))
             return false;
@@ -110,8 +129,9 @@ class GuestService extends AService {
 
         if ($this->repository->insert($model)->execute()) {
             if (Engine::getServer() === 'production' && !$this->sendEmail($model)) {
-                //@todo: show email not sent message
-//                return false;
+                $this->addErrors('Confirmation email not sent. <a href="' .
+                                $view->url($controllerPath['module'], $controllerPath['controller'], 'resend-confirmation', array($model->getId()))) .
+                        '">Click here to resend your confirmation email</a>.';
             }
         }
         return ($flush) ? $this->flush() : true;
@@ -173,15 +193,14 @@ class GuestService extends AService {
         return $this->model;
     }
 
-    private function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
+    public function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
         if (Engine::getServer() === 'development')
             return true;
 
         $email = new Email();
         $reg = Engine::getDB()->table('notification')->select(array(array('type' => 'email', 'name' => $notifyType)))->first();
-        if (!$reg)
-            return false;
-        //@change that of userService->sendAccessCode() too
+        if (!$reg) // if notification type message is not available, ignore sending
+            return true;
 //        $email->setHTML($reg->message, array('autoSetText' => true));
         $email->setText(DSU::prepareMessage($reg->message, $user));
         $webMasterEmail = Engine::getDB()->table('settings')->select(array(array('key' => 'email')))->first();
@@ -201,53 +220,6 @@ class GuestService extends AService {
             return false;
         }
         return true;
-    }
-
-    private function getEmailContent($notifyType) {
-        $setting = $this->settingsRepo->findOneBy('key', 'notify-' . $notifyType);
-        $defaultNotifyMessageFunction = 'get' . \Util::hyphenToCamel($notifyType) . 'Message';
-        return ($setting) ? $setting->getValue() : $this->{$defaultNotifyMessageFunction}();
-    }
-
-    protected function getRegistrationMessage(User $user) {
-        ob_start();
-        $confirmationLink = $_SERVER['SERVER_NAME'] . '/guest/index/confirm-registration/' . urlencode($user->getId()) . '/' . urlencode($user->getEmail());
-        ?>
-        <h1><?= Engine::getConfig('app', 'name') ?> - Registration</h1>
-        <p>Hi,</p>
-        <p>
-            Your registration with <b><?= Engine::getConfig('app', 'name') ?></b> is successful. 
-            To activate your account, navigate to <a href='<?= $confirmationLink ?>'><?= $confirmationLink ?></a>
-        </p>
-        <?php
-        return ob_get_clean();
-    }
-
-    protected function getConfirmationMessage() {
-        ob_start();
-        $loginLink = $_SERVER['SERVER_NAME'] . '/guest/index/login';
-        ?>
-        <h1><?= Engine::getConfig('app', 'name') ?> - Registration Confirmed</h1>
-        <p>Hi,</p>
-        <p>
-            Your registration with <b><?= Engine::getConfig('app', 'name') ?></b> has been successfully confirmed. 
-            To login into your account, navigate to <a href='<?= $loginLink ?>'><?= $loginLink ?></a>
-        </p>
-        <?php
-        return ob_get_clean();
-    }
-
-    protected function getPasswordResetMessage(User $user) {
-        ob_start();
-        $resetLink = $_SERVER['SERVER_NAME'] . '/guest/index/reset-password/' . urlencode($user->getId()) . '/' . urlencode($user->getId());
-        ?>
-        <h1><?= Engine::getConfig('app', 'name') ?> - Registration Confirmed</h1>
-        <p>Hi,</p>
-        <p>
-            You requested a password reset. Please navigate to <a href='<?= $resetLink ?>'><?= $resetLink ?></a>
-        </p>
-        <?php
-        return ob_get_clean();
     }
 
     public static function beforeLogout($class, $method, array $methodParams = array()) {
@@ -282,6 +254,38 @@ class GuestService extends AService {
         );
 
         return (isset($codes[$code])) ? $codes[$code] : array('Unknown Error', 'Your request generated an unknown error');
+    }
+
+    /**
+     * Adds an error to the current operation
+     * @param string|array $error
+     * @return GuestController
+     */
+    final public function addErrors($error) {
+        if (is_string($error))
+            $this->errors[] = $error;
+        else if (is_array($error))
+            $this->errors = array_merge($this->errors, $error);
+        else
+            throw new Exception('Error must be of type string or array');
+
+        return $this;
+    }
+
+    /**
+     * Fetches an array of all errors
+     * @return array
+     */
+    final public function getErrors() {
+        return (is_array($this->errors)) ? $this->errors : array();
+    }
+
+    /**
+     * Surrounds each error in an li tag
+     * @return string
+     */
+    final public function prepareErrors() {
+        return '<li>' . join('</li><li>', $this->errors) . '</li>';
     }
 
 }

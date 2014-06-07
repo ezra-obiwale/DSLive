@@ -47,7 +47,7 @@ class PasswordForm extends Form {
                 'value' => 'Save'
             ),
             'attributes' => array(
-                'class' => 'btn btn-success btn-large'
+                'class' => 'btn btn-success'
             ),
         ));
     }
@@ -59,12 +59,16 @@ class PasswordForm extends Form {
             ),
             'new' => array(
                 'required' => true,
+                'NotMatch' => array(
+                    'element' => 'old',
+                    'message' => 'New and old passwords cannot be the same'
+                )
             ),
             'confirm' => array(
                 'required' => true,
                 'Match' => array(
                     'element' => 'new',
-                    'message' => 'Confirm password'
+                    'message' => 'Password mismatch'
                 )
             ),
         );

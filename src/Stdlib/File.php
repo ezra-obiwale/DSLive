@@ -15,6 +15,20 @@ class File {
     private static $extensions;
     private static $badExtensions;
     private static $maxSize;
+    private static $mime;
+
+    /**
+     * Indicates whether to overwrite files with new if an existing file is found
+     * @var boolean
+     */
+    private static $overwrite = true;
+
+    /**
+     * The names of the image being upload
+     * @var array
+     */
+    private static $properties = array();
+    private static $errors = array();
 
     /**
      * Adds a file extension type to a file property
@@ -88,7 +102,7 @@ class File {
     /**
      * Uploads files to the server
      * @param array|\Object $files
-     * @return boolean
+     * @return boolean|array
      * @throws \Exception
      */
     final public static function uploadFiles($files) {
@@ -103,27 +117,38 @@ class File {
             if (empty($info['name']))
                 continue;
 
-            if (!self::fileIsOk($ppt, $info))
+            if (!array_key_exists(self::$extensions, $ppt) && !array_key_exists(self::$badExtensions, $ppt))
+                continue;
+
+            $extension = self::fileIsOk($ppt, $info);
+            if (!$extension)
                 return false;
 
-            $dir = ROOT . 'public' . DIRECTORY_SEPARATOR . $ppt;
-            if (!is_dir($dir)) {
-                if (!mkdir($dir, 0777, true))
-                    throw new \Exception('Permission denied to directory "' . $dir . '"');
-            }
+            $name = is_array($info['name']) ? $info['name'] : array($info['name']);
 
-            $savePath = $dir . DIRECTORY_SEPARATOR . time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($info['name']));
+            $savePaths = array();
+            $cnt = 1;
+            foreach ($extension as $ky => $ext) {
+                $public = ROOT . 'public';
+                $dir = DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR;
+                if (!is_dir($public . $dir)) {
+                    if (!mkdir($public . $dir, 0777, true)) {
+                        throw new \Exception('Permission denied to directory: "' . ROOT . 'public/"');
+                    }
+                }
 
-            if (move_uploaded_file($info['tmpName'], $savePath)) {
-                self::unlink($ppt);
-                return $savePath;
-            }
-            else {
-                return false;
+                $nam = time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky])) . '.' . $ext;
+
+                $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
+                $source = is_array($tmpName) ? $tmpName[$ky] : $tmpName;
+                if (!move_uploaded_file($source, $public . $dir . $nam)) {
+                    return false;
+                }
+                $savePaths[$cnt] = $dir . $nam;
+                $cnt++;
             }
         }
-
-        return true;
+        return $savePaths;
     }
 
     /**
@@ -133,17 +158,21 @@ class File {
      * @return boolean
      */
     final public static function fileIsOk($property, array $info) {
-        if ($info['error'] !== UPLOAD_ERR_OK)
-            return false;
+        $error = is_array($info['error']) ? $info['error'] : array($info['error']);
+        foreach ($error as $err) {
+            if ($err !== UPLOAD_ERR_OK) {
+                self::$errors[] = 'File not found';
+                return false;
+            }
+        }
 
-        if (!self::sizeIsOk($info['size']))
+        if (!self::sizeIsOk($info['size'])) {
+            self::$errors[] = 'File size too big';
             return false;
+        }
 
-        $info = pathinfo($info['name']);
-        if (!self::extensionIsOk($property, $info['extension']))
-            return false;
-
-        return true;
+        self::$mime = is_array($info['type']) ? serialize($info['type']) : $info['type'];
+        return self::extensionIsOk($property, $info['name']);
     }
 
     /**
@@ -152,13 +181,20 @@ class File {
      * @param string $extension
      * @return boolean
      */
-    final public static function extensionIsOk($property, $extension) {
-        if (isset(self::$extensions[$property]) && !in_array($extension, self::$extensions[$property]))
-            return false;
-        if (isset(self::$badExtensions[$property]) && in_array($extension, self::$badExtensions[$property]))
-            return false;
+    final public static function extensionIsOk($property, $name) {
+        $name = is_array($name) ? $name : array($name);
+        $extensions = array();
+        foreach ($name as $nm) {
+            $info = pathinfo($nm);
+            $extension = strtolower(@$info['extension']);
+            if ((isset(self::$extensions[$property]) && !in_array($extension, self::$extensions[$property])) || (isset(self::$badExtensions[$property]) && in_array($extension, self::$badExtensions[$property]))) {
+                self::$errors[] = 'File extension not allowed';
+                return false;
+            }
 
-        return true;
+            $extensions[] = $extension;
+        }
+        return $extensions;
     }
 
     /**
@@ -167,8 +203,11 @@ class File {
      * @return boolean
      */
     final public static function sizeIsOk($size) {
-        if ($size > self::getMaxSize()) {
-            return false;
+        $size = is_array($size) ? $size : array($size);
+        foreach ($size as $sz) {
+            if ($sz > self::getMaxSize()) {
+                return false;
+            }
         }
 
         return true;
@@ -208,8 +247,46 @@ class File {
         return true;
     }
 
-    final public static function getMime() {
-        
+    /**
+     * Fetches the mime attribute of the file
+     * @return string
+     */
+    public static function getMime() {
+        return self::$mime;
+    }
+
+    /**
+     * Sets the mime attribute of the file
+     * @param string $mime
+     * @return \DSLive\Models\File
+     */
+    public static function setMime($mime) {
+        self::$mime = $mime;
+    }
+
+    /**
+     * Fetches the overwrite option
+     * @return boolean
+     */
+    public static function getOverwrite() {
+        return self::$overwrite;
+    }
+
+    /**
+     * Indicates whether to overwrite file if existing or not
+     * @param boolean $overwrite
+     * @return \DSLive\Models\File
+     */
+    public static function setOverwrite($overwrite) {
+        self::$overwrite = $overwrite;
+    }
+
+    /**
+     * Fetches the errors that occurred during file upload
+     * @return array
+     */
+    final public static function getErrors() {
+        return self::$errors;
     }
 
 }

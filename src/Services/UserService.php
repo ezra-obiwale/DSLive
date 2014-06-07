@@ -2,8 +2,7 @@
 
 namespace DSLive\Services;
 
-use DScribe\Core\IModel,
-    DSLive\Forms\PasswordForm,
+use DSLive\Forms\PasswordForm,
     DSLive\Models\User,
     Object;
 

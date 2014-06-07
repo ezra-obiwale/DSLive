@@ -27,7 +27,10 @@ class GuestController extends AController {
         $form = $this->service->getRegisterForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
-            if ($form->isValid() && $this->service->register($form->getModel(), $this->setup)) {
+            if ($form->isValid() && $this->service->register($this->view, array(
+                        'module' => $this->module(),
+                        'controller' => $this->getClassName(),
+                            ), $form, $this->setup)) {
                 $this->flash()->setSuccessMessage('Registration successful. Please check your email account to confirm your registration');
                 $this->redirect($this->getModule(), $this->getClassName(), 'login');
             }
@@ -40,6 +43,23 @@ class GuestController extends AController {
 
         return $this->request->isAjax() ? $this->view->partial() :
                 $this->view;
+    }
+
+    public function resendConfirmationAction($id) {
+        $model = $this->service->getRepository()->findOneWhere(array(array(
+                'id' => $id,
+                'active' => 0
+        )));
+        if (!$model) {
+            throw new \Exception('Invalid action');
+        }
+
+        if ($this->service->sendEmail($model)) {
+            $this->flash()->setSuccessMessage('Confirmation email sent successfully');
+        }
+        else {
+            $this->flash()->setSuccessMessage('Failed to send confirmation email. Please refresh this page to retry sending.');
+        }
     }
 
     public function confirmRegistrationAction($id, $email) {
@@ -148,7 +168,19 @@ class GuestController extends AController {
             $this->redirect($this->getModule(), $this->getClassName(), 'login');
         }
         $this->setup = true;
-        return $this->registerAction();
+        $return = $this->registerAction();
+        $submit = $return->getVariables('form')->get('submit');
+        $submit->options->value = 'Let\'s Begin';
+        $return->getVariables('form')->remove('submit')
+                ->add(array(
+                    'name' => 'demo',
+                    'type' => 'checkbox',
+                    'options' => array(
+                        'label' => 'Create demo categories and pages'
+                    )
+                ))
+                ->add($submit->toArray());
+        return $return->variables(array('title' => 'CMS Setup'));
     }
 
     public function errorAction($code) {

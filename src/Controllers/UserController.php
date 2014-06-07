@@ -50,6 +50,7 @@ class UserController extends SuperController {
                 ->remove('password')
                 ->remove('confirm')
                 ->remove('role')
+                ->remove('active')
                 ->setModel($model);
         $form->get('email')->attributes->add(array('readonly' => 'readonly'));
         if ($this->request->isPost()) {
@@ -69,7 +70,7 @@ class UserController extends SuperController {
         ));
     }
 
-    public function editPasswordAction($redirect = array()) {
+    public function editPasswordAction(array $redirect = array()) {
         $redirect['module'] = !empty($redirect['module']) ? $redirect['module'] : 'guest';
         $redirect['controller'] = !empty($redirect['controller']) ? $redirect['controller'] : 'index';
         $redirect['action'] = !empty($redirect['action']) ? $redirect['action'] : 'logout';

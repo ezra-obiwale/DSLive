@@ -12,10 +12,9 @@ abstract class SuperService extends AService {
     protected $form;
 
     /**
-     * @todo
      * @var array
      */
-    protected $errors;
+    private $errors;
 
     /**
      * Initialize property $errors to empty array
@@ -55,25 +54,18 @@ abstract class SuperService extends AService {
      * @param mixed $id Id to fetch with
      * @return mixed
      */
-    public function findOneBy($column, $value, $exception = true) {
-        $model = $this->repository->findOneBy($column, $value);
-        if (!$model && $exception)
-            throw new Exception('Required page was not found');
-        $this->model = $model;
-        return $this->model;
+    public function findOne($id, $exception = true) {
+        return $this->findOneBy('id', $id, $exception);
     }
 
     /**
      * Finds a row from database
-     * @param mixed $id Id to fetch with
+     * @param string $column Column to fetch by
+     * @param mixed $value The value the column must contain
      * @return mixed
      */
-    public function findOne($id, $exception = true) {
-        $model = $this->repository->findOne($id);
-        if (!$model && $exception)
-            throw new Exception('Required page was not found');
-        $this->model = $model;
-        return $this->model;
+    public function findOneBy($column, $value, $exception = true) {
+        return $this->findOneWhere(array(array($column => $value)), $exception);
     }
 
     /**
@@ -83,8 +75,12 @@ abstract class SuperService extends AService {
      */
     public function findOneWhere($criteria, $exception = true) {
         $model = $this->repository->findOneWhere($criteria);
-        if (!$model && $exception)
-            throw new Exception('Required page was not found');
+        if (!$model) {
+            if ($exception)
+                throw new Exception('Required page was not found');
+            else
+                $this->addErrors('Required object was not found');
+        }
         $this->model = $model;
         return $this->model;
     }
@@ -97,8 +93,11 @@ abstract class SuperService extends AService {
      * @todo Set first parameter as form so one can fetch either model or data
      */
     public function create(IModel $model, Object $files = null, $flush = true) {
-        if (method_exists($model, 'uploadFiles') && !$model->uploadFiles($files))
+        if (method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+            $this->addErrors('File upload failed');
+            $this->addErrors($model->getErrors());
             return false;
+        }
 
         if ($this->repository->insert($model)->execute()) {
             if ($flush)
@@ -129,8 +128,11 @@ abstract class SuperService extends AService {
                     $model->unlink($model->$method());
                 }
             }
-            if (!$model->uploadFiles($files))
+            if (!$model->uploadFiles($files)) {
+                $this->addErrors('File upload failed');
+                $this->addErrors($model->getErrors());
                 return false;
+            }
         }
         if ($this->repository->update($model)->execute()) {
             if ($flush)
@@ -170,6 +172,38 @@ abstract class SuperService extends AService {
         if ($this->repository->upsert(array($model), $where)->execute()) {
             return ($flush) ? $this->flush() : true;
         }
+    }
+
+    /**
+     * Adds an error to the current operation
+     * @param string|array $error
+     * @return \DSLive\Controllers\SuperController
+     */
+    final public function addErrors($error) {
+        if (is_string($error))
+            $this->errors[] = $error;
+        else if (is_array($error))
+            $this->errors = array_merge($this->errors, $error);
+        else
+            throw new \Exception('Error must be of type string or array. Got "' . gettype($error) . '" instead');
+
+        return $this;
+    }
+
+    /**
+     * Fetches an array of all errors
+     * @return array
+     */
+    final public function getErrors() {
+        return (is_array($this->errors)) ? $this->errors : array();
+    }
+
+    /**
+     * Surrounds each error in an li tag
+     * @return string
+     */
+    final public function prepareErrors() {
+        return '<li>' . join('</li><li>', $this->errors) . '</li>';
     }
 
 }

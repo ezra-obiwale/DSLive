@@ -42,7 +42,7 @@ class FileOut {
             return str_replace('protected/data', '', $file);
         }
         
-        return substr(stristr($filename, 'public/'), 6);
+        return $filename;
     }
 
     private function parseAttributes($attributes) {
