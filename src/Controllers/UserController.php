@@ -24,7 +24,7 @@ class UserController extends SuperController {
     }
 
     public function noCache() {
-        return array_merge(parent::noCache(), 'edit-password');
+        return true;
     }
 
     public function indexAction() {

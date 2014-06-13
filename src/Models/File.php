@@ -9,8 +9,8 @@ namespace DSLive\Models;
  */
 abstract class File extends Model {
 
-    private $extensions;
-    private $badExtensions;
+    private $extensions = array();
+    private $badExtensions = array();
     private $maxSize;
 
     /**
@@ -37,6 +37,7 @@ abstract class File extends Model {
      */
     private $names;
     private $errors;
+    private $limits;
 
     abstract public function __construct();
 
@@ -187,6 +188,9 @@ abstract class File extends Model {
             $savePaths = array();
             $cnt = 1;
             foreach ($extension as $ky => $ext) {
+                if (array_key_exists($ppt, $this->limits) && $this->limits[$ppt] == $ky)
+                    break;
+
                 $public = ROOT . 'public';
                 $dir = DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR;
                 if (!is_dir($public . $dir)) {
@@ -207,7 +211,7 @@ abstract class File extends Model {
                     $this->names[] = $nam . $cnt;
                 }
                 else {
-                    $cnt = time() . '_' . preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
+                    $cnt = preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
                 }
                 $nam .= $cnt . '.' . $ext;
 
@@ -221,8 +225,10 @@ abstract class File extends Model {
             }
 
             $this->unlink($ppt);
-            $sp = array_values($savePaths);
-            $this->$ppt = (count($savePaths) > 1) ? serialize($savePaths) : $sp[0];
+            if (!empty($savePaths)) {
+                $sp = array_values($savePaths);
+                $this->$ppt = (count($sp) > 1) ? serialize($savePaths) : $sp[0];
+            }
         }
         return $savePaths;
     }
@@ -328,7 +334,7 @@ abstract class File extends Model {
      * Fetches the mime attribute of the file
      * @return string
      */
-    public function getMime() {
+    public function getMime($property = NULL) {
         return $this->mime;
     }
 
@@ -360,12 +366,25 @@ abstract class File extends Model {
         return $this;
     }
 
+    public function limitFile($property, $count) {
+        $this->limits[$property] = $count;
+        return $this;
+    }
+
     /**
      * Fetches the errors that occurred during file upload
      * @return array
      */
     final public function getErrors() {
         return $this->errors;
+    }
+
+    public function postFetch() {
+        foreach (array_keys(array_merge($this->extensions, $this->badExtensions)) as $property) {
+            if ($this->$property && $array = unserialize($this->$property)) {
+                $this->$property = $array;
+            }
+        }
     }
 
 }

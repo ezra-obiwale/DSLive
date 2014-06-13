@@ -6,13 +6,14 @@
 namespace DSLive\Controllers;
 
 use DScribe\Core\AController,
+    DScribe\Core\Engine,
     DScribe\Core\IModel,
     DScribe\Core\Repository,
     DScribe\View\View,
     DSLive\Models\User,
+    DSLive\Services\SuperService,
     DSLive\Stdlib\AjaxResponse,
     Exception,
-    Object,
     Util;
 
 /**
@@ -24,7 +25,7 @@ abstract class SuperController extends AController {
 
     /**
      *
-     * @var \DSLive\Services\SuperService
+     * @var SuperService
      */
     protected $service;
 
@@ -53,13 +54,14 @@ abstract class SuperController extends AController {
      */
     public function init() {
         $this->currentUser = clone($this->userIdentity()->getUser());
+        $this->currentUser->setConnection(Engine::getDB());
         $this->layout = $this->currentUser->getRole();
         $this->order = 'id';
     }
 
     public function getCurrentUserFromDB() {
         if (!$this->userIsLive && $this->currentUser->getId()) {
-            $userRepo = new Repository(new \Cms\Models\User);
+            $userRepo = new Repository(new \DSLive\Models\User);
             $user = $userRepo->findOne($this->currentUser->getId());
             if ($user)
                 $this->currentUser = $user;
@@ -165,35 +167,12 @@ abstract class SuperController extends AController {
      * controller, (string) action, (array) params
      * @return View
      */
-    public function newAction(array $variables = array(), array $modifyForm = array(), array $redirect = array()) {
+    public function newAction(array $redirect = array()) {
         $form = $this->service->getForm();
-
-        foreach ($modifyForm as $type => $typeArray) {
-            switch ($type) {
-                case 'ignoreFilters':
-                    foreach ($typeArray as $name) {
-                        $form->ignoreFilter($name);
-                    }
-                    break;
-                case 'removeElements':
-                    foreach ($typeArray as $name) {
-                        $form->remove($name);
-                    }
-                    break;
-                case 'setElements':
-                    foreach ($typeArray as $elem => $part) {
-                        $this->modifyElement($form->get($elem), $part);
-                    }
-                    break;
-            }
-        }
 
         if ($this->request->isPost()) {
             $data = $this->request->getPost();
-            $this->checkFiles();
-            if ($this->request->getFiles()->notEmpty()) {
-                $data->add($this->request->getFiles()->toArray());
-            }
+            $this->checkFiles($data);
             $form->setData($data);
             if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
                 $this->flash()->setSuccessMessage('Save successful');
@@ -212,20 +191,25 @@ abstract class SuperController extends AController {
             }
         }
 
-        $this->view->variables(array_merge($variables, array(
+        $this->view->variables(array(
             'form' => $form,
-        )));
+        ));
 
         return $this->request->isAjax() ?
                 $this->view->partial() :
                 $this->view;
     }
 
-    protected function checkFiles() {
-        foreach ($this->request->getFiles()->toArray() as $name => $data) {
-            if (empty($data->name)) {
+    protected function checkFiles(&$data, $model = null) {
+        foreach ($this->request->getFiles()->toArray() as $name => $dat) {
+            if ((!is_array($dat->name) && empty($dat->name)) || (is_array($dat->name) && empty($dat->name[0]))) {
                 $this->request->getFiles()->remove($name);
+                $method = 'get' . ucfirst($name);
+                $this->request->getPost()->$name = $model->$method();
             }
+        }
+        if ($this->request->getFiles()->notEmpty()) {
+            $data->add($this->request->getFiles()->toArray());
         }
     }
 
@@ -245,37 +229,14 @@ abstract class SuperController extends AController {
      * controller, (string) action, (array) params
      * @return View
      */
-    public function editAction($id, array $variables = array(), array $modifyForm = array(), array $redirect = array()) {
+    public function editAction($id, array $redirect = array()) {
         $model = (is_object($id)) ? $id : $this->service->findOne($id);
         $form = $this->service->getForm();
-
-        foreach ($modifyForm as $type => $typeArray) {
-            switch ($type) {
-                case 'ignoreFilters':
-                    foreach ($typeArray as $name) {
-                        $form->ignoreFilter($name);
-                    }
-                    break;
-                case 'removeElements':
-                    foreach ($typeArray as $name) {
-                        $form->remove($name);
-                    }
-                    break;
-                case 'setElements':
-                    foreach ($typeArray as $elem => $part) {
-                        $this->modifyElement($form->get($elem), $part);
-                    }
-                    break;
-            }
-        }
 
         $form->setModel(clone $model);
         if ($this->request->isPost()) {
             $data = $this->request->getPost();
-            $this->checkFiles();
-            if ($this->request->getFiles()->notEmpty()) {
-                $data->add($this->request->getFiles()->toArray());
-            }
+            $this->checkFiles($data, $model);
             $form->setData($data);
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 $this->flash()->setSuccessMessage('Save successful');
@@ -288,37 +249,14 @@ abstract class SuperController extends AController {
             }
         }
 
-        $this->view->variables(array_merge($variables, array(
+        $this->view->variables(array(
             'model' => $model,
             'form' => $form,
-        )));
+        ));
 
         return $this->request->isAjax() ?
                 $this->view->partial() :
                 $this->view;
-    }
-
-    /**
-     * Modifies an element in the form
-     * @param Object $elem
-     * @param array $part 
-     */
-    private function modifyElement(Object $elem, array $part) {
-        foreach ($part as $key => $value) {
-            $toDo = null;
-            $path = explode('.', $key);
-            foreach ($path as $ky => $pt) {
-                if (!$ky) {
-                    $toDo = & $elem->$pt;
-                }
-                elseif (count($path) < ($ky + 1)) {
-                    $toDo = & $toDo->$pt;
-                }
-                else {
-                    $toDo->$pt = $value;
-                }
-            }
-        }
     }
 
     /**
@@ -342,7 +280,7 @@ abstract class SuperController extends AController {
      * @param int $confirm >= 1 to confirm delete
      * @return View
      */
-    public function deleteAction($id, $confirm = null, array $variables = array(), array $redirect = array()) {
+    public function deleteAction($id, $confirm = null, array $redirect = array()) {
         $model = (is_object($id)) ? $id : $this->service->findOne($id);
         if ($confirm == 1) {
             if ($this->service->delete()) {
@@ -356,9 +294,9 @@ abstract class SuperController extends AController {
             $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }
 
-        $this->view->variables(array_merge(array(
+        $this->view->variables(array(
             'model' => $model,
-                        ), $variables));
+        ));
 
         return $this->request->isAjax() ?
                 $this->view->partial() :

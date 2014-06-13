@@ -16,12 +16,9 @@ use DBScribe\Util,
     DSLive\Models\AdminUser,
     DSLive\Models\Settings,
     DSLive\Models\User,
-    DSLive\Stdlib\Util as DSU,
     Email,
     Exception,
-    In\Models\User as IMU,
-    Object,
-    Session;
+    Object;
 
 class GuestService extends AService {
 
@@ -42,7 +39,7 @@ class GuestService extends AService {
     private $errors;
 
     protected function init() {
-        $this->setModel(new IMU);
+        $this->setModel(new User);
     }
 
     public function getSettingsRepository() {
@@ -107,9 +104,9 @@ class GuestService extends AService {
 
     /**
      * 
-     * @param \DScribe\View\View $view
+     * @param View $view
      * @param array $controllerPath Array with keys module and controller
-     * @param \DScribe\Form\Form $form
+     * @param Form $form
      * @param boolean $setup
      * @param boolean $flush
      * @return boolean
@@ -117,9 +114,12 @@ class GuestService extends AService {
     public function register(View $view, $controllerPath, Form $form, $setup = false, $flush = true) {
         $model = $form->getModel();
         $model->hashPassword();
-        if ($this->repository->findOneBy('email', $model->getEmail()))
+        if ($this->repository->findOneBy('email', $model->getEmail())) {
+            $this->addErrors('User <a title="send mail to account owner" href="mailto:' . $model->getEmail() . '">' . $model->getEmail() . '</a> already exists');
             return false;
-        if (!$this->repository->fetchAll()->count()) {
+        }
+
+        if (!$this->repository->count()) {
             $_model = new AdminUser();
             $_model->populate($model->toArray());
             $model = $_model;
@@ -140,6 +140,10 @@ class GuestService extends AService {
     public function confirmRegistration($id, $email) {
         $user = $this->repository->findOneWhere(array(array('id' => $id, 'email' => $email)));
         if (NULL !== $user) {
+            if ($user->getActive()) {
+                $this->addErrors('User is already active');
+                return false;
+            }
             $user->setActive(TRUE);
             $this->repository->update($user)->execute();
             $this->flush();
@@ -150,16 +154,17 @@ class GuestService extends AService {
         return $user;
     }
 
-    public function resetPassword(IMU $model, $id, $reset) {
+    public function resetPassword(User $model, $id, $reset) {
         if (!$reset) { //just requesting
             $model = $this->getRepository()->findOneBy('email', $model->getEmail());
             if (!$model) {
+                $this->addErrors('User account does not exist');
                 return false;
             }
             $model->setReset(Util::createGUID());
             if ($this->repository->update($model)->execute()) {
                 if (!$this->sendEmail($model, self::NOTIFY_PSWD_RESET)) {
-                    return false;
+                    $this->addErrors('Email notification failed to send');
                 }
             }
         }
@@ -168,12 +173,13 @@ class GuestService extends AService {
             $model->setId($id)->setReset($reset)->setPassword(null);
             $model = $this->getRepository()->findOneWhere(array($model));
             if (!$model) {
+                $this->addErrors('User account does not exist');
                 return false;
             }
             $model->setPassword($password)->hashPassword()->setReset('');
             if ($this->repository->update($model)->execute()) {
                 if (!$this->sendEmail($model, self::NOTIFY_PSWD_RESET_SUCCESS)) {
-                    return false;
+                    $this->addErrors('Email notification failed to send');
                 }
             }
         }
@@ -184,11 +190,16 @@ class GuestService extends AService {
         $model->hashPassword();
         $this->model = $this->repository->findOneWhere($model);
         if ($this->model) {
-            if (!$this->model->getActive())
+            if (!$this->model->getActive()) {
+                $this->addErrors('User account is not yet active');
                 return false;
+            }
 
             $this->model->update();
             $this->repository->update($this->model)->execute();
+        }
+        else {
+            $this->addErrors('User account does not exist');
         }
         return $this->model;
     }
@@ -202,7 +213,7 @@ class GuestService extends AService {
         if (!$reg) // if notification type message is not available, ignore sending
             return true;
 //        $email->setHTML($reg->message, array('autoSetText' => true));
-        $email->setText(DSU::prepareMessage($reg->message, $user));
+        $email->setText(User::prepareMessage($reg->message, $user));
         $webMasterEmail = Engine::getDB()->table('settings')->select(array(array('key' => 'email')))->first();
         if (!$webMasterEmail)
             return false;
@@ -220,40 +231,6 @@ class GuestService extends AService {
             return false;
         }
         return true;
-    }
-
-    public static function beforeLogout($class, $method, array $methodParams = array()) {
-        $beforeLogout = Session::fetch('bL');
-        if (!$beforeLogout) {
-            $beforeLogout = array();
-        }
-        $beforeLogout[$class][$method] = $methodParams;
-        Session::save('bL', $beforeLogout);
-    }
-
-    public function doBeforeLogout() {
-        foreach (Session::fetch('bL') as $class => $methodsArray) {
-            foreach ($methodsArray as $method => $params) {
-                call_user_func_array(array($class, $method), $params);
-            }
-        }
-    }
-
-    public function getErrorMessage($code) {
-        $codes = array(
-            400 => array('400 Bad Request', 'The request cannot be fulfilled due to bad syntax.'),
-            401 => array('401 Login Error', 'It appears that the password and/or user-name you entered was incorrect.'),
-            403 => array('403 Forbidden', 'Sorry, you do not have access to this resource.'),
-            404 => array('404 Missing', 'We\'re sorry, but the page you\'re looking for is missing, hiding, or maybe we moved it somewhere else and forgot to tell you.'),
-            405 => array('405 Method Not Allowed', 'The method specified in the Request-Line is not allowed for the specified resource.'),
-            408 => array('408 Request Timeout', 'Your browser failed to send a request in the time allowed by the server.'),
-            414 => array('414 URL To Long', 'The URL you entered is longer than the maximum length.'),
-            500 => array('500 Internal Server Error', 'The request was unsuccessful due to an unexpected condition encountered by the server.'),
-            502 => array('502 Bad Gateway', 'The server received an invalid response from the upstream server while trying to fulfill the request.'),
-            504 => array('504 Gateway Timeout', 'The upstream server failed to send a request in the time allowed by the server.'),
-        );
-
-        return (isset($codes[$code])) ? $codes[$code] : array('Unknown Error', 'Your request generated an unknown error');
     }
 
     /**

@@ -12,6 +12,7 @@ class GuestController extends AController {
      */
     protected $service;
     private $setup = false;
+    protected $loginAction = 'login';
 
     public function noCache() {
         return false;
@@ -32,9 +33,12 @@ class GuestController extends AController {
                         'controller' => $this->getClassName(),
                             ), $form, $this->setup)) {
                 $this->flash()->setSuccessMessage('Registration successful. Please check your email account to confirm your registration');
-                $this->redirect($this->getModule(), $this->getClassName(), 'login');
+                $this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);
             }
-            $this->flash()->setErrorMessage('Registration failed. Please check your entries and try again');
+            $this->flash()
+                    ->setErrorMessage('Registration failed. Please check your entries and try again')
+                    ->addErrorMessage($this->service->getErrors());
+            $form->setData(array('confirm' => ''));
         }
         $this->view->variables(array(
             'title' => 'Register',
@@ -69,7 +73,7 @@ class GuestController extends AController {
         else {
             $this->flash()->setErrorMessage('Confirm registration failed');
         }
-        $this->redirect($this->getModule(), $this->getClassName(), 'login');
+        $this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);
     }
 
     public function loginAction($module = null, $controller = null, $action = null, $params = null) {
@@ -91,7 +95,8 @@ class GuestController extends AController {
                 $this->redirect($module ? $module : $this->getModule(), $controller ?
                                 $controller : 'dashboard', $action ? $action : $model->getRole(), $params);
             }
-            $this->flash()->setMessage('Login failed. Please check your entries and try again');
+            $this->flash()->setMessage('Login failed. Please check your entries and try again')
+                    ->addErrorMessage($this->service->getErrors());
         }
         $this->view->variables(array(
             'title' => 'Login',
@@ -117,11 +122,13 @@ class GuestController extends AController {
             $form->setData($this->request->getPost());
             if ($form->isValid() && ($this->service->resetPassword($form->getModel(), $id, $password))) {
                 $this->flash()->setSuccessMessage((isset($id) && isset($password)) ?
-                                'Password reset successfully. You may now login' :
-                                'Password reset initiated. Please check your email address for further instructions');
+                                        'Password reset successfully. You may now login' :
+                                        'Password reset initiated. Please check your email address for further instructions')
+                        ->addErrorMessage($this->service->getErrors());
                 $this->redirect($this->getModule(), $this->getClassName(), 'login');
             }
-            $this->flash()->setErrorMessage('Password reset failed.');
+            $this->flash()->setErrorMessage('Password reset failed.')
+                    ->addErrorMessage($this->service->getErrors());
         }
         $this->view->variables(array(
             'title' => 'Reset Password',
@@ -133,7 +140,6 @@ class GuestController extends AController {
     }
 
     public function logoutAction($module = null, $controller = null, $action = null, $params = null) {
-        $this->service->doBeforeLogout();
         $this->resetUserIdentity();
         if ($module !== null) {
             $params = ($params === null) ? array() : explode(':', $params);
@@ -150,7 +156,8 @@ class GuestController extends AController {
                 $this->flash()->setSuccessMessage('Your message has been sent successfully. Thank you.');
             }
             else {
-                $this->flash()->setErrorMessage('Send message failed.');
+                $this->flash()->setErrorMessage('Send message failed.')
+                        ->addErrorMessage($this->service->getErrors());
             }
             $this->redirect($this->getModule(), $this->getClassName(), 'contact-us');
         }
@@ -163,46 +170,19 @@ class GuestController extends AController {
                 $this->view;
     }
 
+    /**
+     * Name of action that overrides method loginAction
+     * @param string $loginAction
+     * @return \DScribe\View\View
+     */
     public function setupAction() {
         if ($this->service->getRepository()->limit(1)->select()->execute()->first()) {
-            $this->redirect($this->getModule(), $this->getClassName(), 'login');
+            $this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);
         }
         $this->setup = true;
         $return = $this->registerAction();
-        $submit = $return->getVariables('form')->get('submit');
-        $submit->options->value = 'Let\'s Begin';
-        $return->getVariables('form')->remove('submit')
-                ->add(array(
-                    'name' => 'demo',
-                    'type' => 'checkbox',
-                    'options' => array(
-                        'label' => 'Create demo categories and pages'
-                    )
-                ))
-                ->add($submit->toArray());
-        return $return->variables(array('title' => 'CMS Setup'));
-    }
-
-    public function errorAction($code) {
-        $this->layout = 'guest-2-columns';
-        return $this->view->variables(array(
-                    'error' => $this->service->getErrorMessage($code)
-        ));
-    }
-
-    /**
-     * Saves/Fetches a value to/from session. Used for ajax sessioning only
-     * @param string $name
-     * @param mixed $value
-     */
-    public function asssnAction($key, $value = null) {
-        if ($this->request->isAjax()) {
-            if ($value !== null)
-                \Session::save($key, $value);
-            else {
-                die(\Session::fetch($key));
-            }
-        }
+        $return->getVariables('form')->get('submit')->options->value = 'Done';
+        return $return->variables(array('title' => 'Setup'));
     }
 
 }
