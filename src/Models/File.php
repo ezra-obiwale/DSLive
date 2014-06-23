@@ -11,7 +11,9 @@ abstract class File extends Model {
 
     private $extensions = array();
     private $badExtensions = array();
+    private $withThumbnails = array();
     private $maxSize;
+    private $directory;
 
     /**
      * The name of the property to use as the name of the file when saving to filesystem
@@ -49,9 +51,6 @@ abstract class File extends Model {
      * @throws \Exception
      */
     final public function addExtension($property, $ext) {
-        if (!property_exists($this, $property)) {
-            throw new \Exception('Add File Extension Error: Property "' . $property . '" does not exists');
-        }
 
         $this->extensions[$property][] = $ext;
         return $this;
@@ -65,10 +64,10 @@ abstract class File extends Model {
      * @return \DSLive\Models\File
      * @throws \Exception
      */
-    final public function setExtensions($property, array $extensions) {
-        if (!property_exists($this, $property)) {
-            throw new \Exception('File Add Extension Error: Property "' . $property . '" does not exists');
-        }
+    public function setExtensions($property, array $extensions) {
+//        if (!property_exists($this, $property)) {
+//            throw new \Exception('File Add Extension Error: Property "' . $property . '" does not exists');
+//        }
 
         $this->extensions[$property] = $extensions;
         return $this;
@@ -92,9 +91,6 @@ abstract class File extends Model {
      * @throws \Exception
      */
     final public function addBadExtension($property, $ext) {
-        if (!property_exists($this, $property)) {
-            throw new \Exception('Add Bad File Extension Error: Property "' . $property . '" does not exists');
-        }
 
         $this->badExtensions[$property][] = $ext;
         return $this;
@@ -108,12 +104,25 @@ abstract class File extends Model {
      * @return \DSLive\Models\File
      * @throws \Exception
      */
-    final public function setBadExtensions($property, array $extensions) {
-        if (!property_exists($this, $property)) {
-            throw new \Exception('Add Bad File Extension Error: Property "' . $property . '" does not exists');
-        }
+    public function setBadExtensions($property, array $extensions) {
 
         $this->badExtensions[$property] = $extensions;
+        return $this;
+    }
+
+    final public function withThumbnails($property, $desiredWidth = 200) {
+        $this->withThumbnails[$property] = $desiredWidth;
+        return $this;
+    }
+
+    /**
+     * Sets the directory to upload files to
+     * @param string $directory
+     * @return \DSLive\Models\File
+     */
+    final public function setDirectory($directory) {
+        $this->directory = (substr($directory, strlen($directory) - 1) === DIRECTORY_SEPARATOR) ?
+                $directory : $directory . DIRECTORY_SEPARATOR;
         return $this;
     }
 
@@ -164,7 +173,7 @@ abstract class File extends Model {
      * @return boolean
      * @throws \Exception
      */
-    final public function uploadFiles($files) {
+    public function uploadFiles($files, $removeOld = true) {
         if (is_object($files) && get_class($files) === 'Object') {
             $files = $files->toArray(true);
         }
@@ -172,11 +181,9 @@ abstract class File extends Model {
             throw new \Exception('Param $files must be either an object of type \Object or an array');
         }
 
+        $savePaths = array();
         foreach ($files as $ppt => $info) {
             if (empty($info['name']))
-                continue;
-
-            if (!property_exists($this, $ppt))
                 continue;
 
             $extension = $this->fileIsOk($ppt, $info);
@@ -185,52 +192,86 @@ abstract class File extends Model {
 
             $name = is_array($info['name']) ? $info['name'] : array($info['name']);
 
-            $savePaths = array();
             $cnt = 1;
             foreach ($extension as $ky => $ext) {
                 if (array_key_exists($ppt, $this->limits) && $this->limits[$ppt] == $ky)
                     break;
 
-                $public = ROOT . 'public';
-                $dir = DIRECTORY_SEPARATOR . 'media' . DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) . DIRECTORY_SEPARATOR . $ext . DIRECTORY_SEPARATOR;
-                if (!is_dir($public . $dir)) {
-                    if (!mkdir($public . $dir, 0777, true)) {
+                $dir = $this->getMediaPath() . $ext . DIRECTORY_SEPARATOR;
+                if (!is_dir($dir)) {
+                    if (!mkdir($dir, 0777, true)) {
                         throw new \Exception('Permission denied to directory "' . ROOT . 'public/"');
                     }
                 }
-
-                $nam = '';
                 if ($this->altNameProperty !== null) {
-                    $nam = preg_replace('/[^A-Z0-9._-]/i', '_', basename($this->{'get' . $this->altNameProperty}())) . '_';
+                    $nam = preg_replace('/[^A-Z0-9]/i', '-', basename($this->{'get' . $this->altNameProperty}())) . '_';
 
                     if (!$this->overwrite) {
                         while (is_readable($dir . $nam . $cnt . '.' . $ext)) {
                             $cnt++;
                         }
                     }
-                    $this->names[] = $nam . $cnt;
+                    $nam .= $cnt . '.' . $ext;
                 }
                 else {
-                    $cnt = preg_replace('/[^A-Z0-9._-]/i', '_', basename($name[$ky]));
+                    $inf = pathinfo($name[$ky]);
+                    $nam = $cnt = str_replace('--', '', preg_replace('/[^A-Z0-9]/i', '-', $inf['filename'])) . '.' . $ext;
                 }
-                $nam .= $cnt . '.' . $ext;
 
+                $this->names[] = $nam;
                 $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
                 $source = is_array($tmpName) ? $tmpName[$ky] : $tmpName;
-                if (!move_uploaded_file($source, $public . $dir . $nam)) {
+                if (!move_uploaded_file($source, $dir . $nam)) {
                     return false;
                 }
-                $savePaths[$cnt] = $dir . $nam;
+
+                if (array_key_exists($ppt, $this->withThumbnails)) {
+                    if (!is_dir($dir . '.thumbnails'))
+                        mkdir($dir . '.thumbnails');
+                    \Util::resizeImage($dir . $nam, $this->withThumbnails[$ppt], $dir . '.thumbnails' . DIRECTORY_SEPARATOR . $nam);
+                }
+
+                $savePaths[$ppt][$nam] = str_replace(ROOT . 'public', '', $dir . $nam);
                 $cnt++;
             }
-
-            $this->unlink($ppt);
+            if ($removeOld)
+                $this->unlink($ppt);
             if (!empty($savePaths)) {
-                $sp = array_values($savePaths);
-                $this->$ppt = (count($sp) > 1) ? serialize($savePaths) : $sp[0];
+                if ($this->$ppt && !is_object($this->$ppt)) {
+                    if (is_array($this->$ppt))
+                        $this->$ppt = array_merge($this->$ppt, $savePaths[$ppt]);
+                    else
+                        $this->$ppt = array_merge(array($this->$ppt), $savePaths[$ppt]);
+                }
+                else
+                    $this->$ppt = $savePaths[$ppt];
             }
         }
+
         return $savePaths;
+    }
+
+    /**
+     * Fetches the thumbnails of the values in the given property, if available
+     * @param string $property Name of the property in the current class
+     * @param mixed $key The key index of the file to get from the property's values
+     * @return mixed
+     */
+    final public function getThumbnails($property, $key = null) {
+        $method = 'get' . ucfirst($property);
+        if (!$this->$method())
+            return array();
+
+        $thumbs = (!is_array($this->$method())) ? array($this->$method()) : $this->$method();
+        array_walk($thumbs, function(&$value) {
+            $value = str_replace(basename($value), '.thumbnails' . DIRECTORY_SEPARATOR . basename($value), $value);
+        });
+
+        if ($key === null)
+            return $thumbs;
+
+        if (array_key_exists($key, $thumbs))
+            return $thumbs[$key];
     }
 
     /**
@@ -253,7 +294,7 @@ abstract class File extends Model {
             return false;
         }
 
-        $this->mime = is_array($info['type']) ? serialize($info['type']) : $info['type'];
+        $this->mime[$property][] = $info['type'];
         return $this->extensionIsOk($property, $info['name']);
     }
 
@@ -270,7 +311,7 @@ abstract class File extends Model {
             $info = pathinfo($nm);
             $extension = strtolower($info['extension']);
             if ((isset($this->extensions[$property]) && !in_array($extension, $this->extensions[$property])) || (isset($this->badExtensions[$property]) && in_array($extension, $this->badExtensions[$property]))) {
-                $this->errors[] = 'File extension not allowed';
+                $this->errors[] = 'File extension (' . $extension . ') not allowed for ' . $property;
                 return false;
             }
 
@@ -322,10 +363,36 @@ abstract class File extends Model {
      * @param string $property
      * @return boolean
      */
-    final public function unlink($property) {
-        if (property_exists($this, $property) && is_string($this->$property) &&
-                is_file($this->$property))
-            return unlink($this->$property);
+    final public function unlink($property = null) {
+        if (!$this->badExtensions)
+            $this->badExtensions = array();
+        if (!$this->extensions)
+            $this->extensions = array();
+
+        $properties = $property ? array($property) :
+                array_keys(array_merge($this->badExtensions, $this->extensions));
+
+        foreach ($properties as $property) {
+            if (property_exists($this, $property) && is_string($this->$property) &&
+                    is_file($this->$property)) {
+                unlink(ROOT . 'public' . $this->$property);
+                if (array_key_exists($property, $this->withThumbnails)) {
+                    foreach ($this->getThumbnails($property) as $file) {
+                        unlink(ROOT . 'public' . $file);
+                    }
+                }
+            }
+            else if (is_array($this->$property)) {
+                foreach ($this->$property as $file) {
+                    unlink(ROOT . 'public' . $file);
+                }
+                if (array_key_exists($property, $this->withThumbnails)) {
+                    foreach ($this->getThumbnails($property) as $file) {
+                        unlink(ROOT . 'public' . $file);
+                    }
+                }
+            }
+        }
 
         return true;
     }
@@ -335,7 +402,11 @@ abstract class File extends Model {
      * @return string
      */
     public function getMime($property = NULL) {
-        return $this->mime;
+        if (!$property)
+            return $this->mime;
+
+        if (array_key_exists($property, $this->mime))
+            return $this->mime[$property];
     }
 
     /**
@@ -376,7 +447,18 @@ abstract class File extends Model {
      * @return array
      */
     final public function getErrors() {
-        return $this->errors;
+        return ($this->errors) ? $this->errors : array();
+    }
+
+    public function preSave($createId = true) {
+        foreach (array_keys(array_merge($this->extensions, $this->badExtensions)) as $property) {
+            if ($this->$property && is_array($this->$property))
+                $this->$property = serialize($this->$property);
+        }
+
+        if ($this->mime && is_array($this->mime))
+            $this->mime = serialize($this->mime);
+        parent::preSave($createId);
     }
 
     public function postFetch() {
@@ -385,6 +467,15 @@ abstract class File extends Model {
                 $this->$property = $array;
             }
         }
+
+        if ($this->mime)
+            $this->mime = unserialize($this->mime);
+    }
+
+    public function getMediaPath() {
+        return ROOT . 'public' . DIRECTORY_SEPARATOR . 'media' .
+                DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) .
+                DIRECTORY_SEPARATOR . $this->directory;
     }
 
 }

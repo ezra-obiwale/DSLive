@@ -35,8 +35,10 @@ abstract class SuperUser extends AUser {
     public function __construct() {
         $this->setTableName('user');
         $this->stdFile = new \DSLive\Stdlib\File;
-        $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif', 'bmp'));
-        $this->stdFile->setMaxSize('500kb');
+        $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif', 'bmp'))
+                ->setMaxSize('500kb')
+                ->withThumbnails('picture', 50)
+                ->setOverwrite(true);
     }
 
     public function getPassword() {
@@ -103,16 +105,10 @@ abstract class SuperUser extends AUser {
         if (!$this->stdFile)
             $this->__construct();
 
-        if ($path = $this->stdFile->uploadFiles($files)) {
-            if (!is_bool($path)) {
-                if (is_array($path)) {
-                    $path = array_values($path);
-                    $this->setPicture($path[0]);
-                }
-                else
-                    $this->setPicture($path);
+        if ($this->stdFile->uploadFiles($files)) {
+            foreach ($this->stdFile->getProperties(false) as $property => $value) {
+                $this->$property = $value;
             }
-
             $this->mime = $this->stdFile->getMime();
             return true;
         }
@@ -145,6 +141,13 @@ abstract class SuperUser extends AUser {
      */
     public function getErrors() {
         return $this->stdFile->getErrors();
+    }
+
+    public function getThumbnails($property) {
+        if (!$this->stdFile)
+            $this->__construct();
+        $this->stdFile->$property = $this->$property;
+        return $this->stdFile->getThumbnails($property, 0);
     }
 
 }

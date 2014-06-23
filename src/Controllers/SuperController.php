@@ -59,7 +59,7 @@ abstract class SuperController extends AController {
         $this->order = 'id';
     }
 
-    public function getCurrentUserFromDB() {
+    final public function getCurrentUserFromDB() {
         if (!$this->userIsLive && $this->currentUser->getId()) {
             $userRepo = new Repository(new \DSLive\Models\User);
             $user = $userRepo->findOne($this->currentUser->getId());
@@ -90,7 +90,7 @@ abstract class SuperController extends AController {
             Util::camelToHyphen($this->getClassName()),
             Util::camelToHyphen($action),
             join(':', $args)
-        ));
+                ), $redirect['hash']);
     }
 
     public function accessRules() {
@@ -201,11 +201,10 @@ abstract class SuperController extends AController {
     }
 
     protected function checkFiles(&$data, $model = null) {
+        $model = (!$model) ? $this->service->getModel() : $model;
         foreach ($this->request->getFiles()->toArray() as $name => $dat) {
             if ((!is_array($dat->name) && empty($dat->name)) || (is_array($dat->name) && empty($dat->name[0]))) {
                 $this->request->getFiles()->remove($name);
-                $method = 'get' . ucfirst($name);
-                $this->request->getPost()->$name = $model->$method();
             }
         }
         if ($this->request->getFiles()->notEmpty()) {
@@ -301,6 +300,27 @@ abstract class SuperController extends AController {
         return $this->request->isAjax() ?
                 $this->view->partial() :
                 $this->view;
+    }
+
+    /**
+     * Checks if the HTTP Referer is the given url
+     * 
+     * @param string|array $url A single url or an array of urls to check. Urls
+     * should start with http|https
+     * @return boolean
+     */
+    final protected function isReferer($url) {
+        if (!is_array($url)) {
+            $url = array($url);
+        }
+
+        $return = false;
+        foreach ($url as $u) {
+            if (substr($this->request->getHttp()->referer, 0, strlen($u)) === $u)
+                $return = true;
+        }
+
+        return $return;
     }
 
 }

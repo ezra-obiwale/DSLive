@@ -14,7 +14,7 @@ abstract class SuperService extends AService {
     /**
      * @var array
      */
-    private $errors;
+    private $errors = array();
 
     /**
      * Initialize property $errors to empty array
@@ -80,8 +80,9 @@ abstract class SuperService extends AService {
                 throw new Exception('Required page was not found');
             else
                 $this->addErrors('Required object was not found');
+        } else {
+            $this->model = $model;
         }
-        $this->model = $model;
         return $this->model;
     }
 
@@ -93,7 +94,7 @@ abstract class SuperService extends AService {
      * @todo Set first parameter as form so one can fetch either model or data
      */
     public function create(IModel $model, Object $files = null, $flush = true) {
-        if (method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+        if ($files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
             $this->addErrors('File upload failed');
             $this->addErrors($model->getErrors());
             return false;
@@ -120,19 +121,10 @@ abstract class SuperService extends AService {
         if (!is_object($files)) {
             $files = new \Object();
         }
-        $_files = array_values($files->toArray());
-        if ($files->count() && ((is_array($_files[0]->error) && $_files[0]->error[0] !== UPLOAD_ERR_NO_FILE) || (!is_array($_files[0]->error) && $_files[0]->error !== UPLOAD_ERR_NO_FILE)) && method_exists($model, 'uploadFiles')) {
-            if (method_exists($model, 'unlink')) {
-                foreach ($files->toArray() as $name => $content) {
-                    $method = 'get' . $name;
-                    $model->unlink($model->$method());
-                }
-            }
-            if (!$model->uploadFiles($files)) {
-                $this->addErrors('File upload failed');
-                $this->addErrors($model->getErrors());
-                return false;
-            }
+        if ($files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+            $this->addErrors('File upload failed');
+            $this->addErrors($model->getErrors());
+            return false;
         }
         if ($this->repository->update($model)->execute()) {
             if ($flush)
@@ -151,6 +143,9 @@ abstract class SuperService extends AService {
     public function delete($flush = true) {
         try {
             //@todo find a way to delete attached files
+            if (method_exists($this->model, 'unlink')) {
+                $this->model->unlink();
+            }
             $deleted = $this->repository->delete($this->model)->execute();
             if ($flush) {
                 return $this->flush();
@@ -168,7 +163,12 @@ abstract class SuperService extends AService {
         }
     }
 
-    public function upsert(IModel $model, $where = 'id', $flush = true) {
+    public function upsert(IModel $model, $where = 'id', Object $files = null, $flush = true) {
+        if ($files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+            $this->addErrors('File upload failed');
+            $this->addErrors($model->getErrors());
+            return false;
+        }
         if ($this->repository->upsert(array($model), $where)->execute()) {
             return ($flush) ? $this->flush() : true;
         }
@@ -195,7 +195,7 @@ abstract class SuperService extends AService {
      * @return array
      */
     final public function getErrors() {
-        return (is_array($this->errors)) ? $this->errors : array();
+        return is_array($this->errors) ? $this->errors : array();
     }
 
     /**

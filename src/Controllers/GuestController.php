@@ -25,6 +25,10 @@ class GuestController extends AController {
     }
 
     public function registerAction() {
+        return $this->register();
+    }
+
+    private function register() {
         $form = $this->service->getRegisterForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
@@ -95,7 +99,7 @@ class GuestController extends AController {
                 $this->redirect($module ? $module : $this->getModule(), $controller ?
                                 $controller : 'dashboard', $action ? $action : $model->getRole(), $params);
             }
-            $this->flash()->setMessage('Login failed. Please check your entries and try again')
+            $this->flash()->setErrorMessage('Login failed. Please check your entries and try again')
                     ->addErrorMessage($this->service->getErrors());
         }
         $this->view->variables(array(

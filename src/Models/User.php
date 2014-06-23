@@ -149,6 +149,16 @@ class User extends SuperUser {
     }
 
     public function preSave() {
+        if (is_array($this->picture)) {
+            $pictures = array_values($this->picture);
+            $this->picture = $pictures[0];
+        }
+        
+        if (is_array($this->mime)) {
+            $mime = array_values($this->mime['picture']);
+            $this->mime = $mime[0];
+        }
+        
         if ($this->role === null)
             throw new Exception('Role not set for user');
 
