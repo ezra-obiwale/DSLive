@@ -50,7 +50,10 @@ abstract class File extends Model {
      * @return \DSLive\Models\File
      * @throws \Exception
      */
-    final public function addExtension($property, $ext) {
+    public function addExtension($property, $ext) {
+//        if (!property_exists($this, $property)) {
+//            throw new \Exception('Add File Extension Error: Property "' . $property . '" does not exists');
+//        }
 
         $this->extensions[$property][] = $ext;
         return $this;
@@ -90,7 +93,10 @@ abstract class File extends Model {
      * @return \DSLive\Models\File
      * @throws \Exception
      */
-    final public function addBadExtension($property, $ext) {
+    public function addBadExtension($property, $ext) {
+//        if (!property_exists($this, $property)) {
+//            throw new \Exception('Add Bad File Extension Error: Property "' . $property . '" does not exists');
+//        }
 
         $this->badExtensions[$property][] = $ext;
         return $this;
@@ -105,6 +111,9 @@ abstract class File extends Model {
      * @throws \Exception
      */
     public function setBadExtensions($property, array $extensions) {
+//        if (!property_exists($this, $property)) {
+//            throw new \Exception('Add Bad File Extension Error: Property "' . $property . '" does not exists');
+//        }
 
         $this->badExtensions[$property] = $extensions;
         return $this;
@@ -192,7 +201,7 @@ abstract class File extends Model {
 
             $name = is_array($info['name']) ? $info['name'] : array($info['name']);
 
-            $cnt = 1;
+            $cnt = 2;
             foreach ($extension as $ky => $ext) {
                 if (array_key_exists($ppt, $this->limits) && $this->limits[$ppt] == $ky)
                     break;
@@ -204,19 +213,13 @@ abstract class File extends Model {
                     }
                 }
                 if ($this->altNameProperty !== null) {
-                    $nam = preg_replace('/[^A-Z0-9]/i', '-', basename($this->{'get' . $this->altNameProperty}())) . '_';
-
-                    if (!$this->overwrite) {
-                        while (is_readable($dir . $nam . $cnt . '.' . $ext)) {
-                            $cnt++;
-                        }
-                    }
-                    $nam .= $cnt . '.' . $ext;
+                    $nam = preg_replace('/[^A-Z0-9]/i', '-', basename($this->{'get' . $this->altNameProperty}()));
                 }
                 else {
                     $inf = pathinfo($name[$ky]);
-                    $nam = $cnt = str_replace('--', '', preg_replace('/[^A-Z0-9]/i', '-', $inf['filename'])) . '.' . $ext;
+                    $nam = str_replace('--', '', preg_replace('/[^A-Z0-9]/i', '-', $inf['filename']));
                 }
+                $nam .= $this->checkOverwrite($dir, $nam, $ext, $cnt) . '.' . $ext;
 
                 $this->names[] = $nam;
                 $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
@@ -249,6 +252,24 @@ abstract class File extends Model {
         }
 
         return $savePaths;
+    }
+
+    private function checkOverwrite($dir, $nam, $ext, &$cnt) {
+        if (!$this->overwrite) {
+            $preZeros = 3; // maximum of 9999
+            $cnt_str = '-' . str_repeat('0', $preZeros) . $cnt;
+            $benchmark = 10;
+            while (is_readable($dir . $nam . $cnt_str . '.' . $ext)) {
+                $cnt++;
+                if ($cnt === $benchmark) {
+                    $preZeros--;
+                    $benchmark *= 10;
+                }
+                $cnt_str = '-' . str_repeat('0', $preZeros) . $cnt;
+            }
+
+            return $cnt_str;
+        }
     }
 
     /**
