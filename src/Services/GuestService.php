@@ -20,7 +20,7 @@ use DBScribe\Util,
     Exception,
     Object;
 
-class GuestService extends AService {
+abstract class GuestService extends AService {
 
     const NOTIFY_REG = 'registration';
     const NOTIFY_CONFIRM = 'confirmation';
@@ -89,16 +89,27 @@ class GuestService extends AService {
     public function contactUs(Object $data, $to = null) {
         $email = new Email();
 
-        $to = ($to !== null) ? $to :
-                Engine::getDB()->table('settings')
-                        ->select(array(array('key' => 'email')))
-                        ->first()->value;
+        $to = Engine::getConfig('app', 'webmaster');
         $domain = Engine::getConfig('app', 'name');
         $email->addTo($to);
         $email->sendFrom(trim($data->email));
-        $message = ucwords(trim($data->fullName)) . " sent you a message on " . Util::createTimestamp() . "\n\r\n\r" . trim($data->message);
-//        $email->setText($message);
-        $email->setHTML(nl2br($message), array('autoSetText' => false));
+
+        \Table::init(array(
+            'border' => 0,
+            'cellspacing' => 0,
+            'cellpadding' => 6,
+            'style' => 'margin:10px 15%;width:70%;background-color:#eee;border:3px double'
+        ));
+        \Table::newRow();
+        \Table::addRowData(trim($data->fullName) . " sent you a message on " .
+                Util::createTimestamp() . ' from <a href="' .
+                Engine::getConfig('app', 'domain') . '">' .
+                Engine::getConfig('app', 'name') . '</a><hr />', array(
+            'style' => 'font-size:larger;font-weight:bolder'
+        ));
+        \Table::newRow();
+        \Table::addRowData(nl2br($data->message));
+        $email->setHTML(\Table::render(), array('autoSetText' => false));
         return $email->send($domain . ': ' . trim($data->title));
     }
 
@@ -125,14 +136,16 @@ class GuestService extends AService {
             $model = $_model;
         }
 
-        $model->setActive((Engine::getServer() !== 'development' || $setup));
-
+        $model->setActive(Engine::getServer() === 'development' || $setup);
         if ($this->repository->insert($model)->execute()) {
-            if (Engine::getServer() === 'production' && !$this->sendEmail($model)) {
+            if (Engine::getServer() !== 'development' && !$this->sendEmail($model)) {
                 $this->addErrors('Confirmation email not sent. <a href="' .
                                 $view->url($controllerPath['module'], $controllerPath['controller'], 'resend-confirmation', array($model->getId()))) .
                         '">Click here to resend your confirmation email</a>.';
             }
+
+            if ($setup)
+                $this->setup();
         }
         return ($flush) ? $this->flush() : true;
     }
@@ -164,16 +177,21 @@ class GuestService extends AService {
             $model->setReset(Util::createGUID());
             if ($this->repository->update($model)->execute()) {
                 if (!$this->sendEmail($model, self::NOTIFY_PSWD_RESET)) {
-                    $this->addErrors('Email notification failed to send');
+                    $this->addErrors('Email notification failed to send')
+                            ->addErrors('Please do a password reset again');
                 }
             }
         }
         else { //reseting password now
             $password = $model->getPassword();
-            $model->setId($id)->setReset($reset)->setPassword(null);
+            $model->setId($id)->setPassword(null);
             $model = $this->getRepository()->findOneWhere(array($model));
             if (!$model) {
                 $this->addErrors('User account does not exist');
+                return false;
+            }
+            else if ($model->getReset() !== $reset) {
+                $this->addErrors('Invalid action');
                 return false;
             }
             $model->setPassword($password)->hashPassword()->setReset('');
@@ -188,10 +206,14 @@ class GuestService extends AService {
 
     public function login(User $model) {
         $model->hashPassword();
-        $this->model = $this->repository->findOneWhere($model);
+        $this->model = $this->repository->findOneBy('email', $model->getEmail());
         if ($this->model) {
             if (!$this->model->getActive()) {
-                $this->addErrors('User account is not yet active');
+                $this->addErrors('User account is not yet active')
+                        ->addErrors('Please click on the confirmation link sent to your email account');
+                return false;
+            }
+            else if ($this->model->getPassword() !== $model->getPassword()) {
                 return false;
             }
 
@@ -204,34 +226,52 @@ class GuestService extends AService {
         return $this->model;
     }
 
+    public function getNotificationService() {
+        return new NotificationService;
+    }
+
     public function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
         if (Engine::getServer() === 'development')
             return true;
 
         $email = new Email();
-        $reg = Engine::getDB()->table('notification')->select(array(array('type' => 'email', 'name' => $notifyType)))->first();
-        if (!$reg) // if notification type message is not available, ignore sending
+        $notification = $this->getNotificationService()->getRepository()
+                ->findOneWhere(array(array('type' => 'email', 'name' => $notifyType)));
+        if (!$notification) // if notification type message is not available, ignore sending
             return true;
-//        $email->setHTML($reg->message, array('autoSetText' => true));
-        $email->setText(User::prepareMessage($reg->message, $user));
-        $webMasterEmail = Engine::getDB()->table('settings')->select(array(array('key' => 'email')))->first();
-        if (!$webMasterEmail)
-            return false;
-        $email->sendFrom($webMasterEmail->value);
+
+        $body = $user->parseString($notification->getMessage());
+        $view = new View();
+        $links = array(
+            '{confirmationLink}' => Engine::getConfig('app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'confirm-registration', array($user->getId(), $user->getEmail())),
+            '{loginLink}' => Engine::getConfig('app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'login'),
+            '{passwordResetLink}' => Engine::getConfig('app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'reset-password', array($user->getId(), $user->getReset())),
+        );
+
+        $body = str_replace(array_keys($links), array_values($links), $body);
+        $email->setHTML($body, array('autoSetText' => false));
+        $webMasterEmail = Engine::getConfig('app', 'webmaster', false);
+        if ($webMasterEmail)
+            $email->sendFrom($webMasterEmail, $notification->getGetReplies());
+        else
+            $email->sendFrom('no-reply@' . str_replace(array('http://', 'https://'), '', Engine::getConfig('app', 'domain')));
+
         $email->addTo($user->getEmail());
 
-        if ($reg->messageTitle) {
-            $title = $reg->messageTitle;
+        if ($notification->getMessageTitle()) {
+            $title = $notification->getMessageTitle();
         }
         else {
             $title = Engine::getConfig('app', 'name') . ' - ' . ucwords(str_replace(array('-', '_'), ' ', $notifyType));
         }
 
-        if (!$email->send($title)) {
-            return false;
-        }
-        return true;
+        return $email->send($title);
     }
+
+    /**
+     * Do something after setting up the admin
+     */
+    abstract public function setup();
 
     /**
      * Adds an error to the current operation

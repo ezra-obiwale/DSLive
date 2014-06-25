@@ -35,7 +35,7 @@ class UserService extends SuperService {
 
     /**
      * Inserts data into the database
-     * @param \In\Models\User
+     * @param \DSLive\Models\User
      * return boolean
      */
     public function create(User $model, $files) {

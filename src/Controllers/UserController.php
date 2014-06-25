@@ -81,7 +81,7 @@ class UserController extends SuperController {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->changePassword($form->getData())) {
                 $this->flash()->setSuccessMessage('Password changed successfully. Please login with your new password');
-                $this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], array($this->getModule(), $this->getClassName(), 'profile'));
+                $this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], array($this->getModule(), $this->getClassName(), 'profile'), $redirect['hash']);
             }
             else {
                 $this->flash()->setErrorMessage('Change password failed');

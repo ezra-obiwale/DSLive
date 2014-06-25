@@ -17,6 +17,9 @@ class PasswordForm extends Form {
             'options' => array(
                 'label' => 'Old Password'
             ),
+            'attributes' => array(
+                'required' => 'required',                
+            )
         ));
 
         $this->add(array(
@@ -25,6 +28,9 @@ class PasswordForm extends Form {
             'options' => array(
                 'label' => 'New Password'
             ),
+            'attributes' => array(
+                'required' => 'required',                
+            )
         ));
 
         $this->add(array(
@@ -33,6 +39,9 @@ class PasswordForm extends Form {
             'options' => array(
                 'label' => 'Confirm Password'
             ),
+            'attributes' => array(
+                'required' => 'required',                
+            )
         ));
 
         $this->add(array(

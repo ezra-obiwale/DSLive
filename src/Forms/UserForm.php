@@ -9,7 +9,7 @@ class UserForm extends Form {
     public function __construct() {
         parent::__construct('userForm');
 
-        $user = class_exists('\In\Models\User') ? new \In\Models\User : new \DSLive\Models\User;
+        $user = new \DSLive\Models\User;
         $this->setModel($user);
 
         $this->setAttributes(array(
@@ -32,7 +32,8 @@ class UserForm extends Form {
                 'label' => 'Email'
             ),
             'attributes' => array(
-                'maxLength' => 100
+                'maxLength' => 100,
+                'required' => 'required',
             )
         ));
 
@@ -43,7 +44,8 @@ class UserForm extends Form {
                 'label' => 'Password'
             ),
             'attributes' => array(
-                'maxLength' => 50
+                'maxLength' => 50,
+                'required' => 'required',
             )
         ));
 
@@ -54,7 +56,8 @@ class UserForm extends Form {
                 'label' => 'Repeat Password'
             ),
             'attributes' => array(
-                'maxLength' => 50
+                'maxLength' => 50,
+                'required' => 'required',
             )
         ));
 
@@ -65,7 +68,8 @@ class UserForm extends Form {
                 'label' => 'First Name'
             ),
             'attributes' => array(
-                'maxLength' => 40
+                'maxLength' => 40,
+                'required' => 'required',
             )
         ));
 
@@ -76,7 +80,8 @@ class UserForm extends Form {
                 'label' => 'Last Name'
             ),
             'attributes' => array(
-                'maxLength' => 40
+                'maxLength' => 40,
+                'required' => 'required',
             )
         ));
 
@@ -98,7 +103,10 @@ class UserForm extends Form {
                     'Subscriber' => 'subscriber',
                     'Editor' => 'editor',
                     'Admin' => 'admin'
-                )
+                ),
+            ),
+            'attributes' => array(
+                'required' => 'required',
             )
         ));
 

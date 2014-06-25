@@ -3,14 +3,14 @@
 namespace DSLive\Forms;
 
 use DScribe\Form\Form,
-    DSLive\Models\SubscriberUser;
+    DSLive\Models\User;
 
 class RegisterForm extends Form {
 
     public function __construct() {
         parent::__construct('registerForm');
 
-        $this->setModel(new SubscriberUser());
+        $this->setModel(new User());
 
         $this->setAttribute('method', 'POST');
 
@@ -21,7 +21,8 @@ class RegisterForm extends Form {
                 'label' => 'Email'
             ),
             'attributes' => array(
-                'autofocus' => 'autofocus'
+                'autofocus' => 'autofocus',
+                'required' => 'required',
             )
         ));
 
@@ -32,7 +33,8 @@ class RegisterForm extends Form {
                 'label' => 'Password'
             ),
             'attributes' => array(
-                'minLength' => 8
+                'minLength' => 8,
+                'required' => 'required',
             )
         ));
 
@@ -42,6 +44,9 @@ class RegisterForm extends Form {
             'options' => array(
                 'label' => 'Confirm Password'
             ),
+            'attributes' => array(
+                'required' => 'required',
+            )
         ));
 
         $this->add(array(

@@ -176,4 +176,24 @@ class User extends SuperUser {
         $this->lastLogin = Util::createTimestamp();
     }
 
+    /**
+     * Parses a string, injecting into it values of the user's properties.
+     * @param string $string String to parse
+     * @param string $prefix Prefix of each property
+     * @param string $suffix Suffix of each property
+     * @return string
+     */
+    public function parseString($string, $prefix = '{', $suffix = '}') {
+        foreach ($this->toArray(true) as $property => $value) {
+            $string = str_replace($prefix . $property . $suffix, $value, $string);
+        }
+        return $string;
+    }
+    
+    public function postFetch() {
+        parent::postFetch();
+        
+        $this->fullName = $this->getFullName();
+    }
+
 }

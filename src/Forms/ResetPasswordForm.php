@@ -3,7 +3,7 @@
 namespace DSLive\Forms;
 
 use DScribe\Form\Form,
-    In\Models\User;
+    DSLive\Models\User;
 
 class ResetPasswordForm extends Form {
 
@@ -20,7 +20,8 @@ class ResetPasswordForm extends Form {
                 'label' => 'Email'
             ),
             'attributes' => array(
-                'autofocus' => 'autofocus'
+                'autofocus' => 'autofocus',
+                'required' => 'required',
             )
         ));
 
@@ -31,7 +32,8 @@ class ResetPasswordForm extends Form {
                 'label' => 'Password'
             ),
             'attributes' => array(
-                'autofocus' => 'autofocus'
+                'autofocus' => 'autofocus',
+                'required' => 'required',
             )
         ));
 
@@ -42,6 +44,7 @@ class ResetPasswordForm extends Form {
                 'label' => 'Confirm Password'
             ),
             'attributes' => array(
+                'required' => 'required',
             )
         ));
 

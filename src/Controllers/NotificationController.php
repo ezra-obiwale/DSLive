@@ -2,16 +2,28 @@
 
 namespace DSLive\Controllers;
 
-use DScribe\Core\AController;
-
-class NotificationController extends AController {
+class NotificationController extends SuperController {
 
     public function noCache() {
-        return array('register');
+        return true;
     }
 
-    public function registerAction() {
-        
+    public function accessRules() {
+        return array(
+            array('allow', array(
+                    'role' => 'admin'
+                )),
+            array('deny'),
+        );
+    }
+
+    public function editAction($id) {
+        $model = $this->service->findOne($id);
+        $form = parent::editAction($model)->getVariables('form');
+        if ($model->getRequired()) {
+            $form->get('name')->attributes->readonly = 'readonly';
+            $form->remove('type');
+        }
     }
 
 }

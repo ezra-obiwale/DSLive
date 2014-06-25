@@ -20,7 +20,8 @@ class LoginForm extends Form {
                 'label' => 'Email',
             ),
             'attributes' => array(
-                'autofocus' => 'autofocus'
+                'autofocus' => 'autofocus',
+                'required' => 'required',                
             )
         ));
 
@@ -30,6 +31,9 @@ class LoginForm extends Form {
             'options' => array(
                 'label' => 'Password'
             ),
+            'attributes' => array(
+                'required' => 'required',                
+            )
         ));
 
         $this->add(array(

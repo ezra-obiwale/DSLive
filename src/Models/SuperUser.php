@@ -32,6 +32,11 @@ abstract class SuperUser extends AUser {
      */
     protected $mime;
 
+    /**
+     * @DBS\String (size=36, nullable=true)
+     */
+    protected $reset;
+
     public function __construct() {
         $this->setTableName('user');
         $this->stdFile = new \DSLive\Stdlib\File;
@@ -77,6 +82,15 @@ abstract class SuperUser extends AUser {
 
     public function getMime() {
         return $this->mime;
+    }
+
+    public function getReset() {
+        return $this->reset;
+    }
+
+    public function setReset($reset) {
+        $this->reset = $reset;
+        return $this;
     }
 
     // ------- helpers -----------

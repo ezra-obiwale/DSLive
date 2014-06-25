@@ -111,24 +111,23 @@ class GuestController extends AController {
                 $this->view;
     }
 
-    public function resetPasswordAction($id = null, $password = null) {
+    public function resetPasswordAction($id = null, $resetId = null) {
         $form = $this->service->getResetPasswordForm();
-        if ($id === null || $password === null) {
+        if ($id === null || $resetId === null) { // remove password and confirm fields just get email to send notification to
             $form->remove('password')->remove('confirm');
         }
         else {
-            if (!$this->service->getRepository()->findOneWhere(array(array('id' => $id, 'reset' => $password)))) {
+            if (!$this->service->getRepository()->findOneWhere(array(array('id' => $id, 'reset' => $resetId)))) {
                 throw new \Exception('The page you\'re looking for does not exist');
             }
             $form->remove('email');
         }
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
-            if ($form->isValid() && ($this->service->resetPassword($form->getModel(), $id, $password))) {
-                $this->flash()->setSuccessMessage((isset($id) && isset($password)) ?
-                                        'Password reset successfully. You may now login' :
-                                        'Password reset initiated. Please check your email address for further instructions')
-                        ->addErrorMessage($this->service->getErrors());
+            if ($form->isValid() && $this->service->resetPassword($form->getModel(), $id, $resetId)) {
+                $this->flash()->setSuccessMessage((isset($id) && isset($resetId)) ?
+                                'Password reset successfully. You may now login' :
+                                'Password reset initiated. Please check your email account for further instructions');
                 $this->redirect($this->getModule(), $this->getClassName(), 'login');
             }
             $this->flash()->setErrorMessage('Password reset failed.')
@@ -158,6 +157,10 @@ class GuestController extends AController {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->contactUs($form->getData())) {
                 $this->flash()->setSuccessMessage('Your message has been sent successfully. Thank you.');
+                $form->setData(array(
+                    'title' => '',
+                    'message' => ''
+                ));
             }
             else {
                 $this->flash()->setErrorMessage('Send message failed.')

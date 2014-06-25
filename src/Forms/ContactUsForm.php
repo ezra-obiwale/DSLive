@@ -19,7 +19,7 @@ class ContactUsForm extends Form {
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
-                'class' => 'span8'
+                'required' => 'required',
             )
         ));
 
@@ -30,7 +30,7 @@ class ContactUsForm extends Form {
                 'label' => 'Email',
             ),
             'attributes' => array(
-                'class' => 'span8'
+                'required' => 'required',
             )
         ));
 
@@ -41,7 +41,7 @@ class ContactUsForm extends Form {
                 'label' => 'Title',
             ),
             'attributes' => array(
-                'class' => 'span8'
+                'required' => 'required',
             )
         ));
 
@@ -53,7 +53,7 @@ class ContactUsForm extends Form {
             ),
             'attributes' => array(
                 'rows' => 8,
-                'class' => 'span8'
+                'required' => 'required',
             )
         ));
 
