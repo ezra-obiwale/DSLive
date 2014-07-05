@@ -39,9 +39,10 @@ class GuestController extends AController {
                 $this->flash()->setSuccessMessage('Registration successful. Please check your email account to confirm your registration');
                 $this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);
             }
-            $this->flash()
-                    ->setErrorMessage('Registration failed. Please check your entries and try again')
-                    ->addErrorMessage($this->service->getErrors());
+            if ($this->service->getErrors())
+                $this->flash()
+                        ->setErrorMessage('Registration failed. Please check your entries and try again');
+            $this->flash()->addErrorMessage($this->service->getErrors());
             $form->setData(array('confirm' => ''));
         }
         $this->view->variables(array(
@@ -93,9 +94,14 @@ class GuestController extends AController {
         $form = $this->service->getLoginForm();
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
-            if ($form->isValid() && ($model = $this->service->login($form->getModel()))) {
+            if ($form->isValid() && $model = $this->service->login($form->getModel())) {
                 $this->resetUserIdentity($model);
-                $params = ($params === null) ? array() : explode(':', $params);
+                $redirect = \Session::fetch('redirect');
+                $module = ($redirect['module']) ? $redirect['module'] : $module;
+                $controller = ($redirect['controller']) ? $redirect['controller'] : $controller;
+                $action = ($redirect['action']) ? $redirect['action'] : $action;
+                $params = ($redirect['params']) ? $redirect['params'] : explode(':', $params);
+
                 $this->redirect($module ? $module : $this->getModule(), $controller ?
                                 $controller : 'dashboard', $action ? $action : $model->getRole(), $params);
             }
@@ -128,7 +134,7 @@ class GuestController extends AController {
                 $this->flash()->setSuccessMessage((isset($id) && isset($resetId)) ?
                                 'Password reset successfully. You may now login' :
                                 'Password reset initiated. Please check your email account for further instructions');
-                $this->redirect($this->getModule(), $this->getClassName(), 'login');
+                $this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);
             }
             $this->flash()->setErrorMessage('Password reset failed.')
                     ->addErrorMessage($this->service->getErrors());
@@ -148,7 +154,7 @@ class GuestController extends AController {
             $params = ($params === null) ? array() : explode(':', $params);
             $this->redirect($module, $controller, $action, $params);
         }
-        $this->redirect($this->getModule(), $this->getClassName(), 'login');
+        $this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);
     }
 
     public function contactUsAction() {

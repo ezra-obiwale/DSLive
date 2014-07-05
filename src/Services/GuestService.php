@@ -13,12 +13,12 @@ use DBScribe\Util,
     DSLive\Forms\LoginForm,
     DSLive\Forms\RegisterForm,
     DSLive\Forms\ResetPasswordForm,
-    DSLive\Models\AdminUser,
     DSLive\Models\Settings,
     DSLive\Models\User,
     Email,
     Exception,
-    Object;
+    Object,
+    Table;
 
 abstract class GuestService extends AService {
 
@@ -94,22 +94,22 @@ abstract class GuestService extends AService {
         $email->addTo($to);
         $email->sendFrom(trim($data->email));
 
-        \Table::init(array(
+        Table::init(array(
             'border' => 0,
             'cellspacing' => 0,
             'cellpadding' => 6,
             'style' => 'margin:10px 15%;width:70%;background-color:#eee;border:3px double'
         ));
-        \Table::newRow();
-        \Table::addRowData(trim($data->fullName) . " sent you a message on " .
+        Table::newRow();
+        Table::addRowData(trim($data->fullName) . " sent you a message on " .
                 Util::createTimestamp() . ' from <a href="' .
                 Engine::getConfig('app', 'domain') . '">' .
                 Engine::getConfig('app', 'name') . '</a><hr />', array(
             'style' => 'font-size:larger;font-weight:bolder'
         ));
-        \Table::newRow();
-        \Table::addRowData(nl2br($data->message));
-        $email->setHTML(\Table::render(), array('autoSetText' => false));
+        Table::newRow();
+        Table::addRowData(nl2br($data->message));
+        $email->setHTML(Table::render(), array('autoSetText' => false));
         return $email->send($domain . ': ' . trim($data->title));
     }
 
@@ -131,9 +131,7 @@ abstract class GuestService extends AService {
         }
 
         if (!$this->repository->count()) {
-            $_model = new AdminUser();
-            $_model->populate($model->toArray());
-            $model = $_model;
+            $model->setRole('admin');
         }
 
         $model->setActive(Engine::getServer() === 'development' || $setup);
@@ -205,7 +203,6 @@ abstract class GuestService extends AService {
     }
 
     public function login(User $model) {
-        $model->hashPassword();
         $this->model = $this->repository->findOneBy('email', $model->getEmail());
         if ($this->model) {
             if (!$this->model->getActive()) {
@@ -213,12 +210,13 @@ abstract class GuestService extends AService {
                         ->addErrors('Please click on the confirmation link sent to your email account');
                 return false;
             }
-            else if ($this->model->getPassword() !== $model->getPassword()) {
+            else if (!$this->model->verifyPassword($model->getPassword())) {
                 return false;
             }
 
             $this->model->update();
             $this->repository->update($this->model)->execute();
+            $this->flush();
         }
         else {
             $this->addErrors('User account does not exist');

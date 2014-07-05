@@ -105,21 +105,6 @@ class User extends SuperUser {
     // ------- helpers -----------
 
     /**
-     * Hashes the password
-     * @param mixed $password Password to hash.
-     * @return m
-     */
-    public function hashPassword($password = null) {
-        $hashed = ($password) ? md5(md5($this->email) . $password) : md5(md5($this->email) . $this->password);
-        if (!$password) {
-            $this->password = $hashed;
-            return $this;
-        }
-
-        return $hashed;
-    }
-
-    /**
      * Parses a string date to another string format
      * @param string|array $property If string, the property value is used. If array,
      * the values of the array elements as properties are joined together with space and
@@ -160,7 +145,7 @@ class User extends SuperUser {
         }
         
         if ($this->role === null)
-            throw new Exception('Role not set for user');
+            throw new \Exception('Role not set for user');
 
         if ($this->id === null)
             $this->id = Util::createGUID();
@@ -194,6 +179,10 @@ class User extends SuperUser {
         parent::postFetch();
         
         $this->fullName = $this->getFullName();
+    }
+
+    public function getNameOrEmail() {
+        return $this->getFirstName() ? $this->getFirstName() : $this->getEmail();
     }
 
 }

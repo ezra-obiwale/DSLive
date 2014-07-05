@@ -17,7 +17,7 @@ class UserController extends SuperController {
             array('allow',
                 array(
                     'role' => '@',
-                    'actions' => array('profile', 'edit-profile', 'edit-password'),
+                    'actions' => array('profile', 'edit-profile', 'edit-password', 'delete-account'),
                 )),
             array('deny'),
         );

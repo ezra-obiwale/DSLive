@@ -151,12 +151,12 @@ abstract class File extends Model {
      *
      * @return int
      */
-    final public function getMaxSize() {
+    final public function getMaxSize($parse = true) {
         if ($this->maxSize === null) {
             $this->maxSize = ini_get('upload_max_filesize');
         }
 
-        return $this->parseSize($this->maxSize);
+        return ($parse) ? $this->parseSize($this->maxSize) : $this->maxSize;
     }
 
     public function getMaxFileNumber() {
@@ -311,7 +311,7 @@ abstract class File extends Model {
         }
 
         if (!$this->sizeIsOk($info['size'])) {
-            $this->errors[] = 'File size too big';
+            $this->errors[] = 'File size [' . round($info['size'][0] / 1000000, 1) . 'M] too big';
             return false;
         }
 

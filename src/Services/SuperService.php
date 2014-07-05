@@ -140,7 +140,13 @@ abstract class SuperService extends AService {
      * Deletes data from the database
      * return boolean
      */
-    public function delete($flush = true) {
+    public function delete($model = null, $flush = true) {
+        if (is_object($model)) {
+            $this->model = $model;
+        } else if (is_bool($model)) {
+            $flush = $model;
+        }
+        
         try {
             //@todo find a way to delete attached files
             if (method_exists($this->model, 'unlink')) {

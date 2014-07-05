@@ -43,10 +43,8 @@ class UserService extends SuperService {
         return parent::create($model, $files);
     }
 
-    public function delete() {
-        if (!$this->model->unlink())
-            return false;
-        return parent::delete();
+    public function delete($user = null) {
+        return parent::delete($user ? $user : true);
     }
 
     public function changePassword(Object $model) {

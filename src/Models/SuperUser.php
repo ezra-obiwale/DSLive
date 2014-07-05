@@ -17,9 +17,19 @@ abstract class SuperUser extends AUser {
     protected $lastName;
 
     /**
-     * @DBS\String (size="50")
+     * @DBS\String (size="256")
      */
     protected $password;
+
+    /**
+     * @DBS\String (size="6", nullable=true)
+     */
+    protected $salt;
+
+    /**
+     * @DBS\int (size=1)
+     */
+    protected $mode;
 
     /**
      * File class
@@ -52,6 +62,24 @@ abstract class SuperUser extends AUser {
 
     public function setPassword($password) {
         $this->password = $password;
+        return $this;
+    }
+
+    public function getSalt() {
+        return $this->salt;
+    }
+
+    public function getMode() {
+        return $this->mode;
+    }
+
+    public function setSalt($salt) {
+        $this->salt = $salt;
+        return $this;
+    }
+
+    public function setMode($mode) {
+        $this->mode = $mode;
         return $this;
     }
 
@@ -106,13 +134,51 @@ abstract class SuperUser extends AUser {
      * @return m
      */
     public function hashPassword($password = null) {
-        $hashed = ($password) ? md5(md5($this->email) . $password) : md5(md5($this->email) . $this->password);
-        if (!$password) {
-            $this->password = $hashed;
-            return $this;
-        }
+        if (function_exists('password_hash')) {
+            if (!$password) {
+                $this->mode = 1;
+                $this->password = password_hash($this->password, PASSWORD_DEFAULT);
+                return $this;
+            }
 
-        return $hashed;
+            return password_hash($password, PASSWORD_DEFAULT);
+        }
+        else if (defined("CRYPT_BLOWFISH") && CRYPT_BLOWFISH) {
+            $salt = '$2y$11$' . substr(md5(uniqid(rand(), true)), 0, 22);
+
+            if (!$password) {
+                $this->mode = 2;
+                $this->password = crypt($this->password, $salt);
+                return $this;
+            }
+            return crypt($password, $salt);
+        }
+        else {
+            $intermediateSalt = md5(uniqid(rand(), true));
+            $salt = substr($intermediateSalt, 0, 6);
+            if (!$password) {
+                $this->mode = 3;
+                $this->password = hash("sha256", $password . $salt);
+                $this->salt = $salt;
+                return $this;
+            }
+            return hash("sha256", $password . $salt);
+        }
+    }
+
+    public function verifyPassword($password) {
+        switch ($this->mode) {
+            case 1:
+                $valid = password_verify($password, $this->password);
+                if ($valid && password_needs_rehash($this->password, PASSWORD_DEFAULT)) {
+                    $this->password = password_hash($password, PASSWORD_DEFAULT);
+                }
+                return $valid;
+            case 2:
+                return crypt($password, $this->password) == $this->password;
+            case 3:
+                return (hash("sha256", $password . $this->salt) === $this->password);
+        }
     }
 
     public function uploadFiles($files) {
