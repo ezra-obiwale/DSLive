@@ -57,17 +57,21 @@ class GuestController extends AController {
     public function resendConfirmationAction($id) {
         $model = $this->service->getRepository()->findOneWhere(array(array(
                 'id' => $id,
-                'active' => 0
         )));
         if (!$model) {
             throw new \Exception('Invalid action');
         }
 
-        if ($this->service->sendEmail($model)) {
+        if ($model->getActive()) {
+            $this->flash()->setMessage('This account has already been confirmed')
+                    ->addMessage('Please ' . str_replace('-', ' ', \Util::camelToHyphen($this->loginAction)));
+        }
+        else if ($this->service->sendEmail($model)) {
             $this->flash()->setSuccessMessage('Confirmation email sent successfully');
         }
         else {
-            $this->flash()->setSuccessMessage('Failed to send confirmation email. Please refresh this page to retry sending.');
+            $this->flash()->setErrorMessage('Failed to send confirmation email')
+                    ->addErrorMessage('Please refresh this page to retry sending');
         }
     }
 
@@ -85,7 +89,7 @@ class GuestController extends AController {
         if (!$this->userIdentity()->isGuest()) {
             if ($module !== null) {
                 $params = ($params === null) ? array() : explode(':', $params);
-                $this->redirect($module, $controller, $action, $params);
+                $this->redirect($module, $controller, $action ? $action : $this->userIdentity()->getUser()->getRole(), $params);
             }
             else
                 $this->redirect('in', 'dashboard', $this->userIdentity()->getUser()->getRole());

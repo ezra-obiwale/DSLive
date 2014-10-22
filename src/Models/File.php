@@ -14,6 +14,7 @@ abstract class File extends Model {
     private $withThumbnails = array();
     private $maxSize;
     private $directory;
+    private $store = array();
 
     /**
      * The name of the property to use as the name of the file when saving to filesystem
@@ -27,11 +28,16 @@ abstract class File extends Model {
     protected $mime;
 
     /**
+     * Indicates whether to remove extension from files or not
+     * @var boolean
+     */
+    private $stripExtension;
+
+    /**
      * Indicates whether to overwrite files with new if an existing file is found
      * @var boolean
      */
     private $overwrite = true;
-    private $maxFileNumber;
 
     /**
      * The names of the image being upload
@@ -40,6 +46,9 @@ abstract class File extends Model {
     private $names;
     private $errors;
     private $limits;
+    private $properties;
+    private $inDirectory;
+    private $skipTableName;
 
     abstract public function __construct();
 
@@ -51,10 +60,9 @@ abstract class File extends Model {
      * @throws \Exception
      */
     public function addExtension($property, $ext) {
-//        if (!property_exists($this, $property)) {
-//            throw new \Exception('Add File Extension Error: Property "' . $property . '" does not exists');
-//        }
-
+        if (!is_string($ext)) {
+            throw new \Exception('Add File Extension Error: You may only add string extensions for property "' . $property . '"');
+        }
         $this->extensions[$property][] = $ext;
         return $this;
     }
@@ -78,11 +86,12 @@ abstract class File extends Model {
 
     /**
      * Sets the name of the property to use as the name of the file when saving to filesystem
-     * @param string $altNameProperty
+     * @param string $property Property to hold file
+     * @param string $altNameProperty Property with intended file name
      * @return \DSLive\Models\File
      */
-    final public function setAltNameProperty($altNameProperty) {
-        $this->altNameProperty = $altNameProperty;
+    final public function setAltNameProperty($property, $altNameProperty) {
+        $this->altNameProperty[$property] = $altNameProperty;
         return $this;
     }
 
@@ -94,9 +103,9 @@ abstract class File extends Model {
      * @throws \Exception
      */
     public function addBadExtension($property, $ext) {
-//        if (!property_exists($this, $property)) {
-//            throw new \Exception('Add Bad File Extension Error: Property "' . $property . '" does not exists');
-//        }
+        if (!is_string($ext)) {
+            throw new \Exception('Add Bad File Extension Error: You may only add string extensions for property "' . $property . '"');
+        }
 
         $this->badExtensions[$property][] = $ext;
         return $this;
@@ -126,7 +135,7 @@ abstract class File extends Model {
 
     /**
      * Sets the directory to upload files to
-     * @param string $directory
+     * @param string $directory Path name within the media directory
      * @return \DSLive\Models\File
      */
     final public function setDirectory($directory) {
@@ -159,12 +168,19 @@ abstract class File extends Model {
         return ($parse) ? $this->parseSize($this->maxSize) : $this->maxSize;
     }
 
-    public function getMaxFileNumber() {
-        return $this->maxFileNumber;
-    }
+    /**
+     * Indicates whether to strip extension from the file or not
+     * @param string|boolean $property Name of property or true|false for all 
+     * properties
+     * @param boolean $strip Indication for the property if given
+     * @return \DSLive\Models\File
+     */
+    public function stripExtension($property = true, $strip = true) {
+        if (is_bool($property))
+            $this->stripExtension = $property;
+        else if (is_string($property))
+            $this->stripExtension[$property] = $strip;
 
-    public function setMaxFileNumber($maxFileNumber) {
-        $this->maxFileNumber = $maxFileNumber;
         return $this;
     }
 
@@ -174,6 +190,47 @@ abstract class File extends Model {
      */
     final public function getFileNames() {
         return $this->names;
+    }
+
+    /**
+     * Indicates that file should not be placed directly in media directory and 
+     * not within its extension director
+     * @param bool $bool
+     * @return \DSLive\Models\File
+     */
+    public function inDirectory($bool = true) {
+        $this->inDirectory = $bool;
+        return $this;
+    }
+
+    /**
+     * Indicates that table name should not be included in the file path
+     * @param bool $bool
+     * @return \DSLive\Models\File
+     */
+    public function skipTableName($bool = true) {
+        $this->skipTableName = $bool;
+        return $this;
+    }
+
+    /**
+     * Saves value of the given property
+     * @param string $property
+     * @return \DSLive\Models\File
+     */
+    public function store($property) {
+        if (property_exists($this, $property))
+            $this->store[$property] = $this->$property;
+        return $this;
+    }
+
+    /**
+     * Retrieves the value of the given property from storage
+     * @param string $property
+     * @return mixed
+     */
+    public function fromStore($property) {
+        return $this->store[$property];
     }
 
     /**
@@ -192,8 +249,11 @@ abstract class File extends Model {
 
         $savePaths = array();
         foreach ($files as $ppt => $info) {
-            if (empty($info['name']))
+            if (empty($info['name'])) {
+                $this->postFetch($ppt);
+                $this->errors[] = 'No file found for ' . $ppt;
                 continue;
+            }
 
             $extension = $this->fileIsOk($ppt, $info);
             if (!$extension)
@@ -206,20 +266,28 @@ abstract class File extends Model {
                 if (array_key_exists($ppt, $this->limits) && $this->limits[$ppt] == $ky)
                     break;
 
-                $dir = $this->getMediaPath() . $ext . DIRECTORY_SEPARATOR;
+                $dir = $this->inDirectory ?
+                        $this->getMediaPath() :
+                        $this->getMediaPath() . $ext . DIRECTORY_SEPARATOR;
                 if (!is_dir($dir)) {
                     if (!mkdir($dir, 0777, true)) {
                         throw new \Exception('Permission denied to directory "' . ROOT . 'public/"');
                     }
                 }
-                if ($this->altNameProperty !== null) {
-                    $nam = preg_replace('/[^A-Z0-9]/i', '-', basename($this->{'get' . $this->altNameProperty}()));
+                if ($this->altNameProperty[$ppt] !== null) {
+                    $method = 'get' . $this->altNameProperty[$ppt];
+                    $nam = method_exists($this, $method) ?
+                            preg_replace('/[^A-Z0-9]/i', '-', basename($this->{$method}())) :
+                            $this->getProperty($this->altNameProperty[$ppt]);
                 }
                 else {
                     $inf = pathinfo($name[$ky]);
                     $nam = str_replace('--', '', preg_replace('/[^A-Z0-9]/i', '-', $inf['filename']));
                 }
-                $nam .= $this->checkOverwrite($dir, $nam, $ext, $cnt) . '.' . $ext;
+                $nam .= $this->checkOverwrite($dir, $nam, $ext, $cnt);
+                if ((is_array($this->stripExtension) && !$this->stripExtension[$ppt]) ||
+                        (!is_array($this->stripExtension) && !$this->stripExtension))
+                    $nam .= '.' . $ext;
 
                 $this->names[] = $nam;
                 $tmpName = (isset($info['tmpName'])) ? $info['tmpName'] : $info['tmp_name'];
@@ -231,26 +299,36 @@ abstract class File extends Model {
                 if (array_key_exists($ppt, $this->withThumbnails)) {
                     if (!is_dir($dir . '.thumbnails'))
                         mkdir($dir . '.thumbnails');
-                    \Util::resizeImage($dir . $nam, $this->withThumbnails[$ppt], $dir . '.thumbnails' . DIRECTORY_SEPARATOR . $nam);
-                }
 
-                $savePaths[$ppt][$nam] = str_replace(ROOT . 'public', '', $dir . $nam);
+                    if (is_array($this->withThumbnails[$ppt])) {
+                        foreach ($this->withThumbnails[$ppt] as $nm => $size) {
+                            \Util::resizeImage($dir . $nam, $size, $dir . '.thumbnails' . DIRECTORY_SEPARATOR . $nam . $nm, $ext);
+                        }
+                    }
+                    else {
+                        \Util::resizeImage($dir . $nam, $this->withThumbnails[$ppt], $dir . '.thumbnails' . DIRECTORY_SEPARATOR . $nam, $ext);
+                    }
+                }
+                $savePaths[$ppt][] = str_replace(ROOT . 'public', '', $dir . $nam);
                 $cnt++;
             }
             if ($removeOld)
                 $this->unlink($ppt);
             if (!empty($savePaths)) {
-                if ($this->$ppt && !is_object($this->$ppt)) {
-                    if (is_array($this->$ppt))
-                        $this->$ppt = array_merge($this->$ppt, $savePaths[$ppt]);
+                $fromStore = $this->fromStore($ppt);
+                if ($fromStore && !is_object($fromStore)) {
+                    if (is_array($fromStore))
+                        $pptValue = array_merge($fromStore, $savePaths[$ppt]);
                     else
-                        $this->$ppt = array_merge(array($this->$ppt), $savePaths[$ppt]);
+                        $pptValue = array_merge(array($fromStore), $savePaths[$ppt]);
                 }
                 else
-                    $this->$ppt = $savePaths[$ppt];
+                    $pptValue = $savePaths[$ppt];
+
+                $this->$ppt = $pptValue;
+                $this->setProperty($ppt, $pptValue);
             }
         }
-
         return $savePaths;
     }
 
@@ -305,6 +383,7 @@ abstract class File extends Model {
         $error = is_array($info['error']) ? $info['error'] : array($info['error']);
         foreach ($error as $err) {
             if ($err !== UPLOAD_ERR_OK) {
+                $this->postFetch($property);
                 $this->errors[] = 'File not found';
                 return false;
             }
@@ -474,29 +553,51 @@ abstract class File extends Model {
     public function preSave($createId = true) {
         foreach (array_keys(array_merge($this->extensions, $this->badExtensions)) as $property) {
             if ($this->$property && is_array($this->$property))
-                $this->$property = serialize($this->$property);
+                $this->$property = json_encode($this->$property);
         }
 
         if ($this->mime && is_array($this->mime))
-            $this->mime = serialize($this->mime);
+            $this->mime = json_encode($this->mime);
         parent::preSave($createId);
     }
 
-    public function postFetch() {
-        foreach (array_keys(array_merge($this->extensions, $this->badExtensions)) as $property) {
-            if ($this->$property && $array = unserialize($this->$property)) {
-                $this->$property = $array;
-            }
+    public function postFetch($property = null) {
+        $fileProperties = array_keys(array_merge($this->extensions, $this->badExtensions));
+        if ($property && property_exists($this, $property)) {
+            $this->{$property} = $this->getDBValue($property);
+            return $this->{$property};
+        }
+
+        foreach ($fileProperties as $property) {
+            $this->$property = json_decode($this->$property, true);
         }
 
         if ($this->mime)
-            $this->mime = unserialize($this->mime);
+            $this->mime = json_decode($this->mime, true);
+
+        parent::postFetch($property);
     }
 
     public function getMediaPath() {
         return ROOT . 'public' . DIRECTORY_SEPARATOR . 'media' .
-                DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName()) .
+                ($this->skipTableName ? '' :
+                        DIRECTORY_SEPARATOR . \Util::_toCamel($this->getTableName())) .
                 DIRECTORY_SEPARATOR . $this->directory;
+    }
+
+    public function setProperty($property, $value) {
+        $this->properties[$property] = $value;
+        return $this;
+    }
+
+    public function getProperty($property) {
+        return $this->properties[$property];
+    }
+
+    public function getProperties($preSave = true) {
+        if ($preSave)
+            $this->preSave();
+        return $this->properties;
     }
 
 }

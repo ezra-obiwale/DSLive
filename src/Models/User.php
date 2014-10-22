@@ -175,7 +175,7 @@ class User extends SuperUser {
         return $string;
     }
     
-    public function postFetch() {
+    public function postFetch($property = null) {
         parent::postFetch();
         
         $this->fullName = $this->getFullName();

@@ -16,6 +16,11 @@ class NotificationController extends SuperController {
             array('deny'),
         );
     }
+    
+    public function indexAction() {
+        $this->order = 'name';
+        return parent::indexAction();
+    }
 
     public function editAction($id) {
         $model = $this->service->findOne($id);

@@ -14,10 +14,7 @@ use DSLive\Models\File as DMF;
  */
 class File extends DMF {
 
-    private $properties;
-
     public function __construct() {
-        $this->properties = array();
     }
 
     public function setBadExtensions($property, array $extensions) {
@@ -41,45 +38,36 @@ class File extends DMF {
     }
 
     private function setupProperty($property) {
-        if (!array_key_exists($property, $this->properties)) {
-            $this->properties[$property] = null;
+        if (!$this->getProperty($property)) {
+            $this->setProperty($property, NULL);
         }
     }
 
     public function __get($name) {
-        if (array_key_exists($name, $this->properties)) {
-            return $this->properties[$name];
+        if (!property_exists($this, $name)) {
+            return $this->getProperty($name);
         }
     }
 
     public function _set($name, $value) {
-        if (array_key_exists($name, $this->properties)) {
-            $this->properties[$name] = $value;
-            return $this;
+        if (!property_exists($this, $name)) {
+            $this->setProperty($name, $value);
         }
     }
 
     public function _call(&$name, $args) {
         if (!method_exists($this, $name)) {
             $property = strtolower(substr($name, 3));
-            if (array_key_exists($property, $this->properties)) {
-                if (substr($name, 0, 3) === 'get') {
-                    return $this->properties[$property];
-                }
-                else if (substr($name, 0, 3) === 'set') {
-                    $this->properties[$property] = $arguments[0];
-                    return $this;
-                }
+            if (substr($name, 0, 3) === 'get') {
+                return $this->getProperty($property);
+            }
+            else if (substr($name, 0, 3) === 'set') {
+                $this->setProperty($property, $args[0]);
+                return $this;
             }
         }
 
         return parent::_call($name, $args);
-    }
-
-    public function getProperties($preSave = true) {
-        if ($preSave)
-            $this->preSave();
-        return $this->properties;
     }
 
 }

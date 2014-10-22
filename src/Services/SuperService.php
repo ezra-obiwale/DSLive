@@ -83,7 +83,7 @@ abstract class SuperService extends AService {
         } else {
             $this->model = $model;
         }
-        return $this->model;
+        return $model;
     }
 
     /**
@@ -94,17 +94,29 @@ abstract class SuperService extends AService {
      * @todo Set first parameter as form so one can fetch either model or data
      */
     public function create(IModel $model, Object $files = null, $flush = true) {
-        if ($files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+        if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) &&
+                method_exists($model, 'uploadFiles') &&
+                !$upload = $model->uploadFiles($files)) {
             $this->addErrors('File upload failed');
             $this->addErrors($model->getErrors());
             return false;
         }
+        else if (!$upload && method_exists($model, 'uploadFiles')) {
+            foreach (array_keys($files->toArray(true)) as $property) {
+                $model->postFetch($property);
+            }
+        }
+        try {
+            if ($this->repository->insert($model)->execute()) {
+                if ($flush)
+                    $this->flush();
 
-        if ($this->repository->insert($model)->execute()) {
-            if ($flush)
-                $this->flush();
-
-            return $model;
+                $model->postFetch();
+                return $model;
+            }
+        }
+        catch (Exception $ex) {
+            
         }
 
         return false;
@@ -121,18 +133,40 @@ abstract class SuperService extends AService {
         if (!is_object($files)) {
             $files = new \Object();
         }
-        if ($files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+        if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) &&
+                method_exists($model, 'uploadFiles') &&
+                !$upload = $model->uploadFiles($files)) {
             $this->addErrors('File upload failed');
             $this->addErrors($model->getErrors());
             return false;
         }
-        if ($this->repository->update($model)->execute()) {
-            if ($flush)
-                $this->flush();
+        else if (!$upload && method_exists($model, 'uploadFiles')) {
+            foreach (array_keys($files->toArray(true)) as $property) {
+                $model->postFetch($property);
+            }
+        }
+        try {
+            if ($this->repository->update($model)->execute()) {
+                if ($flush)
+                    $this->flush();
 
-            return $model;
+                $model->postFetch();
+                return $model;
+            }
+        }
+        catch (Exception $ex) {
+            
         }
 
+        return false;
+    }
+
+    private function checkFileIsNotEmpty($files) {
+        foreach ($files as $file) {
+            if ($file['error'] !== UPLOAD_ERR_NO_FILE) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -143,15 +177,16 @@ abstract class SuperService extends AService {
     public function delete($model = null, $flush = true) {
         if (is_object($model)) {
             $this->model = $model;
-        } else if (is_bool($model)) {
+        }
+        else if (is_bool($model)) {
             $flush = $model;
         }
-        
+
         try {
-            //@todo find a way to delete attached files
             if (method_exists($this->model, 'unlink')) {
                 $this->model->unlink();
             }
+            $this->model->preSave();
             $deleted = $this->repository->delete($this->model)->execute();
             if ($flush) {
                 return $this->flush();
@@ -170,14 +205,20 @@ abstract class SuperService extends AService {
     }
 
     public function upsert(IModel $model, $where = 'id', Object $files = null, $flush = true) {
-        if ($files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
+        if ($files && $files->notEmpty() && method_exists($model, 'uploadFiles') && !$model->uploadFiles($files)) {
             $this->addErrors('File upload failed');
             $this->addErrors($model->getErrors());
             return false;
         }
         if ($this->repository->upsert(array($model), $where)->execute()) {
-            return ($flush) ? $this->flush() : true;
+            if ($flush)
+                $this->flush();
+
+            $model->postFetch();
+            return $model;
         }
+
+        return false;
     }
 
     /**
@@ -209,7 +250,7 @@ abstract class SuperService extends AService {
      * @return string
      */
     final public function prepareErrors() {
-        return '<li>' . join('</li><li>', $this->errors) . '</li>';
+        return ($this->errors) ? '<li>' . join('</li><li>', $this->errors) . '</li>' : null;
     }
 
 }

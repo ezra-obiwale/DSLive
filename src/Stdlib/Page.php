@@ -2,7 +2,6 @@
 
 use Cms\Models\Slide,
     DBScribe\ArrayCollection,
-    DScribe\Core\Engine,
     DScribe\View\Renderer;
 
 /*
@@ -64,7 +63,7 @@ class Page {
      * @return string
      */
     public static function mediaCarouselFromDB($table = 'media', array $criteria = array(), array $attrs = array()) {
-        return self::mediaCarousel(Engine::getDB()->table($table)->select($criteria), $attrs);
+        return self::mediaCarousel(engineGet('db')->table($table)->select($criteria), $attrs);
     }
 
     public static function carouselFromModelsWithMedia(ArrayCollection $objects, array $attrs = array()) {
@@ -86,7 +85,7 @@ class Page {
     }
 
     public static function cmsLinks(Renderer $renderer, $id = null, array $additionalLinks = array()) {
-        $categories = Engine::getDB()
+        $categories = engineGet('db')
                 ->table('category')
                 ->orderBy('position')
                 ->orderBy('name')
@@ -234,7 +233,7 @@ class Page {
             else
                 $formModel = new $formAttrs[1];
 
-            $currentPath = serialize(Engine::getUrls());
+            $currentPath = serialize(engineGet('urls'));
             ob_start();
             echo TwbForm::horizontal($formModel->setAttribute('action', $formModel->getAttribute('action') . '/' . urlencode($currentPath)));
             $content = str_replace('{form' . $sep . join($sep, $formAttrs) . '}', ob_get_clean(), $content);
@@ -250,7 +249,7 @@ class Page {
             $codeName = str_replace('slide' . $sep, '', $slideStr);
             $slides[] = array('codeName' => $codeName);
         }
-        return (!empty($slides)) ? Engine::getDB()->table('slide', new Slide())->select($slides) : array();
+        return (!empty($slides)) ? engineGet('db')->table('slide', new Slide())->select($slides) : array();
     }
 
     private static function getForms($sep, $content, $offset = 0) {

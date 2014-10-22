@@ -44,6 +44,8 @@ class UserService extends SuperService {
     }
 
     public function delete($user = null) {
+        if (!$this->model->unlink())
+            return false;
         return parent::delete($user ? $user : true);
     }
 

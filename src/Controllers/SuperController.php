@@ -6,7 +6,6 @@
 namespace DSLive\Controllers;
 
 use DScribe\Core\AController,
-    DScribe\Core\Engine,
     DScribe\Core\IModel,
     DScribe\Core\Repository,
     DScribe\View\View,
@@ -54,14 +53,17 @@ abstract class SuperController extends AController {
      */
     public function init() {
         $this->currentUser = clone($this->userIdentity()->getUser());
-        $this->currentUser->setConnection(Engine::getDB());
+        $this->currentUser->setConnection(engineGet('db'));
         $this->layout = $this->currentUser->getRole();
         $this->order = 'id';
+
+        if ($this->request->isAjax())
+            $this->view->partial();
     }
 
     final public function getCurrentUserFromDB() {
         if (!$this->userIsLive && $this->currentUser->getId()) {
-            $userRepo = new Repository(new \DSLive\Models\User);
+            $userRepo = new Repository(new User);
             $user = $userRepo->findOne($this->currentUser->getId());
             if ($user)
                 $this->currentUser = $user;
@@ -143,13 +145,9 @@ abstract class SuperController extends AController {
             $repository->orderBy($column, $direction);
         }
 
-        $this->view->variables(array(
-            'models' => $repository->fetchAll(),
+        return $this->view->variables(array(
+                    'models' => $repository->fetchAll(),
         ));
-
-        return $this->request->isAjax() ?
-                $this->view->partial() :
-                $this->view;
     }
 
     /**
@@ -190,21 +188,19 @@ abstract class SuperController extends AController {
                         ->addErrorMessage($this->service->getErrors());
             }
         }
-
-        $this->view->variables(array(
-            'form' => $form,
+        return $this->view->variables(array(
+                    'form' => $form,
         ));
-
-        return $this->request->isAjax() ?
-                $this->view->partial() :
-                $this->view;
     }
 
-    protected function checkFiles(&$data, $model = null) {
+    protected function checkFiles(&$data, &$model = null) {
         $model = (!$model) ? $this->service->getModel() : $model;
         foreach ($this->request->getFiles()->toArray() as $name => $dat) {
             if ((!is_array($dat->name) && empty($dat->name)) || (is_array($dat->name) && empty($dat->name[0]))) {
                 $this->request->getFiles()->remove($name);
+            }
+            else if (is_a($model, 'DSLive\Models\File')) {
+                $model->store($name);
             }
         }
         if ($this->request->getFiles()->notEmpty()) {
@@ -236,6 +232,7 @@ abstract class SuperController extends AController {
         if ($this->request->isPost()) {
             $data = $this->request->getPost();
             $this->checkFiles($data, $model);
+            $form->setModel(clone $model);
             $form->setData($data);
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 $this->flash()->setSuccessMessage('Save successful');
@@ -248,14 +245,10 @@ abstract class SuperController extends AController {
             }
         }
 
-        $this->view->variables(array(
-            'model' => $model,
-            'form' => $form,
+        return $this->view->variables(array(
+                    'model' => $model,
+                    'form' => $form,
         ));
-
-        return $this->request->isAjax() ?
-                $this->view->partial() :
-                $this->view;
     }
 
     /**
@@ -264,18 +257,14 @@ abstract class SuperController extends AController {
      * @return View
      */
     public function viewAction($id) {
-        $this->view->variables(array(
-            'model' => (is_object($id) && is_a($id, 'DBScribe\Row')) ? $id : $this->service->findOne($id),
+        return $this->view->variables(array(
+                    'model' => (is_object($id) && is_a($id, 'DBScribe\Row')) ? $id : $this->service->findOne($id),
         ));
-
-        return $this->request->isAjax() ?
-                $this->view->partial() :
-                $this->view;
     }
 
     /**
      * Deletes a model from the repository
-     * @param string $id Id of the model to delete
+     * @param string|\DScribe\Core\AModel $id Id of the model or model to delete
      * @param int $confirm >= 1 to confirm delete
      * @return View
      */
@@ -293,13 +282,9 @@ abstract class SuperController extends AController {
             $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }
 
-        $this->view->variables(array(
-            'model' => $model,
+        return $this->view->variables(array(
+                    'model' => $model,
         ));
-
-        return $this->request->isAjax() ?
-                $this->view->partial() :
-                $this->view;
     }
 
     /**

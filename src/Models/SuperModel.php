@@ -59,5 +59,9 @@ class SuperModel extends AModel {
         }
         return $this->$property;
     }
+    
+    public function postFetch($property = null) {
+        parent::postFetch($property);
+    }
 
 }

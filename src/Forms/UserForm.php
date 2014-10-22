@@ -32,7 +32,7 @@ class UserForm extends Form {
                 'label' => 'Email'
             ),
             'attributes' => array(
-                'maxLength' => 100,
+                'maxlength' => 100,
                 'required' => 'required',
             )
         ));
@@ -44,7 +44,7 @@ class UserForm extends Form {
                 'label' => 'Password'
             ),
             'attributes' => array(
-                'maxLength' => 50,
+                'maxlength' => 50,
                 'required' => 'required',
             )
         ));
@@ -56,7 +56,7 @@ class UserForm extends Form {
                 'label' => 'Repeat Password'
             ),
             'attributes' => array(
-                'maxLength' => 50,
+                'maxlength' => 50,
                 'required' => 'required',
             )
         ));
@@ -68,7 +68,7 @@ class UserForm extends Form {
                 'label' => 'First Name'
             ),
             'attributes' => array(
-                'maxLength' => 40,
+                'maxlength' => 40,
                 'required' => 'required',
             )
         ));
@@ -80,7 +80,7 @@ class UserForm extends Form {
                 'label' => 'Last Name'
             ),
             'attributes' => array(
-                'maxLength' => 40,
+                'maxlength' => 40,
                 'required' => 'required',
             )
         ));

@@ -5,8 +5,7 @@
 
 namespace DSLive\Stdlib;
 
-use DScribe\Core\Engine,
-    DSLive\Models\User as DMU,
+use DSLive\Models\User as DMU,
     Util as Utl;
 
 /**
@@ -109,7 +108,7 @@ class Util {
         if ($accessCode && method_exists($accessCode, $method))
             $msg = str_replace('{{accessCode: ' . $template . '}}', $accessCode->$method(), $msg);
 
-        $domain = Engine::getDB()->table('settings')
+        $domain = engineGet('db')->table('settings')
                         ->select(array(array('key' => 'domain')))
                         ->first()->value;
 

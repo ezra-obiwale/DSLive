@@ -4,7 +4,6 @@ namespace DSLive\Services;
 
 use DBScribe\Util,
     DScribe\Core\AService,
-    DScribe\Core\Engine,
     DScribe\Core\Repository,
     DScribe\Form\Form,
     DScribe\View\View,
@@ -89,8 +88,8 @@ abstract class GuestService extends AService {
     public function contactUs(Object $data, $to = null) {
         $email = new Email();
 
-        $to = Engine::getConfig('app', 'webmaster');
-        $domain = Engine::getConfig('app', 'name');
+        $to = engineGet('config', 'app', 'webmaster');
+        $domain = engineGet('config', 'app', 'name');
         $email->addTo($to);
         $email->sendFrom(trim($data->email));
 
@@ -103,8 +102,8 @@ abstract class GuestService extends AService {
         Table::newRow();
         Table::addRowData(trim($data->fullName) . " sent you a message on " .
                 Util::createTimestamp() . ' from <a href="' .
-                Engine::getConfig('app', 'domain') . '">' .
-                Engine::getConfig('app', 'name') . '</a><hr />', array(
+                engineGet('config', 'app', 'domain') . '">' .
+                engineGet('config', 'app', 'name') . '</a><hr />', array(
             'style' => 'font-size:larger;font-weight:bolder'
         ));
         Table::newRow();
@@ -134,9 +133,9 @@ abstract class GuestService extends AService {
             $model->setRole('admin');
         }
 
-        $model->setActive(Engine::getServer() === 'development' || $setup);
+        $model->setActive(engineGet('server') === 'development' || $setup);
         if ($this->repository->insert($model)->execute()) {
-            if (Engine::getServer() !== 'development' && !$this->sendEmail($model)) {
+            if (engineGet('server') !== 'development' && !$this->sendEmail($model)) {
                 $this->addErrors('Confirmation email not sent. <a href="' .
                                 $view->url($controllerPath['module'], $controllerPath['controller'], 'resend-confirmation', array($model->getId()))) .
                         '">Click here to resend your confirmation email</a>.';
@@ -216,7 +215,8 @@ abstract class GuestService extends AService {
 
             $this->model->update();
             $this->repository->update($this->model)->execute();
-            $this->flush();
+			$this->flush();
+            $this->model->postFetch();
         }
         else {
             $this->addErrors('User account does not exist');
@@ -229,7 +229,7 @@ abstract class GuestService extends AService {
     }
 
     public function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
-        if (Engine::getServer() === 'development')
+        if (engineGet('server') === 'development')
             return true;
 
         $email = new Email();
@@ -241,18 +241,18 @@ abstract class GuestService extends AService {
         $body = $user->parseString($notification->getMessage());
         $view = new View();
         $links = array(
-            '{confirmationLink}' => Engine::getConfig('app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'confirm-registration', array($user->getId(), $user->getEmail())),
-            '{loginLink}' => Engine::getConfig('app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'login'),
-            '{passwordResetLink}' => Engine::getConfig('app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'reset-password', array($user->getId(), $user->getReset())),
+            '{confirmationLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'confirm-registration', array($user->getId(), $user->getEmail())),
+            '{loginLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'login'),
+            '{passwordResetLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'reset-password', array($user->getId(), $user->getReset())),
         );
 
         $body = str_replace(array_keys($links), array_values($links), $body);
         $email->setHTML($body, array('autoSetText' => false));
-        $webMasterEmail = Engine::getConfig('app', 'webmaster', false);
+        $webMasterEmail = engineGet('config', 'app', 'webmaster', false);
         if ($webMasterEmail)
             $email->sendFrom($webMasterEmail, $notification->getGetReplies());
         else
-            $email->sendFrom('no-reply@' . str_replace(array('http://', 'https://'), '', Engine::getConfig('app', 'domain')));
+            $email->sendFrom('no-reply@' . str_replace(array('http://', 'https://'), '', engineGet('config', 'app', 'domain')));
 
         $email->addTo($user->getEmail());
 
@@ -260,7 +260,7 @@ abstract class GuestService extends AService {
             $title = $notification->getMessageTitle();
         }
         else {
-            $title = Engine::getConfig('app', 'name') . ' - ' . ucwords(str_replace(array('-', '_'), ' ', $notifyType));
+            $title = engineGet('config', 'app', 'name') . ' - ' . ucwords(str_replace(array('-', '_'), ' ', $notifyType));
         }
 
         return $email->send($title);
@@ -300,7 +300,7 @@ abstract class GuestService extends AService {
      * @return string
      */
     final public function prepareErrors() {
-        return '<li>' . join('</li><li>', $this->errors) . '</li>';
+        return $this->errors ? '<li>' . join('</li><li>', $this->errors) . '</li>' : null;
     }
 
 }

@@ -50,7 +50,7 @@ abstract class SuperUser extends AUser {
     public function __construct() {
         $this->setTableName('user');
         $this->stdFile = new \DSLive\Stdlib\File;
-        $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif', 'bmp'))
+        $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif'))
                 ->setMaxSize('500kb')
                 ->withThumbnails('picture', 50)
                 ->setOverwrite(true);
@@ -190,10 +190,8 @@ abstract class SuperUser extends AUser {
                 $this->$property = $value;
             }
             $this->mime = $this->stdFile->getMime();
-            return true;
+            return $this;
         }
-
-        return false;
     }
 
     public function unlink() {
