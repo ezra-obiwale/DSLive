@@ -272,9 +272,15 @@ abstract class SuperController extends AController {
         $model = (is_object($id)) ? $id : $this->service->findOne($id);
         if ($confirm == 1) {
             if ($this->service->delete()) {
+                if ($this->request->isAjax()) {
+                    die('Delete successful. ' . $this->service->prepareErrors());
+                }
                 $this->flash()->setSuccessMessage('Delete successful');
             }
             else {
+                if ($this->request->isAjax()) {
+                    die('Delete failed. ' . $this->service->prepareErrors());
+                }
                 $this->flash()
                         ->setErrorMessage('Delete failed')
                         ->addErrorMessage($this->service->getErrors());
@@ -282,9 +288,84 @@ abstract class SuperController extends AController {
             $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }
 
-        return $this->view->variables(array(
+        return $this->view->variables(array_merge(array(
                     'model' => $model,
+                                ), $variables));
+    }
+
+    public function importAction() {
+        if ($this->request->isPost()) {
+            if ($this->service->import($this->request->getFiles())) {
+                $this->flash()->setSuccessMessage('Imported into ' .
+                        ucwords(str_replace('_', ' ', $this->service->getModel()->getTableName())) . '(s) successful');
+                $this->redirect($this->getModule(), $this->getClassName(), 'view-unsaved-imports');
+            }
+            else
+                $this->flash()->setErrorMessage('Import failed')
+                        ->addErrorMessage($this->service->getErrors());
+        }
+
+        return $this->view->variables(array(
+                    'form' => $this->service->getImportForm(),
         ));
+    }
+
+    public function downloadTemplateFileAction() {
+        $headings = array();
+        $table = $this->service->getModel()->getTable();
+        foreach ($table->getColumns() as $column => $descArray) {
+            $heading = ucwords(str_replace('_', ' ', $column));
+            if (strtolower($descArray['nullable']) === 'no')
+                $heading .= ' | Required';
+
+            $headings[] = $heading;
+        }
+
+        $path = DATA . 'temp' . DIRECTORY_SEPARATOR;
+        $file = $path . $table->getName() . '_template.csv';
+
+        $handle = fopen($file, 'w+');
+        fputcsv($handle, $headings);
+        header('Content-Description: File Transfer');
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . basename($file));
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file));
+        ob_clean();
+        flush();
+        readfile($file);
+        unlink($file);
+    }
+
+    public function exportAction() {
+        $this->service->export();
+    }
+
+    public function viewUnsavedImportsAction() {
+        $importDir = DATA . 'imports' . DIRECTORY_SEPARATOR;
+        if (!is_readable($importDir . $this->service->getModel()->getTableName() . '.php')) {
+            $imported = array();
+        }
+        else {
+            $imported = include $importDir . $this->service->getModel()->getTableName() . '.php';
+        }
+        return $this->view->variables(array(
+                    'imported' => $imported,
+        ));
+    }
+
+    public function saveImportsAction() {
+        if ($this->service->saveImports()) {
+            $this->flash()->setSuccessMessage('Imports saved successfully');
+        }
+        else {
+            $this->flash()->setErrorMessage('Save imports failed');
+        }
+        $this->redirect($this->getModule(), $this->getClassName(), 'import');
     }
 
     /**

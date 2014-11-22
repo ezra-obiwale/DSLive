@@ -4,12 +4,19 @@ namespace DSLive\Services;
 
 use DScribe\Core\AService,
     DScribe\Core\IModel,
+    DSLive\Forms\ImportForm,
     Exception,
     Object;
 
 abstract class SuperService extends AService {
 
     protected $form;
+
+    /**
+     *
+     * @var \DSLive\Models\Model
+     */
+    protected $model;
 
     /**
      * @var array
@@ -222,9 +229,95 @@ abstract class SuperService extends AService {
     }
 
     /**
+     * @return ImportForm
+     */
+    public function getImportForm() {
+        return new ImportForm();
+    }
+
+    public function import(Object $data) {
+        if (empty($data->file->name) || $data->file->error)
+            return false;
+
+        $dir = DATA . 'temp' . DIRECTORY_SEPARATOR;
+        $importDir = DATA . 'imports' . DIRECTORY_SEPARATOR;
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+        if (!is_dir($importDir)) {
+            mkdir($importDir, 0777, true);
+        }
+
+        if (move_uploaded_file($data->file->tmpName, $dir . 'import.csv')) {
+            $file = fopen($dir . 'import.csv', 'r');
+            $temp = array();
+            $count = 0;
+            while (($line = fgetcsv($file)) !== FALSE) {
+                $temp[] = $line;
+                $count++;
+            }
+            fclose($file);
+            unlink($dir . 'import.csv');
+            return \Util::updateConfig($importDir . $this->model->getTableName() . '.php', $temp, true, array());
+        }
+
+        return false;
+    }
+
+    public function saveImports() {
+        $importDir = DATA . 'imports' . DIRECTORY_SEPARATOR;
+        if (is_readable($importDir . $this->model->getTableName() . '.php')) {
+            $imported = include $importDir . $this->model->getTableName() . '.php';
+            unset($imported[0]);
+            $columns = $this->model->getTable()->getColumns(true);
+            $save = array();
+            foreach ($imported as $line) {
+                $this->model->populate(array_combine($columns, $line))->preSave();
+                $save[] = $this->model->toArray();
+            }
+            if ($this->repository->insert($save)->execute()) {
+                if ($this->flush()) {
+                    unlink($importDir . $this->model->getTableName() . '.php');
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public function export() {
+        $path = DATA . 'temp' . DIRECTORY_SEPARATOR;
+        $file = $path . $this->model->getTableName() . '_' . \DBScribe\Util::createTimestamp() . '.csv';
+
+        $handle = fopen($file, 'w+');
+        $table = $this->model->getTable();
+        foreach ($table->getColumns(true) as $column) {
+            $headings[] = ucwords(str_replace('_', ' ', $column));
+        }
+        fputcsv($handle, $headings);
+        foreach ($this->repository->fetchAll(\DBScribe\Table::RETURN_DEFAULT) as $row) {
+            fputcsv($handle, array_values($row));
+        }
+
+        header('Content-Description: File Transfer');
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . basename($file));
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file));
+        ob_clean();
+        flush();
+        readfile($file);
+        unlink($file);
+    }
+
+    /**
      * Adds an error to the current operation
      * @param string|array $error
-     * @return \DSLive\Controllers\SuperController
+     * @return \DSLive\Controllers\SuperService
      */
     final public function addErrors($error) {
         if (is_string($error))

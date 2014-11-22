@@ -152,6 +152,8 @@ class User extends SuperUser {
 
         if ($this->registerDate === null)
             $this->registerDate = Util::createTimestamp();
+        
+        parent::preSave();
     }
 
     /**
