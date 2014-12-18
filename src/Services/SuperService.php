@@ -2,11 +2,15 @@
 
 namespace DSLive\Services;
 
-use DScribe\Core\AService,
+use DBScribe\Table,
+    DBScribe\Util as DU,
+    DScribe\Core\AService,
     DScribe\Core\IModel,
     DSLive\Forms\ImportForm,
+    DSLive\Models\Model,
     Exception,
-    Object;
+    Object,
+    Util;
 
 abstract class SuperService extends AService {
 
@@ -14,7 +18,7 @@ abstract class SuperService extends AService {
 
     /**
      *
-     * @var \DSLive\Models\Model
+     * @var Model
      */
     protected $model;
 
@@ -52,8 +56,8 @@ abstract class SuperService extends AService {
      * Fetches all data in the database
      * return array
      */
-    public function fetchAll() {
-        return $this->repository->fetchAll();
+    public function fetchAll($returnType = Table::RETURN_MODEL) {
+        return $this->repository->fetchAll($returnType);
     }
 
     /**
@@ -61,8 +65,8 @@ abstract class SuperService extends AService {
      * @param mixed $id Id to fetch with
      * @return mixed
      */
-    public function findOne($id, $exception = true) {
-        return $this->findOneBy('id', $id, $exception);
+    public function findOne($id, $exception = true, $returnType = Table::RETURN_MODEL) {
+        return $this->findOneBy('id', $id, $exception, $returnType);
     }
 
     /**
@@ -71,8 +75,8 @@ abstract class SuperService extends AService {
      * @param mixed $value The value the column must contain
      * @return mixed
      */
-    public function findOneBy($column, $value, $exception = true) {
-        return $this->findOneWhere(array(array($column => $value)), $exception);
+    public function findOneBy($column, $value, $exception = true, $returnType = Table::RETURN_MODEL) {
+        return $this->findOneWhere(array(array($column => $value)), $exception, $returnType);
     }
 
     /**
@@ -80,8 +84,8 @@ abstract class SuperService extends AService {
      * @param array $criteria
      * @return mixed
      */
-    public function findOneWhere($criteria, $exception = true) {
-        $model = $this->repository->findOneWhere($criteria);
+    public function findOneWhere($criteria, $exception = true, $returnType = Table::RETURN_MODEL) {
+        $model = $this->repository->findOneWhere($criteria, $returnType);
         if (!$model) {
             if ($exception)
                 throw new Exception('Required page was not found');
@@ -113,17 +117,12 @@ abstract class SuperService extends AService {
                 $model->postFetch($property);
             }
         }
-        try {
-            if ($this->repository->insert($model)->execute()) {
-                if ($flush)
-                    $this->flush();
+        if ($this->repository->insert($model)->execute()) {
+            if ($flush)
+                $this->flush();
 
-                $model->postFetch();
-                return $model;
-            }
-        }
-        catch (Exception $ex) {
-            
+            $model->postFetch();
+            return $model;
         }
 
         return false;
@@ -152,17 +151,12 @@ abstract class SuperService extends AService {
                 $model->postFetch($property);
             }
         }
-        try {
-            if ($this->repository->update($model)->execute()) {
-                if ($flush)
-                    $this->flush();
+        if ($this->repository->update($model)->execute()) {
+            if ($flush)
+                $this->flush();
 
-                $model->postFetch();
-                return $model;
-            }
-        }
-        catch (Exception $ex) {
-            
+            $model->postFetch();
+            return $model;
         }
 
         return false;
@@ -193,7 +187,7 @@ abstract class SuperService extends AService {
             if (method_exists($this->model, 'unlink')) {
                 $this->model->unlink();
             }
-            $this->model->preSave();
+            $this->model->preSave(false);
             $deleted = $this->repository->delete($this->model)->execute();
             if ($flush) {
                 return $this->flush();
@@ -258,7 +252,7 @@ abstract class SuperService extends AService {
             }
             fclose($file);
             unlink($dir . 'import.csv');
-            return \Util::updateConfig($importDir . $this->model->getTableName() . '.php', $temp, true, array());
+            return Util::updateConfig($importDir . $this->model->getTableName() . '.php', $temp, true, array());
         }
 
         return false;
@@ -287,7 +281,7 @@ abstract class SuperService extends AService {
 
     public function export() {
         $path = DATA . 'temp' . DIRECTORY_SEPARATOR;
-        $file = $path . $this->model->getTableName() . '_' . \DBScribe\Util::createTimestamp() . '.csv';
+        $file = $path . $this->model->getTableName() . '_' . str_replace(' ', '_', DU::createTimestamp()) . '.csv';
 
         $handle = fopen($file, 'w+');
         $table = $this->model->getTable();
@@ -295,7 +289,7 @@ abstract class SuperService extends AService {
             $headings[] = ucwords(str_replace('_', ' ', $column));
         }
         fputcsv($handle, $headings);
-        foreach ($this->repository->fetchAll(\DBScribe\Table::RETURN_DEFAULT) as $row) {
+        foreach ($this->repository->fetchAll(Table::RETURN_DEFAULT) as $row) {
             fputcsv($handle, array_values($row));
         }
 

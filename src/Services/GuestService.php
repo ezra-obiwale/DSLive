@@ -4,10 +4,8 @@ namespace DSLive\Services;
 
 use DBScribe\Util,
     DScribe\Core\AService,
-    DScribe\Core\Repository,
     DScribe\Form\Form,
     DScribe\View\View,
-    DSLive\Controllers\GuestController,
     DSLive\Forms\ContactUsForm,
     DSLive\Forms\LoginForm,
     DSLive\Forms\RegisterForm,
@@ -43,7 +41,7 @@ abstract class GuestService extends AService {
 
     public function getSettingsRepository() {
         if ($this->settingsRepository)
-            $this->settingsRepository = new Repository(new Settings());
+            $this->settingsRepository = new \DBScribe\Repository(new Settings());
 
         return $this->settingsRepository;
     }
@@ -121,7 +119,7 @@ abstract class GuestService extends AService {
      * @param boolean $flush
      * @return boolean
      */
-    public function register(View $view, $controllerPath, Form $form, $setup = false, $flush = true) {
+    public function register(View $view, $controllerPath, Form $form, $setup = false, $sendMail = true, $flush = true) {
         $model = $form->getModel();
         $model->hashPassword();
         if ($this->repository->findOneBy('email', $model->getEmail())) {
@@ -135,7 +133,7 @@ abstract class GuestService extends AService {
 
         $model->setActive(engineGet('server') === 'development' || $setup);
         if ($this->repository->insert($model)->execute()) {
-            if (engineGet('server') !== 'development' && !$this->sendEmail($model)) {
+            if ($sendMail && engineGet('server') !== 'development' && !$this->sendEmail($model)) {
                 $this->addErrors('Confirmation email not sent. <a href="' .
                                 $view->url($controllerPath['module'], $controllerPath['controller'], 'resend-confirmation', array($model->getId()))) .
                         '">Click here to resend your confirmation email</a>.';
@@ -144,7 +142,7 @@ abstract class GuestService extends AService {
             if ($setup)
                 $this->setup();
         }
-        return ($flush) ? $this->flush() : true;
+        return ($flush) ? $this->flush() : $model;
     }
 
     public function confirmRegistration($id, $email) {

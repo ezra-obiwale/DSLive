@@ -562,14 +562,15 @@ abstract class File extends Model {
     }
 
     public function postFetch($property = null) {
-        $fileProperties = array_keys(array_merge($this->extensions, $this->badExtensions));
         if ($property && property_exists($this, $property)) {
             $this->{$property} = $this->getDBValue($property);
             return $this->{$property};
         }
 
+        $fileProperties = array_keys(array_merge($this->extensions, $this->badExtensions));
         foreach ($fileProperties as $property) {
-            $this->$property = json_decode($this->$property, true);
+            if ($val = json_decode($this->$property, true))
+                $this->$property = $val;
         }
 
         if ($this->mime)

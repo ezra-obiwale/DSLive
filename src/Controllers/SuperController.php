@@ -7,7 +7,7 @@ namespace DSLive\Controllers;
 
 use DScribe\Core\AController,
     DScribe\Core\IModel,
-    DScribe\Core\Repository,
+    DBScribe\Repository,
     DScribe\View\View,
     DSLive\Models\User,
     DSLive\Services\SuperService,
@@ -63,7 +63,7 @@ abstract class SuperController extends AController {
 
     final public function getCurrentUserFromDB() {
         if (!$this->userIsLive && $this->currentUser->getId()) {
-            $userRepo = new Repository(new User);
+            $userRepo = new Repository($this->currentUser, engineGet('db'), true);
             $user = $userRepo->findOne($this->currentUser->getId());
             if ($user)
                 $this->currentUser = $user;
@@ -74,7 +74,7 @@ abstract class SuperController extends AController {
     }
 
     public function noCache() {
-        return array('index', 'new', 'edit', 'delete');
+        return true;
     }
 
     public function accessDenied($action, $args = array(), array $redirect = array()) {
@@ -236,7 +236,8 @@ abstract class SuperController extends AController {
             $form->setData($data);
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 $this->flash()->setSuccessMessage('Save successful');
-                $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+                if (!$this->request->isAjax())
+                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
             }
             else {
                 $this->flash()
@@ -271,7 +272,7 @@ abstract class SuperController extends AController {
     public function deleteAction($id, $confirm = null, array $redirect = array()) {
         $model = (is_object($id)) ? $id : $this->service->findOne($id);
         if ($confirm == 1) {
-            if ($this->service->delete()) {
+            if ($this->service->delete($model)) {
                 if ($this->request->isAjax()) {
                     die('Delete successful. ' . $this->service->prepareErrors());
                 }
@@ -293,11 +294,21 @@ abstract class SuperController extends AController {
                                 ), $variables));
     }
 
+    public function deleteManyAction($redirect = array()) {
+        $this->service->getRepository()->in('id', $this->request->getPost()->ids)
+                ->delete()->execute();
+        $this->service->flush();
+        $this->redirect($redirect['module'] ? $redirect['module'] :
+                        $this->getModule(), $redirect['controller'] ? $redirect['controller'] :
+                        $this->getClassName(), $redirect['action'] ? $redirect['action'] :
+                        'index', $redirect['params'] ? $redirect['params'] : array());
+    }
+
     public function importAction() {
         if ($this->request->isPost()) {
             if ($this->service->import($this->request->getFiles())) {
                 $this->flash()->setSuccessMessage('Imported into ' .
-                        ucwords(str_replace('_', ' ', $this->service->getModel()->getTableName())) . '(s) successful');
+                        ucwords(str_replace('_', ' ', $this->service->getModel()->getTableName())) . '(s) successfully');
                 $this->redirect($this->getModule(), $this->getClassName(), 'view-unsaved-imports');
             }
             else

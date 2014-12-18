@@ -15,7 +15,7 @@ class PasswordForm extends Form {
             'name' => 'old',
             'type' => 'password',
             'options' => array(
-                'label' => 'Old Password'
+                'label' => 'Current Password',
             ),
             'attributes' => array(
                 'required' => 'required',                
@@ -26,10 +26,12 @@ class PasswordForm extends Form {
             'name' => 'new',
             'type' => 'password',
             'options' => array(
-                'label' => 'New Password'
+                'label' => 'New Password',
+                'inlineInfo' => 'Minimum 8 characters',
             ),
             'attributes' => array(
-                'required' => 'required',                
+                'required' => 'required',
+				'min' => 8,
             )
         ));
 
@@ -71,6 +73,9 @@ class PasswordForm extends Form {
                 'NotMatch' => array(
                     'element' => 'old',
                     'message' => 'New and old passwords cannot be the same'
+                ),
+                'minLength' => array(
+                    'value' => 8
                 )
             ),
             'confirm' => array(

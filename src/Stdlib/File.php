@@ -55,19 +55,21 @@ class File extends DMF {
         }
     }
 
-    public function _call(&$name, $args) {
+    protected function _preCall(&$name, array &$args) {
         if (!method_exists($this, $name)) {
             $property = strtolower(substr($name, 3));
-            if (substr($name, 0, 3) === 'get') {
-                return $this->getProperty($property);
-            }
-            else if (substr($name, 0, 3) === 'set') {
-                $this->setProperty($property, $args[0]);
-                return $this;
-            }
+			if (property_exists($this, $property)) {
+	            if (substr($name, 0, 3) === 'get') {
+    	            return $this->getProperty($property);
+        	    }
+            	else if (substr($name, 0, 3) === 'set') {
+                	$this->setProperty($property, $args[0]);
+	                return $this;
+    	        }
+    	    }
         }
 
-        return parent::_call($name, $args);
+        return parent::_preCall($name, $args);
     }
 
 }

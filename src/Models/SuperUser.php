@@ -228,4 +228,8 @@ abstract class SuperUser extends AUser {
         return $this->stdFile->getThumbnails($property, 0);
     }
 
+    public function parseBoolean($property, $on = 'Yes', $off = 'No') {
+        return ($this->$property == 1) ? $on : $off;
+    }
+
 }

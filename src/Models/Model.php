@@ -45,13 +45,6 @@ class Model extends SuperModel {
         if (empty($this->id) && $createId) {
             $this->id = Util::createGUID();
         }
-
-        if (property_exists($this, 'date') && empty($this->date)) {
-            $this->date = Util::createTimestamp();
-        }
-        if (property_exists($this, 'timestamp') && empty($this->timestamp)) {
-            $this->timestamp = Util::createTimestamp();
-        }
         parent::preSave();
     }
 

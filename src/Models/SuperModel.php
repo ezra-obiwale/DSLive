@@ -60,4 +60,14 @@ class SuperModel extends AModel {
         return $this->$property;
     }
 
+    public function preSave() {
+        if (property_exists($this, 'date') && empty($this->date)) {
+            $this->date = Util::createTimestamp();
+        }
+        if (property_exists($this, 'timestamp') && empty($this->timestamp)) {
+            $this->timestamp = Util::createTimestamp();
+        }
+        parent::preSave();
+    }
+
 }

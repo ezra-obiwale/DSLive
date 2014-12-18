@@ -5,7 +5,7 @@ namespace DSLive\Forms;
 class ImportForm extends FileForm {
 
     public function __construct($name = 'importForm', $maxSize = null, array $attributes = array()) {
-        parent::__construct($name, $attributes);
+        parent::__construct(ini_get('post_max_size'), $name, $attributes);
 
         $this->setAttributes(array(
             'method' => 'post',
@@ -26,11 +26,11 @@ class ImportForm extends FileForm {
             'name' => 'file',
             'type' => 'file',
             'options' => array(
-                'label' => 'CSV File',
+                'label' => 'Excel File',
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
-                'accept' => '.csv'
+                'accept' => '.xls, .xlsx'
             )
         ));
 

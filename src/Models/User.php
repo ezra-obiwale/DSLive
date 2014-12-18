@@ -12,7 +12,7 @@ class User extends SuperUser {
     protected $id;
 
     /**
-     * @DBS\String (size="100")
+     * @DBS\String (size="200")
      */
     protected $email;
 
@@ -62,7 +62,7 @@ class User extends SuperUser {
     public function getRegisterDate() {
         return $this->registerDate;
     }
-    
+
     public function setRegisterDate($registerDate) {
         $this->registerDate = $registerDate;
     }
@@ -84,7 +84,11 @@ class User extends SuperUser {
         return $this->role;
     }
 
-    public function getPicture() {
+    public function getPicture($returnSingleValue = false) {
+        if ($returnSingleValue && is_array($this->picture)) {
+            $pictures = array_values($this->picture);
+            return $pictures[0];
+        }
         return $this->picture;
     }
 
@@ -138,12 +142,12 @@ class User extends SuperUser {
             $pictures = array_values($this->picture);
             $this->picture = $pictures[0];
         }
-        
+
         if (is_array($this->mime)) {
             $mime = array_values($this->mime['picture']);
             $this->mime = $mime[0];
         }
-        
+
         if ($this->role === null)
             throw new \Exception('Role not set for user');
 
@@ -152,7 +156,7 @@ class User extends SuperUser {
 
         if ($this->registerDate === null)
             $this->registerDate = Util::createTimestamp();
-        
+
         parent::preSave();
     }
 
@@ -179,7 +183,7 @@ class User extends SuperUser {
     
     public function postFetch($property = null) {
         parent::postFetch();
-        
+
         $this->fullName = $this->getFullName();
     }
 

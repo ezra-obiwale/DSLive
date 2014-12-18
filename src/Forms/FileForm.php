@@ -23,9 +23,10 @@ class FileForm extends Form {
                 throw new Exception('$modelOrMaxSize must be of type \DSLive\Models\File');
 
             $this->setModel($modelOrMaxSize);
-            $modelOrMaxSize = $modelOrMaxSize->getMaxSize();
+            $modelOrMaxSize = $modelOrMaxSize->getMaxSize(false);
         }
-
+        $file = new \DSLive\Stdlib\File();
+        $file->setMaxSize($modelOrMaxSize);
         $this->setAttributes(array(
             'method' => 'post',
             'enctype' => 'multipart/form-data'
@@ -34,8 +35,8 @@ class FileForm extends Form {
         $this->add(array(
             'name' => 'MAX_FILE_SIZE',
             'type' => 'hidden',
-            'attributes' => array(
-                'value' => $modelOrMaxSize,
+            'options' => array(
+                'value' => $file->getMaxSize(),
             )
         ));
     }

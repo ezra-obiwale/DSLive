@@ -122,13 +122,13 @@ class Page {
                     if ($id === $page->id)
                         $active = true;
                     ?>
-                    <li <?= ($id === $page->id) ? 'class="active"' : '' ?>><a class="auto" tabindex="-1" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
+                    <li  <?= ($id === $page->id) ? 'class="active"' : '' ?>><a data-id="<?= $page->id ?>" class="auto" tabindex="-1" href="<?= $renderer->url('cms', 'page', 'view', array($category->link, $page->link)) ?>"><?= $page->title ?></a></li>
                     <?php
                 }
                 $lis = ob_get_clean();
                 ?>
                 <li class="dropdown <?= $active ? 'active' : '' ?>">
-                    <a tabindex="-1" href="#" <?= ($pages->count() || $subCategories->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
+                    <a tabindex="-1" data-id="<?= $category->id ?>" href="#" <?= ($pages->count() || $subCategories->count()) ? 'class="dropdown-toggle" data-toggle="dropdown"' : '' ?>><?= $category->name ?> <b class="caret"></b></a>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
                         <?= $lis ?>
                         <?php
@@ -215,6 +215,7 @@ class Page {
                     $attrs['style'] = 'height:' . $slide->getHeight();
             }
             $attrs['name'] = false;
+            $attrs['id'] = str_replace(' ', '-', $slide->getCodeName());
             $content = str_replace('{slide' . $sep . $slide->getCodeName() . '}', self::mediaCarousel($slide->media(array(
                                 'orderBy' => 'name'
                             )), $attrs), $content);
