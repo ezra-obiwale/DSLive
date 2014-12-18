@@ -4,9 +4,17 @@
 This is a collection of helpers that can make the it a whole lot easier and 
 faster developing with DScribe Framework.
 
-Instructions
+
+INSTALLATION
 ============
 
-Just put in the vendor's directory of your project and start calling classes.
+There two ways to install DSLive.
 
-C'est fini.
+1. COMPOSER (Recommended)
+   "require": {
+        "d-scribe/ds-live": "dev-master"
+    }
+   
+2. MANUAL
+   - Create "d-scribe/ds-live" directory in your vendor directory
+   - Copy the files of DSLive into that directory
