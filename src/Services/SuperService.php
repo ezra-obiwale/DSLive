@@ -111,8 +111,7 @@ abstract class SuperService extends AService {
             $this->addErrors('File upload failed');
             $this->addErrors($model->getErrors());
             return false;
-        }
-        else if (!$upload && method_exists($model, 'uploadFiles')) {
+        } else if (!$upload && method_exists($model, 'uploadFiles')) {
             foreach (array_keys($files->toArray(true)) as $property) {
                 $model->postFetch($property);
             }
@@ -139,14 +138,14 @@ abstract class SuperService extends AService {
         if (!is_object($files)) {
             $files = new \Object();
         }
+        $upload = true;
         if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) &&
                 method_exists($model, 'uploadFiles') &&
                 !$upload = $model->uploadFiles($files)) {
             $this->addErrors('File upload failed');
             $this->addErrors($model->getErrors());
             return false;
-        }
-        else if (!$upload && method_exists($model, 'uploadFiles')) {
+        } else if (!$upload && method_exists($model, 'uploadFiles')) {
             foreach (array_keys($files->toArray(true)) as $property) {
                 $model->postFetch($property);
             }
@@ -178,8 +177,7 @@ abstract class SuperService extends AService {
     public function delete($model = null, $flush = true) {
         if (is_object($model)) {
             $this->model = $model;
-        }
-        else if (is_bool($model)) {
+        } else if (is_bool($model)) {
             $flush = $model;
         }
 
@@ -191,12 +189,10 @@ abstract class SuperService extends AService {
             $deleted = $this->repository->delete($this->model)->execute();
             if ($flush) {
                 return $this->flush();
-            }
-            else {
+            } else {
                 return $deleted;
             }
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             if (stristr($ex->getMessage(), 'Integrity constraint violation:')) {
                 $this->errors[] = ucwords(str_replace('_', ' ', $this->model->getTableName())) .
                         ' is being used in another part of the application';

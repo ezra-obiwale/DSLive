@@ -176,16 +176,14 @@ abstract class GuestService extends AService {
                             ->addErrors('Please do a password reset again');
                 }
             }
-        }
-        else { //reseting password now
+        } else { //reseting password now
             $password = $model->getPassword();
             $model->setId($id)->setPassword(null);
             $model = $this->getRepository()->findOneWhere(array($model));
             if (!$model) {
                 $this->addErrors('User account does not exist');
                 return false;
-            }
-            else if ($model->getReset() !== $reset) {
+            } else if ($model->getReset() !== $reset) {
                 $this->addErrors('Invalid action');
                 return false;
             }
@@ -206,17 +204,15 @@ abstract class GuestService extends AService {
                 $this->addErrors('User account is not yet active')
                         ->addErrors('Please click on the confirmation link sent to your email account');
                 return false;
-            }
-            else if (!$this->model->verifyPassword($model->getPassword())) {
+            } else if (!$this->model->verifyPassword($model->getPassword())) {
                 return false;
             }
 
             $this->model->update();
             $this->repository->update($this->model)->execute();
-			$this->flush();
+            $this->flush();
             $this->model->postFetch();
-        }
-        else {
+        } else {
             $this->addErrors('User account does not exist');
         }
         return $this->model;
@@ -256,8 +252,7 @@ abstract class GuestService extends AService {
 
         if ($notification->getMessageTitle()) {
             $title = $notification->getMessageTitle();
-        }
-        else {
+        } else {
             $title = engineGet('config', 'app', 'name') . ' - ' . ucwords(str_replace(array('-', '_'), ' ', $notifyType));
         }
 

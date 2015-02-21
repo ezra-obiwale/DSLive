@@ -232,4 +232,9 @@ abstract class SuperUser extends AUser {
         return ($this->$property == 1) ? $on : $off;
     }
 
+    public function prepareEmail($label = null, $class = null) {
+        $label = $label ? $label : $this->email;
+        return '<a title="send email" class="' . $class . '" href="mailto:' . $this->email . '">' . $label . '</a>';
+    }
+
 }
