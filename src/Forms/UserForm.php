@@ -2,14 +2,15 @@
 
 namespace DSLive\Forms;
 
-use DScribe\Form\Form;
+use \DScribe\Form\Form,
+    \DSLive\Models\User;
 
 class UserForm extends Form {
 
-    public function __construct() {
-        parent::__construct('userForm');
+    public function __construct($name = 'userForm', User $user = null) {
+        parent::__construct($name);
 
-        $user = new \DSLive\Models\User;
+        $user = ($user === null) ? new User : $user;
         $this->setModel($user);
 
         $this->setAttributes(array(

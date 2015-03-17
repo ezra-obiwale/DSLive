@@ -24,7 +24,7 @@ class SuperModel extends AModel {
      * @return string
      * @throws \Exception
      */
-    public function parseDate($property, $format = 'F j, Y H:i:s') {
+    public function parseDate($property, $format = 'F j, Y') {
         if (is_array($property)) {
             $dateString = '';
             foreach ($property as $ppt) {
@@ -50,11 +50,15 @@ class SuperModel extends AModel {
         return ($this->$property == 1) ? $on : $off;
     }
 
+    public function prepareEmail($property, $label = null) {
+        $label = $label ? $label : $this->$property;
+        return '<a title="send email" href="mailto:' . $this->$property . '">' . $label . '</a>';
+    }
+
     public function getArray($property) {
         if (!$this->$property) {
             return array();
-        }
-        elseif (!is_array($this->$property)) {
+        } elseif (!is_array($this->$property)) {
             return array($this->$property);
         }
         return $this->$property;

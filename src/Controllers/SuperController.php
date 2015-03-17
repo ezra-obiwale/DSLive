@@ -160,8 +160,8 @@ abstract class SuperController extends AController {
      * <b>setElements (array)</b> - Array of keys as property to edit. Use (dot) to indicate
      *      path to actual property to edit in case value of first property is an object
      *      e.g. <i>'options.value' => 'no value for the element'</i>
-     * 
-     * @param array $redirect May contain any of keys [(string) module, (string) 
+     *
+     * @param array $redirect May contain any of keys [(string) module, (string)
      * controller, (string) action, (array) params
      * @return View
      */
@@ -177,12 +177,10 @@ abstract class SuperController extends AController {
 
                 if (isset($this->request->getPost()->saveAndNew)) {
                     $form->reset();
-                }
-                else {
+                } else {
                     $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
                 }
-            }
-            else {
+            } else {
                 $this->flash()
                         ->setErrorMessage('Save failed')
                         ->addErrorMessage($this->service->getErrors());
@@ -198,8 +196,7 @@ abstract class SuperController extends AController {
         foreach ($this->request->getFiles()->toArray() as $name => $dat) {
             if ((!is_array($dat->name) && empty($dat->name)) || (is_array($dat->name) && empty($dat->name[0]))) {
                 $this->request->getFiles()->remove($name);
-            }
-            else if (is_a($model, 'DSLive\Models\File')) {
+            } else if (is_a($model, 'DSLive\Models\File')) {
                 $model->store($name);
             }
         }
@@ -219,8 +216,8 @@ abstract class SuperController extends AController {
      * <b>setElements (array)</b> - Array of keys as property to edit. Use (dot) to indicate
      *      path to actual property to edit in case value of first property is an object
      *      e.g. <i>'options.value' => 'no value for the element'</i>
-     * 
-     * @param array $redirect May contain any of keys [(string) module, (string) 
+     *
+     * @param array $redirect May contain any of keys [(string) module, (string)
      * controller, (string) action, (array) params
      * @return View
      */
@@ -277,8 +274,7 @@ abstract class SuperController extends AController {
                     die('Delete successful. ' . $this->service->prepareErrors());
                 }
                 $this->flash()->setSuccessMessage('Delete successful');
-            }
-            else {
+            } else {
                 if ($this->request->isAjax()) {
                     die('Delete failed. ' . $this->service->prepareErrors());
                 }
@@ -289,9 +285,9 @@ abstract class SuperController extends AController {
             $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
         }
 
-        return $this->view->variables(array_merge(array(
+        return $this->view->variables(array(
                     'model' => $model,
-                                ), $variables));
+        ));
     }
 
     public function deleteManyAction($redirect = array()) {
@@ -310,8 +306,7 @@ abstract class SuperController extends AController {
                 $this->flash()->setSuccessMessage('Imported into ' .
                         ucwords(str_replace('_', ' ', $this->service->getModel()->getTableName())) . '(s) successfully');
                 $this->redirect($this->getModule(), $this->getClassName(), 'view-unsaved-imports');
-            }
-            else
+            } else
                 $this->flash()->setErrorMessage('Import failed')
                         ->addErrorMessage($this->service->getErrors());
         }
@@ -360,8 +355,7 @@ abstract class SuperController extends AController {
         $importDir = DATA . 'imports' . DIRECTORY_SEPARATOR;
         if (!is_readable($importDir . $this->service->getModel()->getTableName() . '.php')) {
             $imported = array();
-        }
-        else {
+        } else {
             $imported = include $importDir . $this->service->getModel()->getTableName() . '.php';
         }
         return $this->view->variables(array(
@@ -372,8 +366,7 @@ abstract class SuperController extends AController {
     public function saveImportsAction() {
         if ($this->service->saveImports()) {
             $this->flash()->setSuccessMessage('Imports saved successfully');
-        }
-        else {
+        } else {
             $this->flash()->setErrorMessage('Save imports failed');
         }
         $this->redirect($this->getModule(), $this->getClassName(), 'import');
@@ -381,7 +374,7 @@ abstract class SuperController extends AController {
 
     /**
      * Checks if the HTTP Referer is the given url
-     * 
+     *
      * @param string|array $url A single url or an array of urls to check. Urls
      * should start with http|https
      * @return boolean

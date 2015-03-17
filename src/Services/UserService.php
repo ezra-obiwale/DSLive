@@ -50,7 +50,7 @@ class UserService extends SuperService {
     }
 
     public function changePassword(Object $model) {
-        if ($this->model->hashPassword($model->old) !== $this->model->getPassword())
+        if (!$this->model->verifyPassword($model->old))
             return false;
 
         $this->model->setPassword($model->new);

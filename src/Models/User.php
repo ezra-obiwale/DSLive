@@ -117,7 +117,7 @@ class User extends SuperUser {
      * @return string
      * @throws \Exception
      */
-    public function parseDate($property, $format = 'F j, Y H:i:s') {
+    public function parseDate($property, $format = 'F j, Y') {
         if (is_array($property)) {
             $dateString = '';
             foreach ($property as $ppt) {

@@ -2,10 +2,12 @@
 
 namespace DSLive\Controllers;
 
+use \DSLive\Services\UserService;
+
 class UserController extends SuperController {
 
     /**
-     * @var \DSLive\Services\UserService
+     * @var UserService
      */
     protected $service;
 
