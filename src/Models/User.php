@@ -22,7 +22,7 @@ class User extends SuperUser {
     protected $registerDate;
 
     /**
-     * @DBS\Timestamp
+     * @DBS\Timestamp (nullable=true)
      */
     protected $lastLogin;
 

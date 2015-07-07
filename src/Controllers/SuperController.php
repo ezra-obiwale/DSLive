@@ -178,7 +178,7 @@ abstract class SuperController extends AController {
                 if (isset($this->request->getPost()->saveAndNew)) {
                     $form->reset();
                 } else {
-                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
                 }
             } else {
                 $this->flash()
@@ -234,7 +234,7 @@ abstract class SuperController extends AController {
             if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
                 $this->flash()->setSuccessMessage('Save successful');
                 if (!$this->request->isAjax())
-                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+                    $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
             }
             else {
                 $this->flash()
@@ -282,7 +282,7 @@ abstract class SuperController extends AController {
                         ->setErrorMessage('Delete failed')
                         ->addErrorMessage($this->service->getErrors());
             }
-            $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array());
+            $this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
         }
 
         return $this->view->variables(array(
