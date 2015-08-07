@@ -49,8 +49,8 @@ class UserService extends SuperService {
         return parent::delete($user ? $user : true);
     }
 
-    public function changePassword(Object $model) {
-        if (!$this->model->verifyPassword($model->old))
+    public function changePassword(Object $model, $verify = true) {
+        if ($verify && !$this->model->verifyPassword($model->old))
             return false;
 
         $this->model->setPassword($model->new);

@@ -41,13 +41,23 @@ class User extends SuperUser {
      */
     protected $active;
 
-    public function getId() {
+    /**
+     * Indicates whether to generate id if none exists
+     * @param bool $generate
+     * @return string
+     */
+    public function getId($generate = false) {
+        if (!$this->id && $generate) $this->id = Util::createGUID();
         return $this->id;
     }
 
     public function setId($id) {
         $this->id = $id;
         return $this;
+    }
+
+    public function getPictureName() {
+        return $this->getId(true);
     }
 
     public function setEmail($email) {
@@ -122,14 +132,14 @@ class User extends SuperUser {
             $dateString = '';
             foreach ($property as $ppt) {
                 if (!property_exists($this, $ppt))
-                    throw new \Exception('Parse Date Error: Property "' . $ppt .
+                        throw new \Exception('Parse Date Error: Property "' . $ppt .
                     '" does not exist in class "' . get_called_class() . '"');
                 $dateString .= ' ' . $this->$ppt;
             }
         }
         else {
             if (!property_exists($this, $property))
-                throw new \Exception('Parse Date Error: Property "' . $property .
+                    throw new \Exception('Parse Date Error: Property "' . $property .
                 '" does not exist in class "' . get_called_class() . '"');
             $dateString = $this->$property;
         }
@@ -148,14 +158,12 @@ class User extends SuperUser {
             $this->mime = $mime[0];
         }
 
-        if ($this->role === null)
-            throw new \Exception('Role not set for user');
+        if ($this->role === null) throw new \Exception('Role not set for user');
 
-        if ($this->id === null)
-            $this->id = Util::createGUID();
+        if ($this->id === null) $this->id = Util::createGUID();
 
         if ($this->registerDate === null)
-            $this->registerDate = Util::createTimestamp();
+                $this->registerDate = Util::createTimestamp();
 
         parent::preSave();
     }
@@ -180,7 +188,7 @@ class User extends SuperUser {
         }
         return $string;
     }
-    
+
     public function postFetch($property = null) {
         parent::postFetch();
 

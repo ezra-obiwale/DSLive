@@ -186,10 +186,9 @@ abstract class SuperService extends AService {
                 $this->model->unlink();
             }
             $this->model->preSave(false);
-            $deleted = $this->repository->delete($this->model)->execute();
-            if ($flush) {
-                return $this->flush();
-            } else {
+            if ($deleted = $this->repository->delete($this->model)->execute()) {
+                if ($flush)
+                    $this->flush();
                 return $deleted;
             }
         } catch (Exception $ex) {

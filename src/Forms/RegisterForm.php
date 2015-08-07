@@ -18,7 +18,15 @@ class RegisterForm extends Form {
             'name' => 'email',
             'type' => 'email',
             'options' => array(
-                'label' => 'Email'
+                'label' => array(
+                    'text' => 'Email',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
@@ -30,7 +38,15 @@ class RegisterForm extends Form {
             'name' => 'password',
             'type' => 'password',
             'options' => array(
-                'label' => 'Password'
+                'label' => array(
+                    'text' => 'Password',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'minLength' => 8,
@@ -58,7 +74,10 @@ class RegisterForm extends Form {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Register'
+                'value' => 'Register',
+                'containerAttrs' => array(
+                    'class' => 'col-md-8 col-md-offset-3'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'

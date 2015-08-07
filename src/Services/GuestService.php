@@ -127,7 +127,7 @@ abstract class GuestService extends AService {
             return false;
         }
 
-        if (!$this->repository->count()) {
+        if ($setup) {
             $model->setRole('admin');
         }
 

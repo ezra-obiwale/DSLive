@@ -26,7 +26,15 @@ class ImportForm extends FileForm {
             'name' => 'file',
             'type' => 'file',
             'options' => array(
-                'label' => 'Excel File',
+                'label' => array(
+                    'text' => 'Excel File',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
@@ -44,6 +52,9 @@ class ImportForm extends FileForm {
             'type' => 'submit',
             'options' => array(
                 'value' => 'Import',
+                'containerAttrs' => array(
+                    'class' => 'col-md-8 col-md-offset-3'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'

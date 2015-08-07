@@ -15,7 +15,15 @@ class ContactUsForm extends Form {
             'name' => 'fullName',
             'type' => 'text',
             'options' => array(
-                'label' => 'Full Name',
+                'label' => array(
+                    'text' => 'Full Name',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
@@ -27,7 +35,15 @@ class ContactUsForm extends Form {
             'name' => 'email',
             'type' => 'email',
             'options' => array(
-                'label' => 'Email',
+                'label' => array(
+                    'text' => 'Email',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'required' => 'required',
@@ -38,7 +54,15 @@ class ContactUsForm extends Form {
             'name' => 'title',
             'type' => 'text',
             'options' => array(
-                'label' => 'Title',
+                'label' => array(
+                    'text' => 'Title',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'required' => 'required',
@@ -49,7 +73,15 @@ class ContactUsForm extends Form {
             'name' => 'message',
             'type' => 'textarea',
             'options' => array(
-                'label' => 'Message'
+                'label' => array(
+                    'text' => 'Message',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'rows' => 8,
@@ -67,6 +99,9 @@ class ContactUsForm extends Form {
             'type' => 'submit',
             'options' => array(
                 'value' => 'Send',
+                'containerAttrs' => array(
+                    'class' => 'col-md-offset-3 col-md-8'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'

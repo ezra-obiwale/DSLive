@@ -19,7 +19,8 @@ class UserController extends SuperController {
             array('allow',
                 array(
                     'role' => '@',
-                    'actions' => array('profile', 'edit-profile', 'edit-password', 'delete-account'),
+                    'actions' => array('profile', 'edit-profile', 'edit-password',
+                        'delete-account'),
                 )),
             array('deny'),
         );
@@ -34,14 +35,14 @@ class UserController extends SuperController {
         return parent::indexAction();
     }
 
-    public function editAction($id) {
-        return parent::editAction($id, array(), array(
-                    'removeElements' => array('email', 'password', 'confirm', 'firstName', 'lastName', 'picture')
-        ));
+    public function editAction($id, array $redirect = array()) {
+        $form = parent::editAction($id, $redirect)->getVariables('form');
+        $form->remove('password')->remove('confirm');
+        return $this->view;
     }
 
-    public function profileAction() {
-        return array('model' => $this->currentUser);
+    public function profileAction($id = null) {
+        return $id ? $this->viewAction($id) : $this->view->variables(array('model' => $this->currentUser));
     }
 
     public function editProfileAction() {
@@ -57,10 +58,12 @@ class UserController extends SuperController {
         $form->get('email')->attributes->add(array('readonly' => 'readonly'));
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
-            if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
+            if ($form->isValid() && $this->service->save($form->getModel(),
+                            $this->request->getFiles())) {
                 $this->resetUserIdentity($this->service->getModel());
                 $this->flash()->setSuccessMessage('Profile saved successfully');
-                $this->redirect($this->getModule(), $this->getClassName(), 'profile');
+                $this->redirect($this->getModule(), $this->getClassName(),
+                        'profile');
             }
             else {
                 $this->flash()->setErrorMessage('Save profile failed');
@@ -74,7 +77,8 @@ class UserController extends SuperController {
 
     public function editPasswordAction(array $redirect = array()) {
         $redirect['module'] = !empty($redirect['module']) ? $redirect['module'] : 'guest';
-        $redirect['controller'] = !empty($redirect['controller']) ? $redirect['controller'] : 'index';
+        $redirect['controller'] = !empty($redirect['controller']) ? $redirect['controller']
+                    : 'index';
         $redirect['action'] = !empty($redirect['action']) ? $redirect['action'] : 'logout';
         $model = $this->currentUser;
         $this->service->setModel($model);
@@ -83,16 +87,19 @@ class UserController extends SuperController {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->changePassword($form->getData())) {
                 $this->flash()->setSuccessMessage('Password changed successfully. Please login with your new password');
-                $this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], array($this->getModule(), $this->getClassName(), 'profile'), $redirect['hash']);
+                $this->redirect($redirect['module'], $redirect['controller'],
+                        $redirect['action'],
+                        array($this->getModule(), $this->getClassName(), 'profile'),
+                        $redirect['hash']);
             }
             else {
                 $this->flash()->setErrorMessage('Change password failed');
             }
         }
-        return array(
-            'model' => $model,
-            'form' => $form,
-        );
+        return $this->view->variables(array(
+                    'model' => $model,
+                    'form' => $form,
+        ));
     }
 
     public function resetPasswordAction($id) {

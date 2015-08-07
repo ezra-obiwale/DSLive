@@ -17,7 +17,15 @@ class LoginForm extends Form {
             'name' => 'email',
             'type' => 'email',
             'options' => array(
-                'label' => 'Email',
+                'label' => array(
+                    'text' => 'Email',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
@@ -29,7 +37,15 @@ class LoginForm extends Form {
             'name' => 'password',
             'type' => 'password',
             'options' => array(
-                'label' => 'Password'
+                'label' => array(
+                    'text' => 'Password',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'required' => 'required',                
@@ -46,6 +62,9 @@ class LoginForm extends Form {
             'type' => 'submit',
             'options' => array(
                 'value' => 'Login',
+                'containerAttrs' => array(
+                    'class' => 'col-md-6 col-md-offset-4'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'
