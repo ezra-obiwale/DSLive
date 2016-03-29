@@ -1,6 +1,6 @@
 <?php
 
-namespace DSLive\Forms;
+namespace dsLive\Forms;
 
 class ImportForm extends FileForm {
 

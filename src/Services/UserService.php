@@ -1,9 +1,9 @@
 <?php
 
-namespace DSLive\Services;
+namespace dsLive\Services;
 
-use DSLive\Forms\PasswordForm,
-    DSLive\Models\User,
+use dsLive\Forms\PasswordForm,
+    dsLive\Models\User,
     Object;
 
 class UserService extends SuperService {
@@ -21,7 +21,7 @@ class UserService extends SuperService {
 
     /**
      * Inserts data into the database
-     * @param \DSLive\Models\User
+     * @param \dsLive\Models\User
      * return boolean
      */
     public function create(User $model, $files) {

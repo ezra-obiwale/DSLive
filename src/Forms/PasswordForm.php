@@ -1,8 +1,8 @@
 <?php
 
-namespace DSLive\Forms;
+namespace dsLive\Forms;
 
-use DScribe\Form\Form;
+use dScribe\Form\Form;
 
 class PasswordForm extends Form {
 

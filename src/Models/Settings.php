@@ -1,8 +1,8 @@
 <?php
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
-use DSLive\Models\Model;
+use dsLive\Models\Model;
 
 /**
  * Description of Model

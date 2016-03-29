@@ -3,9 +3,9 @@
 /*
  */
 
-namespace DSLive\Forms;
+namespace dsLive\Forms;
 
-use DScribe\Form\Form,
+use dScribe\Form\Form,
     Exception;
 
 /**
@@ -19,13 +19,13 @@ class FileForm extends Form {
         parent::__construct($name, $attributes);
 
         if (is_object($modelOrMaxSize)) {
-            if (!is_a($modelOrMaxSize, 'DSLive\Models\File'))
-                throw new Exception('$modelOrMaxSize must be of type \DSLive\Models\File');
+            if (!is_a($modelOrMaxSize, 'dsLive\Models\File'))
+                throw new Exception('$modelOrMaxSize must be of type \dsLive\Models\File');
 
             $this->setModel($modelOrMaxSize);
             $modelOrMaxSize = $modelOrMaxSize->getMaxSize(false);
         }
-        $file = new \DSLive\Stdlib\File();
+        $file = new \dsLive\Stdlib\File();
         $file->setMaxSize($modelOrMaxSize);
         $this->setAttributes(array(
             'method' => 'post',

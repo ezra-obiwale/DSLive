@@ -1,8 +1,8 @@
 <?php
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
-use \DSLive\Services\UserService;
+use \dsLive\Services\UserService;
 
 class UserController extends DataTableController {
 

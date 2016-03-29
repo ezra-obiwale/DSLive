@@ -24,10 +24,10 @@
  * THE SOFTWARE.
  */
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
-use DBScribe\Table,
-    DSLive\Services\SmsService,
+use dbScribe\Table,
+    dsLive\Services\SmsService,
     Object;
 
 /**

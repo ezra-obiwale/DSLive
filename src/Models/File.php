@@ -1,6 +1,6 @@
 <?php
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
 /**
  * Description of File
@@ -56,7 +56,7 @@ abstract class File extends Model {
      * Adds a file extension type to a file property
      * @param string $property
      * @param string $ext
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      * @throws \Exception
      */
     public function addExtension($property, $ext) {
@@ -72,7 +72,7 @@ abstract class File extends Model {
      * they will be overriden.
      * @param string $property
      * @param array $extensions
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      * @throws \Exception
      */
     public function setExtensions($property, array $extensions) {
@@ -88,7 +88,7 @@ abstract class File extends Model {
      * Sets the name of the property to use as the name of the file when saving to filesystem
      * @param string $property Property to hold file
      * @param string $altNameProperty Property with intended file name
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     final public function setAltNameProperty($property, $altNameProperty) {
         $this->altNameProperty[$property] = $altNameProperty;
@@ -99,7 +99,7 @@ abstract class File extends Model {
      * Adds a bad file extension type to a file property
      * @param string $property
      * @param string $ext
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      * @throws \Exception
      */
     public function addBadExtension($property, $ext) {
@@ -116,7 +116,7 @@ abstract class File extends Model {
      * they will be overriden.
      * @param string $property
      * @param array $extensions
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      * @throws \Exception
      */
     public function setBadExtensions($property, array $extensions) {
@@ -132,7 +132,7 @@ abstract class File extends Model {
      *
      * @param string $property
      * @param int|array $desiredWidth Int width or array of thumbnail widths
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     final public function withThumbnails($property, $desiredWidth = 200) {
         if (!is_array($desiredWidth)) $desiredWidth = array($desiredWidth);
@@ -143,7 +143,7 @@ abstract class File extends Model {
     /**
      * Sets the directory to upload files to
      * @param string $directory Path name within the media directory
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     final public function setDirectory($directory) {
         $this->directory = (substr($directory, strlen($directory) - 1) === DIRECTORY_SEPARATOR)
@@ -155,7 +155,7 @@ abstract class File extends Model {
     /**
      * Sets the maximum size of the file to upload
      * @param int|string $size
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     final public function setMaxSize($size) {
         $this->maxSize = $size;
@@ -181,7 +181,7 @@ abstract class File extends Model {
      * @param string|boolean $property Name of property or true|false for all 
      * properties
      * @param boolean $strip Indication for the property if given
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     public function stripExtension($property = true, $strip = true) {
         if (is_bool($property)) $this->stripExtension = $property;
@@ -203,7 +203,7 @@ abstract class File extends Model {
      * Indicates that file should not be placed directly in media directory and 
      * not within its extension director
      * @param bool $bool
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     public function inDirectory($bool = true) {
         $this->inDirectory = $bool;
@@ -213,7 +213,7 @@ abstract class File extends Model {
     /**
      * Indicates that table name should not be included in the file path
      * @param bool $bool
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     public function skipTableName($bool = true) {
         $this->skipTableName = $bool;
@@ -223,7 +223,7 @@ abstract class File extends Model {
     /**
      * Saves value of the given property
      * @param string $property
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     public function store($property) {
         if (property_exists($this, $property))
@@ -528,7 +528,7 @@ abstract class File extends Model {
     /**
      * Sets the mime attribute of the file
      * @param string $mime
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     public function setMime($mime) {
         $this->mime = $mime;
@@ -546,7 +546,7 @@ abstract class File extends Model {
     /**
      * Indicates whether to overwrite file if existing or not
      * @param boolean $overwrite
-     * @return \DSLive\Models\File
+     * @return \dsLive\Models\File
      */
     public function setOverwrite($overwrite) {
         $this->overwrite = $overwrite;

@@ -1,6 +1,6 @@
 <?php
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
 class NotificationController extends SuperController {
 

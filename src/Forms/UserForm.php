@@ -1,9 +1,9 @@
 <?php
 
-namespace DSLive\Forms;
+namespace dsLive\Forms;
 
-use \DScribe\Form\Form,
-    \DSLive\Models\User;
+use \dScribe\Form\Form,
+    \dsLive\Models\User;
 
 class UserForm extends Form {
 

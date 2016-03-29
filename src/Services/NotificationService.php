@@ -6,10 +6,10 @@
  * and open the template in the editor.
  */
 
-namespace DSLive\Services;
+namespace dsLive\Services;
 
-use DBScribe\Util,
-    DSLive\Models\Notification,
+use dbScribe\Util,
+    dsLive\Models\Notification,
     Table;
 
 /**

@@ -3,10 +3,10 @@
 /*
  */
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
-use DBScribe\Util,
-    DScribe\Core\AModel;
+use dbScribe\Util,
+    dScribe\Core\AModel;
 
 /**
  * Description of Model

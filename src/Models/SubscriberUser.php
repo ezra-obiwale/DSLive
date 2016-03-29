@@ -2,7 +2,7 @@
 /*
  */
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
 /**
  * Description of SubscriberUser

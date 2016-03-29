@@ -24,9 +24,9 @@
  * THE SOFTWARE.
  */
 
-namespace DSLive\Services;
+namespace dsLive\Services;
 
-use DSLive\Models\SmsDrafts;
+use dsLive\Models\SmsDrafts;
 
 /**
  * Description of SmsService

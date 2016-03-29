@@ -1,8 +1,8 @@
 <?php
 
 use Cms\Models\Slide,
-    DBScribe\ArrayCollection,
-    DScribe\View\Renderer;
+    dbScribe\ArrayCollection,
+    dScribe\View\Renderer;
 
 /*
  */

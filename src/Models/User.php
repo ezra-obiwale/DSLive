@@ -1,8 +1,8 @@
 <?php
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
-use DBScribe\Util;
+use dbScribe\Util;
 
 class User extends SuperUser {
 

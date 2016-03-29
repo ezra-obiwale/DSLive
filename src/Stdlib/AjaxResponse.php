@@ -2,7 +2,7 @@
 /*
  */
 
-namespace DSLive\Stdlib;
+namespace dsLive\Stdlib;
 
 use Json;
 
@@ -66,7 +66,7 @@ class AjaxResponse {
 	/**
 	 * Sets the status of the response to send to the request
 	 * @param int $status Any of the constants FAILURE_STATUS, SUCCESS_STATUS
-	 * @return \DSLive\Stdlib\AjaxResponse
+	 * @return \dsLive\Stdlib\AjaxResponse
 	 */
 	public function setStatus($status) {
 		$this->status = $status;
@@ -84,7 +84,7 @@ class AjaxResponse {
 	/**
 	 * Sets the message to send in the response
 	 * @param mixed $message
-	 * @return \DSLive\Stdlib\AjaxResponse
+	 * @return \dsLive\Stdlib\AjaxResponse
 	 */
 	public function setMessage($message) {
 		$this->message = $message;
@@ -102,7 +102,7 @@ class AjaxResponse {
 	/**
 	 * Sets the action to send with the response
 	 * @param int $action Any of the constants CONTINUE_ACTION, WAIT_ACTION, CLEAR_WAIT_ACTION
-	 * @return \DSLive\Stdlib\AjaxResponse
+	 * @return \dsLive\Stdlib\AjaxResponse
 	 */
 	public function setAction($action) {
 		$this->action = $action;

@@ -3,15 +3,15 @@
 /*
  */
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
-use DBScribe\Repository,
-    DScribe\Core\AController,
-    DScribe\Core\AModel,
-    DScribe\Core\IModel,
-    DScribe\View\View,
-    DSLive\Models\User,
-    DSLive\Services\SuperService,
+use dbScribe\Repository,
+    dScribe\Core\AController,
+    dScribe\Core\AModel,
+    dScribe\Core\IModel,
+    dScribe\View\View,
+    dsLive\Models\User,
+    dsLive\Services\SuperService,
     Exception,
     Json,
     Util;
@@ -202,7 +202,7 @@ abstract class SuperController extends AController {
 	    if ((!is_array($dat->name) && empty($dat->name)) || (is_array($dat->name) && empty($dat->name[0]))) {
 		$this->request->getFiles()->remove($name);
 	    }
-	    else if (is_a($model, 'DSLive\Models\File')) {
+	    else if (is_a($model, 'dsLive\Models\File')) {
 		$model->store($name);
 	    }
 	}
@@ -262,7 +262,7 @@ abstract class SuperController extends AController {
      */
     public function viewAction($id) {
 	return $this->view->variables(array(
-		    'model' => (is_object($id) && is_a($id, 'DBScribe\Row')) ? $id : $this->service->findOne($id),
+		    'model' => (is_object($id) && is_a($id, 'dbScribe\Row')) ? $id : $this->service->findOne($id),
 	));
     }
 

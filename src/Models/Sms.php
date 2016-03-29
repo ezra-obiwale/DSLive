@@ -24,7 +24,7 @@
  * THE SOFTWARE.
  */
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
 /**
  * Description of Sms
@@ -90,7 +90,7 @@ class SmsDrafts extends Model {
     }
 
     public function preSave($createId = true) {
-        $this->timestamp = \DBScribe\Util::createTimestamp();
+        $this->timestamp = \dbScribe\Util::createTimestamp();
         if (is_array($this->recipients))
                 $this->recipients = json_encode($this->recipients);
         parent::preSave($createId);

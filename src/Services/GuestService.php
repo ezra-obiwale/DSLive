@@ -1,17 +1,17 @@
 <?php
 
-namespace DSLive\Services;
+namespace dsLive\Services;
 
-use DBScribe\Util,
-    DScribe\Core\AService,
-    DScribe\Form\Form,
-    DScribe\View\View,
-    DSLive\Forms\ContactUsForm,
-    DSLive\Forms\LoginForm,
-    DSLive\Forms\RegisterForm,
-    DSLive\Forms\ResetPasswordForm,
-    DSLive\Models\Settings,
-    DSLive\Models\User,
+use dbScribe\Util,
+    dScribe\Core\AService,
+    dScribe\Form\Form,
+    dScribe\View\View,
+    dsLive\Forms\ContactUsForm,
+    dsLive\Forms\LoginForm,
+    dsLive\Forms\RegisterForm,
+    dsLive\Forms\ResetPasswordForm,
+    dsLive\Models\Settings,
+    dsLive\Models\User,
     Email,
     Exception,
     Object,
@@ -41,7 +41,7 @@ abstract class GuestService extends AService {
 
     public function getSettingsRepository() {
         if ($this->settingsRepository)
-                $this->settingsRepository = new \DBScribe\Repository(new Settings());
+                $this->settingsRepository = new \dbScribe\Repository(new Settings());
 
         return $this->settingsRepository;
     }

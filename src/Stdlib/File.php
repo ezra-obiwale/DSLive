@@ -3,9 +3,9 @@
 /*
  */
 
-namespace DSLive\Stdlib;
+namespace dsLive\Stdlib;
 
-use DSLive\Models\File as DMF;
+use dsLive\Models\File as DMF;
 
 /**
  * Description of File

@@ -23,9 +23,9 @@
  * THE SOFTWARE.
  */
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
-use DBScribe\Table,
+use dbScribe\Table,
     Json,
     stdClass,
     Util;

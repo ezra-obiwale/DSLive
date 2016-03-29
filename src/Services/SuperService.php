@@ -1,13 +1,13 @@
 <?php
 
-namespace DSLive\Services;
+namespace dsLive\Services;
 
-use DBScribe\Table,
-    DBScribe\Util as DU,
-    DScribe\Core\AService,
-    DScribe\Core\IModel,
-    DSLive\Forms\ImportForm,
-    DSLive\Models\Model,
+use dbScribe\Table,
+    dbScribe\Util as DU,
+    dScribe\Core\AService,
+    dScribe\Core\IModel,
+    dsLive\Forms\ImportForm,
+    dsLive\Models\Model,
     Exception,
     Object,
     Util;
@@ -314,7 +314,7 @@ abstract class SuperService extends AService {
     /**
      * Adds an error to the current operation
      * @param string|array $error
-     * @return \DSLive\Controllers\SuperService
+     * @return \dsLive\Controllers\SuperService
      */
     final public function addErrors($error) {
 	if (is_string($error))

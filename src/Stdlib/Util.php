@@ -3,9 +3,9 @@
 /*
  */
 
-namespace DSLive\Stdlib;
+namespace dsLive\Stdlib;
 
-use DSLive\Models\User as DMU,
+use dsLive\Models\User as DMU,
     Util as Utl;
 
 /**
@@ -86,7 +86,7 @@ class Util {
     }
 
     public static function prepareMessage($msg, DMU $user,
-            $func = array('DSLive\Stdlib\Util', 'parseTemplates')) {
+            $func = array('dsLive\Stdlib\Util', 'parseTemplates')) {
         $templates = self::findTemplates(array('user', 'accessCode'), $msg,
                         $func);
         foreach ($templates as $template => $value) {

@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-namespace DSLive\Models;
+namespace dsLive\Models;
 
 /**
  * Description of Subscription

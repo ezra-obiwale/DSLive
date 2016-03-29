@@ -2,9 +2,9 @@
 /*
  */
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
-use DScribe\Core\AController,
+use dScribe\Core\AController,
 	Session;
 
 /**

@@ -6,9 +6,9 @@
  * and open the template in the editor.
  */
 
-namespace DSLive\Forms;
+namespace dsLive\Forms;
 
-use DScribe\Form\Form;
+use dScribe\Form\Form;
 
 /**
  * Description of VoguePayForm
@@ -55,7 +55,7 @@ class VoguePayForm extends Form {
      * @param string $value
      * @param string $type The type of element to use
      * @param string $label The label to use with the element if any
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addMemo($value, $type = 'hidden', $label = null) {
         $memo = array(
@@ -87,7 +87,7 @@ class VoguePayForm extends Form {
      * transaction details.
      * 
      * @param string $ref
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addMerchantRef($ref) {
         return $this->add(array(
@@ -104,7 +104,7 @@ class VoguePayForm extends Form {
      * @param string $item The name of the product being purchased  
      * @param string $description The short description of the product being purchased
      * @param string $price The price of the product being purchased in Nigerian naira
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addItem($item, $description, $price) {
         $this->add(array(
@@ -140,7 +140,7 @@ class VoguePayForm extends Form {
      * Can be ommited. If included, will be used instead of the sum of all the prices.
      * 
      * This method should be called after all items have been added with @see addItem()
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addTotal() {
         return $this->add(array(
@@ -156,7 +156,7 @@ class VoguePayForm extends Form {
      * Indicates bill is to be repeated at a specified interval.
      * @param int $daysInterval No of days between each recurrent billing if 
      * recurrent is set to true.
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function isRecurrent($daysInterval) {
         return $this->add(array(
@@ -178,7 +178,7 @@ class VoguePayForm extends Form {
      * Adds url to send payment notification to. 
      * If set, this will be used instead of the notification url on your account.
      * @param string $url
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addNotifyUrl($url) {
         return $this->addUrl('notify', $url);
@@ -188,7 +188,7 @@ class VoguePayForm extends Form {
      * Adds url to send buyer back to if payment is successful. 
      * If set, this will be used instead of the Success Return URL on your account.
      * @param string $url
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addSuccessUrl($url) {
         return $this->addUrl('success', $url);
@@ -198,7 +198,7 @@ class VoguePayForm extends Form {
      * Adds url to send buyer back to if payment is unsuccessful. 
      * If set, this will be used instead of the Failure Return URL on your account.
      * @param string $url
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addFailUrl($url) {
         return $this->addUrl('fail', $url);
@@ -218,7 +218,7 @@ class VoguePayForm extends Form {
      * Adds the image to use for submit button
      * @param string $type buynow | addtocart | checkout | donate | subscribe | make_payment
      * @param string $color blue | red | green | grey
-     * @return \DSLive\Forms\VoguePayForm
+     * @return \dsLive\Forms\VoguePayForm
      */
     public function addSubmitImage($type = 'make_payment', $color = 'green') {
         return $this->add(array(

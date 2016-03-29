@@ -1,8 +1,8 @@
 <?php
 
-namespace DSLive\Stdlib;
+namespace dsLive\Stdlib;
 
-use DScribe\Core\Engine;
+use dScribe\Core\Engine;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -35,7 +35,7 @@ abstract class SingleEntryEngine extends Engine {
     }
     
     /**
-     * @return string Fully Qualified Class Name of the class extending \DSLive\Controllers\SingleEntryController
+     * @return string Fully Qualified Class Name of the class extending \dsLive\Controllers\SingleEntryController
      */
     protected abstract static function getSingleEntryController();
 

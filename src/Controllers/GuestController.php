@@ -1,14 +1,14 @@
 <?php
 
-namespace DSLive\Controllers;
+namespace dsLive\Controllers;
 
-use DScribe\Core\AController;
+use dScribe\Core\AController;
 
 class GuestController extends AController {
 
     /**
      *
-     * @var \DSLive\Services\GuestService
+     * @var \dsLive\Services\GuestService
      */
     protected $service;
     private $setup = false;
@@ -49,7 +49,7 @@ class GuestController extends AController {
 	    $this->flash()->addErrorMessage($this->service->getErrors());
 	    $form->setData(array('confirm' => ''));
 	}
-	$mediaForm = new \DSLive\Forms\MediaSignUpForm();
+	$mediaForm = new \dsLive\Forms\MediaSignUpForm();
 	$mediaForm->setAttribute('action', $this->view->url($this->getModule(), $this->getClassName(), 'media-signup', array(
 		    $module, $controller, $action, $parrams)));
 	$this->view->variables(array(
@@ -112,7 +112,7 @@ class GuestController extends AController {
 	    $this->flash()->setErrorMessage('Login failed. Please check your entries and try again')
 		    ->addErrorMessage($this->service->getErrors());
 	}
-	$mediaForm = new \DSLive\Forms\MediaLoginForm();
+	$mediaForm = new \dsLive\Forms\MediaLoginForm();
 	$mediaForm->setAttribute('action', $this->view->url($this->getModule(), $this->getClassName(), 'media-login', array(
 		    $module, $controller, $action, $parrams)));
 	$this->view->variables(array(
@@ -125,7 +125,7 @@ class GuestController extends AController {
 		$this->view;
     }
 
-    protected function loginSuccess(\DSLive\Models\User $model, $module = null, $controller = null, $action =
+    protected function loginSuccess(\dsLive\Models\User $model, $module = null, $controller = null, $action =
     null, $params = null) {
 	$this->resetUserIdentity($model);
 	$redirect = \Session::fetch('redirect');
@@ -140,7 +140,7 @@ class GuestController extends AController {
 
     public function mediaSignupAction() {
 	if ($this->request->isPost()) {
-	    $form = new \DSLive\Forms\MediaSignUpForm();
+	    $form = new \dsLive\Forms\MediaSignUpForm();
 	    $form->setData($this->request->getPost());
 	    if ($form->isValid() && $this->service->mediaSignup($form->getData(), $this->view, array(
 			'module' => $this->module(),
@@ -156,7 +156,7 @@ class GuestController extends AController {
 
     public function mediaLoginAction($module = null, $controller = null, $action = null, $params = null) {
 	if ($this->request->isPost()) {
-	    $form = new \DSLive\Forms\MediaLoginForm();
+	    $form = new \dsLive\Forms\MediaLoginForm();
 	    $form->setData($this->request->getPost());
 	    if ($form->isValid() && $model = $this->service->mediaLogin($form->getData())) {
 		$this->loginSuccess($model, $module, $controller, $action, $params);
@@ -237,7 +237,7 @@ class GuestController extends AController {
     /**
      * Name of action that overrides method loginAction
      * @param string $loginAction
-     * @return \DScribe\View\View
+     * @return \dScribe\View\View
      */
     public function setupAction() {
 	if ($this->service->getRepository()->findOneBy('role', 'admin')) {
