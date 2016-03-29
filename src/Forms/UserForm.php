@@ -59,6 +59,7 @@ class UserForm extends Form {
                 'containerAttrs' => array(
                     'class' => 'col-md-8'
                 ),
+                'blockInfo' => 'Minimum 8 characters',
             ),
             'attributes' => array(
                 'maxlength' => 50,

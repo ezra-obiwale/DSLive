@@ -43,7 +43,7 @@ class PasswordForm extends Form {
                 'containerAttrs' => array(
                     'class' => 'col-md-6'
                 ),
-                'inlineInfo' => 'Minimum 8 characters',
+                'blockInfo' => 'Minimum 8 characters',
             ),
             'attributes' => array(
                 'required' => 'required',

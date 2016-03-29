@@ -4,7 +4,7 @@ namespace DSLive\Controllers;
 
 use \DSLive\Services\UserService;
 
-class UserController extends SuperController {
+class UserController extends DataTableController {
 
     /**
      * @var UserService
@@ -30,11 +30,6 @@ class UserController extends SuperController {
         return true;
     }
 
-    public function indexAction() {
-        $this->order = 'firstName';
-        return parent::indexAction();
-    }
-
     public function editAction($id, array $redirect = array()) {
         $form = parent::editAction($id, $redirect)->getVariables('form');
         $form->remove('password')->remove('confirm');
@@ -54,8 +49,12 @@ class UserController extends SuperController {
                 ->remove('confirm')
                 ->remove('role')
                 ->remove('active')
+                ->remove('guarantors')
+                ->remove('modeOfId')
+                ->remove('sourceOfFunds')
                 ->setModel($model);
         $form->get('email')->attributes->add(array('readonly' => 'readonly'));
+        $form->get('accountNumber')->attributes->add(array('readonly' => 'readonly'));
         if ($this->request->isPost()) {
             $form->setData($this->request->getPost());
             if ($form->isValid() && $this->service->save($form->getModel(),

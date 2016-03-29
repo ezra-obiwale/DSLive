@@ -66,6 +66,45 @@ class RegisterForm extends Form {
         ));
 
         $this->add(array(
+            'name' => 'firstName',
+            'type' => 'text',
+            'options' => array(
+                'label' => array(
+                    'text' => 'First Name',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
+            ),
+            'attributes' => array(
+                'autofocus' => 'autofocus',
+                'required' => 'required',
+            )
+        ));
+
+        $this->add(array(
+            'name' => 'lastName',
+            'type' => 'text',
+            'options' => array(
+                'label' => array(
+                    'text' => 'Last Name',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
+            ),
+            'attributes' => array(
+                'required' => 'required',
+            )
+        ));
+
+        $this->add(array(
             'name' => 'csrf',
             'type' => 'hidden'
         ));
@@ -87,6 +126,14 @@ class RegisterForm extends Form {
 
     public function getFilters() {
         return array(
+            'firstName' => array(
+                'required' => true,
+                'NotEmpty' => array(),
+            ),
+            'lastName' => array(
+                'required' => true,
+                'NotEmpty' => array(),
+            ),
             'email' => array(
                 'required' => true,
                 'NotEmpty' => array(),

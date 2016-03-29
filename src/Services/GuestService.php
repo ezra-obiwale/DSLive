@@ -41,7 +41,7 @@ abstract class GuestService extends AService {
 
     public function getSettingsRepository() {
         if ($this->settingsRepository)
-            $this->settingsRepository = new \DBScribe\Repository(new Settings());
+                $this->settingsRepository = new \DBScribe\Repository(new Settings());
 
         return $this->settingsRepository;
     }
@@ -51,8 +51,7 @@ abstract class GuestService extends AService {
      * @return RegisterForm
      */
     public function getRegisterForm() {
-        if (!$this->registerForm)
-            $this->registerForm = new RegisterForm ();
+        if (!$this->registerForm) $this->registerForm = new RegisterForm ();
 
         return $this->registerForm;
     }
@@ -61,9 +60,9 @@ abstract class GuestService extends AService {
      * Fetches the login form
      * @return LoginForm
      */
-    public function getLoginForm() {
+    public function getLoginForm($passwordResetLink = null) {
         if (!$this->loginForm)
-            $this->loginForm = new LoginForm();
+                $this->loginForm = new LoginForm($passwordResetLink);
         return $this->loginForm;
     }
 
@@ -73,13 +72,12 @@ abstract class GuestService extends AService {
      */
     public function getResetPasswordForm() {
         if (!$this->resetPasswordForm)
-            $this->resetPasswordForm = new ResetPasswordForm();
+                $this->resetPasswordForm = new ResetPasswordForm();
         return $this->resetPasswordForm;
     }
 
     public function getContactUsForm() {
-        if (!$this->contactUsForm)
-            $this->contactUsForm = new ContactUsForm();
+        if (!$this->contactUsForm) $this->contactUsForm = new ContactUsForm();
         return $this->contactUsForm;
     }
 
@@ -101,7 +99,8 @@ abstract class GuestService extends AService {
         Table::addRowData(trim($data->fullName) . " sent you a message on " .
                 Util::createTimestamp() . ' from <a href="' .
                 engineGet('config', 'app', 'domain') . '">' .
-                engineGet('config', 'app', 'name') . '</a><hr />', array(
+                engineGet('config', 'app', 'name') . '</a><hr />',
+                array(
             'style' => 'font-size:larger;font-weight:bolder'
         ));
         Table::newRow();
@@ -119,7 +118,8 @@ abstract class GuestService extends AService {
      * @param boolean $flush
      * @return boolean
      */
-    public function register(View $view, $controllerPath, Form $form, $setup = false, $sendMail = true, $flush = true) {
+    public function register(View $view, $controllerPath, Form $form,
+            $setup = false, $sendMail = true, $flush = true) {
         $model = $form->getModel();
         $model->hashPassword();
         if ($this->repository->findOneBy('email', $model->getEmail())) {
@@ -127,26 +127,35 @@ abstract class GuestService extends AService {
             return false;
         }
 
-        if ($setup) {
-            $model->setRole('admin');
-        }
-
+        if ($setup) $model->setRole('admin')->setSuper(true);
+        
         $model->setActive(engineGet('server') === 'development' || $setup);
-        if ($this->repository->insert($model)->execute()) {
-            if ($sendMail && engineGet('server') !== 'development' && !$this->sendEmail($model)) {
+        return $this->registerUser($model, $view, $controllerPath, $setup,
+                        $sendMail, $flush);
+    }
+
+    private function registerUser(User $user, View $view, $controllerPath,
+            $setup, $sendMail, $flush) {
+        if ($this->repository->insert($user)->execute()) {
+            if ($sendMail && engineGet('server') !== 'development' && !$this->sendEmail($user)) {
                 $this->addErrors('Confirmation email not sent. <a href="' .
-                                $view->url($controllerPath['module'], $controllerPath['controller'], 'resend-confirmation', array($model->getId()))) .
+                                $view->url($controllerPath['module'],
+                                        $controllerPath['controller'],
+                                        'resend-confirmation',
+                                        array($user->getId()))) .
                         '">Click here to resend your confirmation email</a>.';
             }
 
-            if ($setup)
-                $this->setup();
+            if ($setup) $this->setup();
         }
-        return ($flush) ? $this->flush() : $model;
+        return ($flush) ? $this->flush() : $user;
     }
 
     public function confirmRegistration($id, $email) {
-        $user = $this->repository->findOneWhere(array(array('id' => $id, 'email' => $email)));
+        $user = $this->repository->findOneWhere(array(array(
+                'id' => $id,
+                'email' => str_replace(':', '.', $email)
+        )));
         if (NULL !== $user) {
             if ($user->getActive()) {
                 $this->addErrors('User is already active');
@@ -164,7 +173,8 @@ abstract class GuestService extends AService {
 
     public function resetPassword(User $model, $id, $reset) {
         if (!$reset) { //just requesting
-            $model = $this->getRepository()->findOneBy('email', $model->getEmail());
+            $model = $this->getRepository()->findOneBy('email',
+                    $model->getEmail());
             if (!$model) {
                 $this->addErrors('User account does not exist');
                 return false;
@@ -176,14 +186,16 @@ abstract class GuestService extends AService {
                             ->addErrors('Please do a password reset again');
                 }
             }
-        } else { //reseting password now
+        }
+        else { //reseting password now
             $password = $model->getPassword();
             $model->setId($id)->setPassword(null);
             $model = $this->getRepository()->findOneWhere(array($model));
             if (!$model) {
                 $this->addErrors('User account does not exist');
                 return false;
-            } else if ($model->getReset() !== $reset) {
+            }
+            else if ($model->getReset() !== $reset) {
                 $this->addErrors('Invalid action');
                 return false;
             }
@@ -204,7 +216,8 @@ abstract class GuestService extends AService {
                 $this->addErrors('User account is not yet active')
                         ->addErrors('Please click on the confirmation link sent to your email account');
                 return false;
-            } else if (!$this->model->verifyPassword($model->getPassword())) {
+            }
+            else if (!$this->model->verifyPassword($model->getPassword())) {
                 return false;
             }
 
@@ -212,7 +225,43 @@ abstract class GuestService extends AService {
             $this->repository->update($this->model)->execute();
             $this->flush();
             $this->model->postFetch();
-        } else {
+        }
+        else {
+            $this->addErrors('User account does not exist');
+        }
+        return $this->model;
+    }
+
+    public function mediaSignup(\Object $data, View $view, $controllerPath,
+            $sendMail = true, $flush = true) {
+        $model = $this->repository->findOneBy('email', $data->email);
+        if ($model) {
+            $this->addErrors('User already exists.');
+            return false;
+        }
+        else {
+            $this->model->populate($data->toArray());
+            $this->model->setRole('user')->setActive(false);
+            return $this->registerUser($this->model, $view, $controllerPath,
+                            false, $sendMail, $flush);
+        }
+    }
+
+    public function mediaLogin(\Object $data) {
+        $this->model = $this->repository->findOneBy('email', $data->email);
+        if ($this->model) {
+            if (!$this->model->getActive()) {
+                $this->addErrors('User account is not yet active')
+                        ->addErrors('Please click on the confirmation link sent to your email account');
+                return false;
+            }
+
+            $this->model->update();
+            $this->repository->update($this->model)->execute();
+            $this->flush();
+            $this->model->postFetch();
+        }
+        else {
             $this->addErrors('User account does not exist');
         }
         return $this->model;
@@ -223,37 +272,46 @@ abstract class GuestService extends AService {
     }
 
     public function sendEmail(User $user, $notifyType = self::NOTIFY_REG) {
-        if (engineGet('server') === 'development')
-            return true;
+        if (engineGet('server') === 'development') return true;
 
         $email = new Email();
         $notification = $this->getNotificationService()->getRepository()
                 ->findOneWhere(array(array('type' => 'email', 'name' => $notifyType)));
         if (!$notification) // if notification type message is not available, ignore sending
-            return true;
+                return true;
 
-        $body = $user->parseString($notification->getMessage());
+        $parsedEmail = str_replace('.', ':', $user->getEmail());
+        $msg = str_replace('{email}', $parsedEmail, $notification->getMessage());
+        $body = $user->parseString($msg);
         $view = new View();
         $links = array(
-            '{confirmationLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'confirm-registration', array($user->getId(), $user->getEmail())),
-            '{loginLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'login'),
-            '{passwordResetLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(), $this->getClassName(), 'reset-password', array($user->getId(), $user->getReset())),
+            '{confirmationLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(),
+                    $this->getClassName(), 'confirm-registration',
+                    array($user->getId(), $user->getEmail())),
+            '{loginLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(),
+                    $this->getClassName(), 'login'),
+            '{passwordResetLink}' => engineGet('config', 'app', 'domain') . $view->url($this->getModule(),
+                    $this->getClassName(), 'reset-password',
+                    array($user->getId(), $user->getReset())),
         );
 
         $body = str_replace(array_keys($links), array_values($links), $body);
         $email->setHTML($body, array('autoSetText' => false));
         $webMasterEmail = engineGet('config', 'app', 'webmaster', false);
         if ($webMasterEmail)
-            $email->sendFrom($webMasterEmail, $notification->getGetReplies());
+                $email->sendFrom($webMasterEmail, $notification->getGetReplies());
         else
-            $email->sendFrom('no-reply@' . str_replace(array('http://', 'https://'), '', engineGet('config', 'app', 'domain')));
+                $email->sendFrom('no-reply@' . str_replace(array('http://', 'https://'),
+                            '', engineGet('config', 'app', 'domain')));
 
         $email->addTo($user->getEmail());
 
         if ($notification->getMessageTitle()) {
             $title = $notification->getMessageTitle();
-        } else {
-            $title = engineGet('config', 'app', 'name') . ' - ' . ucwords(str_replace(array('-', '_'), ' ', $notifyType));
+        }
+        else {
+            $title = engineGet('config', 'app', 'name') . ' - ' . ucwords(str_replace(array(
+                        '-', '_'), ' ', $notifyType));
         }
 
         return $email->send($title);
@@ -270,12 +328,10 @@ abstract class GuestService extends AService {
      * @return GuestController
      */
     final public function addErrors($error) {
-        if (is_string($error))
-            $this->errors[] = $error;
+        if (is_string($error)) $this->errors[] = $error;
         else if (is_array($error))
-            $this->errors = array_merge($this->errors, $error);
-        else
-            throw new Exception('Error must be of type string or array');
+                $this->errors = array_merge($this->errors, $error);
+        else throw new Exception('Error must be of type string or array');
 
         return $this;
     }
@@ -293,7 +349,8 @@ abstract class GuestService extends AService {
      * @return string
      */
     final public function prepareErrors() {
-        return $this->errors ? '<li>' . join('</li><li>', $this->errors) . '</li>' : null;
+        return $this->errors ? '<li>' . join('</li><li>', $this->errors) . '</li>'
+                    : null;
     }
 
 }

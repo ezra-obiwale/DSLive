@@ -580,7 +580,6 @@ abstract class File extends Model {
 
     public function postFetch($property = null) {
         if ($property && property_exists($this, $property)) {
-            $this->{$property} = $this->getDBValue($property);
             return $this->{$property};
         }
 

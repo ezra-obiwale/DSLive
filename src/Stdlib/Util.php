@@ -24,10 +24,8 @@ class Util {
     public static function prepareArrayForSelect(array $array) {
         $return = array();
         foreach ($array as $index => $value) {
-            if (is_int($index))
-                $return[$value] = $value;
-            else
-                $return[$index] = $value;
+            if (is_int($index)) $return[$value] = $value;
+            else $return[$index] = $value;
         }
         return $return;
     }
@@ -39,9 +37,10 @@ class Util {
      * @return array
      */
     public static function fetchCountries() {
-        $countries = VENDOR . 'DSLive' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'worldCountries.csv';
-        if (!is_readable($countries))
-            return array();
+        $countries = VENDOR . 'd-scribe' . DIRECTORY_SEPARATOR . 'ds-live'
+                . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'assets'
+                . DIRECTORY_SEPARATOR . 'worldCountries.csv';
+        if (!is_readable($countries)) return array();
 
         $countries = explode(',', file_get_contents($countries));
         sort($countries);
@@ -59,13 +58,15 @@ class Util {
      * @param string $closing
      * @return array
      */
-    public static function findTemplates(array $templates, $string, $func = null, $opening = '{{', $closing = '}}') {
+    public static function findTemplates(array $templates, $string,
+            $func = null, $opening = '{{', $closing = '}}') {
         $found = array();
         foreach ($templates as $template) {
             $last = 0;
             while ($start = stripos($string, $opening . $template, $last)) {
                 $end = stripos($string, $closing, $start);
-                $f = substr($string, $start + strlen($opening), $end - $start - strlen($closing));
+                $f = substr($string, $start + strlen($opening),
+                        $end - $start - strlen($closing));
                 if ($func === null) {
                     $found[] = $f;
                 }
@@ -84,8 +85,10 @@ class Util {
         return $found;
     }
 
-    public static function prepareMessage($msg, DMU $user, $func = array('DSLive\Stdlib\Util', 'parseTemplates')) {
-        $templates = self::findTemplates(array('user', 'accessCode'), $msg, $func);
+    public static function prepareMessage($msg, DMU $user,
+            $func = array('DSLive\Stdlib\Util', 'parseTemplates')) {
+        $templates = self::findTemplates(array('user', 'accessCode'), $msg,
+                        $func);
         foreach ($templates as $template => $value) {
             if (is_array($value)) {
                 foreach ($value as $tpl) {
@@ -102,24 +105,28 @@ class Util {
     public static function replaceTemplate($template, &$msg, DMU $user) {
         $method = 'get' . ucfirst(Utl::hyphenToCamel($template));
         if (method_exists($user, $method))
-            $msg = str_replace('{{user: ' . $template . '}}', $user->$method(), $msg);
+                $msg = str_replace('{{user: ' . $template . '}}',
+                    $user->$method(), $msg);
 
         $accessCode = $user->accessCode()->first();
         if ($accessCode && method_exists($accessCode, $method))
-            $msg = str_replace('{{accessCode: ' . $template . '}}', $accessCode->$method(), $msg);
+                $msg = str_replace('{{accessCode: ' . $template . '}}',
+                    $accessCode->$method(), $msg);
 
         $domain = engineGet('db')->table('settings')
                         ->select(array(array('key' => 'domain')))
                         ->first()->value;
 
         if ('confirmation-link' == $template) {
-            $msg = str_replace('{{user: confirmation-link}}', 'http://' .
+            $msg = str_replace('{{user: confirmation-link}}',
+                    'http://' .
                     $domain . '/guest/index/confirm-registration/' .
                     urlencode($user->getId()) . '/' .
                     urlencode($user->getEmail()), $msg);
         }
         else if ('password-reset-link' == $template) {
-            $msg = str_replace('{{user: password-reset-link}}', 'http://' .
+            $msg = str_replace('{{user: password-reset-link}}',
+                    'http://' .
                     $domain . '/guest/index/reset-password/' .
                     urlencode($user->getId()) . '/' .
                     urlencode($user->getReset()), $msg);
@@ -175,7 +182,9 @@ class Util {
         }
         elseif (function_exists('pathinfo')) {
             if ($pathinfo = @pathinfo($filename)) {
-                $imagetypes = array('gif', 'jpeg', 'jpg', 'png', 'swf', 'psd', 'bmp', 'tiff', 'tif', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp', 'xbm', 'ico');
+                $imagetypes = array('gif', 'jpeg', 'jpg', 'png', 'swf', 'psd', 'bmp',
+                    'tiff', 'tif', 'jpc', 'jp2', 'jpx', 'jb2', 'swc', 'iff', 'wbmp',
+                    'xbm', 'ico');
                 if (in_array($pathinfo['extension'], $imagetypes) && getimagesize($filename)) {
                     $size = getimagesize($filename);
                     return $size['mime'];
@@ -193,6 +202,4 @@ class Util {
         }
     }
 
-//        }
-//    }
 }

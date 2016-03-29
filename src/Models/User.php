@@ -32,6 +32,11 @@ class User extends SuperUser {
     protected $role;
 
     /**
+     * @DBS\Boolean (nullable=true, default=false)
+     */
+    protected $super;
+
+    /**
      * @DBS\String (size="300", nullable=true)
      */
     protected $picture;
@@ -92,6 +97,15 @@ class User extends SuperUser {
 
     public function getRole() {
         return $this->role;
+    }
+
+    public function getSuper() {
+        return $this->super;
+    }
+
+    public function setSuper($super) {
+        $this->super = $super;
+        return $this;
     }
 
     public function getPicture($returnSingleValue = false) {

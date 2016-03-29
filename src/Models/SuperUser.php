@@ -17,7 +17,7 @@ abstract class SuperUser extends AUser {
     protected $lastName;
 
     /**
-     * @DBS\String (size="256")
+     * @DBS\String (size="256", nullable=true)
      */
     protected $password;
 
@@ -27,7 +27,7 @@ abstract class SuperUser extends AUser {
     protected $salt;
 
     /**
-     * @DBS\int (size=1)
+     * @DBS\int (size=1, nullable=true)
      */
     protected $mode;
 

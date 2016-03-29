@@ -27,7 +27,7 @@ class ImportForm extends FileForm {
             'type' => 'file',
             'options' => array(
                 'label' => array(
-                    'text' => 'Excel File',
+                    'text' => 'CSV File',
                     'attrs' => array(
                         'class' => 'col-md-3',
                     ),
@@ -38,7 +38,7 @@ class ImportForm extends FileForm {
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
-                'accept' => '.xls, .xlsx'
+                'accept' => '.csv'
             )
         ));
 
@@ -51,7 +51,7 @@ class ImportForm extends FileForm {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Import',
+                'value' => 'Upload',
                 'containerAttrs' => array(
                     'class' => 'col-md-8 col-md-offset-3'
                 ),
