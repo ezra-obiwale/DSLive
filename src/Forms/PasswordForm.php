@@ -15,10 +15,18 @@ class PasswordForm extends Form {
             'name' => 'old',
             'type' => 'password',
             'options' => array(
-                'label' => 'Current Password',
+                'label' => array(
+                    'text' => 'Current Password',
+                    'attrs' => array(
+                        'class' => 'col-md-4',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-6'
+                ),
             ),
             'attributes' => array(
-                'required' => 'required',                
+                'required' => 'required',
             )
         ));
 
@@ -26,12 +34,20 @@ class PasswordForm extends Form {
             'name' => 'new',
             'type' => 'password',
             'options' => array(
-                'label' => 'New Password',
-                'inlineInfo' => 'Minimum 8 characters',
+                'label' => array(
+                    'text' => 'New Password',
+                    'attrs' => array(
+                        'class' => 'col-md-4',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-6'
+                ),
+                'blockInfo' => 'Minimum 8 characters',
             ),
             'attributes' => array(
                 'required' => 'required',
-				'min' => 8,
+                'min' => 8,
             )
         ));
 
@@ -39,10 +55,18 @@ class PasswordForm extends Form {
             'name' => 'confirm',
             'type' => 'password',
             'options' => array(
-                'label' => 'Confirm Password'
+                'label' => array(
+                    'text' => 'Repeat New Password',
+                    'attrs' => array(
+                        'class' => 'col-md-4',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-6'
+                ),
             ),
             'attributes' => array(
-                'required' => 'required',                
+                'required' => 'required',
             )
         ));
 
@@ -55,7 +79,10 @@ class PasswordForm extends Form {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Save'
+                'value' => 'Save',
+                'containerAttrs' => array(
+                    'class' => 'col-md-offset-4 col-md-6'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'

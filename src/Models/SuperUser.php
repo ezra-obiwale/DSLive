@@ -17,7 +17,7 @@ abstract class SuperUser extends AUser {
     protected $lastName;
 
     /**
-     * @DBS\String (size="256")
+     * @DBS\String (size="256", nullable=true)
      */
     protected $password;
 
@@ -27,7 +27,7 @@ abstract class SuperUser extends AUser {
     protected $salt;
 
     /**
-     * @DBS\int (size=1)
+     * @DBS\int (size=1, nullable=true)
      */
     protected $mode;
 
@@ -50,10 +50,24 @@ abstract class SuperUser extends AUser {
     public function __construct() {
         $this->setTableName('user');
         $this->stdFile = new \DSLive\Stdlib\File;
-        $this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif'))
+        $this->stdFile->setExtensions('picture',
+                        array('jpg', 'jpeg', 'png', 'gif'))
                 ->setMaxSize('500kb')
+                ->setAltNameProperty('picture', 'pictureName')
                 ->withThumbnails('picture', 50)
+                ->setDirectory('users')
+                ->stripExtension('picture')
+                ->inDirectory()
                 ->setOverwrite(true);
+    }
+
+    public function setPictureName() {
+        return $this->stdFile->setProperty('pictureName',
+                        $this->getPictureName());
+    }
+
+    public function getPictureName() {
+        return md5($this->getFullName());
     }
 
     public function getPassword() {
@@ -137,7 +151,8 @@ abstract class SuperUser extends AUser {
         if (function_exists('password_hash')) {
             if (!$password) {
                 $this->mode = 1;
-                $this->password = password_hash($this->password, PASSWORD_DEFAULT);
+                $this->password = password_hash($this->password,
+                        PASSWORD_DEFAULT);
                 return $this;
             }
 
@@ -170,7 +185,8 @@ abstract class SuperUser extends AUser {
         switch ($this->mode) {
             case 1:
                 $valid = password_verify($password, $this->password);
-                if ($valid && password_needs_rehash($this->password, PASSWORD_DEFAULT)) {
+                if ($valid && password_needs_rehash($this->password,
+                                PASSWORD_DEFAULT)) {
                     $this->password = password_hash($password, PASSWORD_DEFAULT);
                 }
                 return $valid;
@@ -182,9 +198,8 @@ abstract class SuperUser extends AUser {
     }
 
     public function uploadFiles($files) {
-        if (!$this->stdFile)
-            $this->__construct();
-
+        if (!$this->stdFile) $this->__construct();
+        $this->stdFile->setProperty('pictureName', $this->getPictureName());
         if ($this->stdFile->uploadFiles($files)) {
             foreach ($this->stdFile->getProperties(false) as $property => $value) {
                 $this->$property = $value;
@@ -195,8 +210,7 @@ abstract class SuperUser extends AUser {
     }
 
     public function unlink() {
-        if (!$this->stdFile)
-            $this->__construct();
+        if (!$this->stdFile) $this->__construct();
 
         return $this->stdFile->unlink($this->picture);
     }
@@ -221,11 +235,15 @@ abstract class SuperUser extends AUser {
         return $this->stdFile->getErrors();
     }
 
-    public function getThumbnails($property) {
-        if (!$this->stdFile)
-            $this->__construct();
-        $this->stdFile->$property = $this->$property;
-        return $this->stdFile->getThumbnails($property, 0);
+    /**
+     * Fetches a thumbnail of the picture
+     * @param int $size The size of thumbnail to fetch
+     * @return mixed
+     */
+    public function getThumbnail($size = null) {
+        if (!$this->stdFile) $this->__construct();
+        $this->stdFile->picture = $this->picture;
+        return $this->stdFile->getThumbnails('picture', 0, $size);
     }
 
     public function parseBoolean($property, $on = 'Yes', $off = 'No') {

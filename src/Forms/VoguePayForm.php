@@ -27,7 +27,8 @@ class VoguePayForm extends Form {
      * @param string $name Form name
      * @param array $attributes Array of attributes to add to the element tag
      */
-    public function __construct($merchantId, $name = 'form', array $attributes = array()) {
+    public function __construct($merchantId, $name = 'form',
+            array $attributes = array()) {
         parent::__construct($name, $attributes);
         $this->items = 1;
 
@@ -62,11 +63,19 @@ class VoguePayForm extends Form {
             'type' => $type,
             'options' => array(
                 'value' => $value,
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             )
         );
 
         if ($label)
-            $memo['options']['label'] = $label;
+                $memo['options']['label'] = array(
+                'text' => $label,
+                'attrs' => array(
+                    'class' => 'col-md-3',
+                ),
+            );
 
         return $this->add($memo);
     }
@@ -215,6 +224,11 @@ class VoguePayForm extends Form {
         return $this->add(array(
                     'name' => 'submit',
                     'type' => 'image',
+                    'options' => array(
+                        'containerAttrs' => array(
+                            'class' => 'col-md-offset-2 col-md-8'
+                        ),
+                    ),
                     'attributes' => array(
                         'src' => 'http://voguepay.com/images/buttons/' . $type . '_' . $color . '.png',
                         'alt' => 'Submit'

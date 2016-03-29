@@ -30,7 +30,15 @@ class UserForm extends Form {
             'name' => 'email',
             'type' => 'email',
             'options' => array(
-                'label' => 'Email'
+                'label' => array(
+                    'text' => 'Email',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'maxlength' => 100,
@@ -42,7 +50,16 @@ class UserForm extends Form {
             'name' => 'password',
             'type' => 'password',
             'options' => array(
-                'label' => 'Password'
+                'label' => array(
+                    'text' => 'Password',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
+                'blockInfo' => 'Minimum 8 characters',
             ),
             'attributes' => array(
                 'maxlength' => 50,
@@ -54,7 +71,15 @@ class UserForm extends Form {
             'name' => 'confirm',
             'type' => 'password',
             'options' => array(
-                'label' => 'Repeat Password'
+                'label' => array(
+                    'text' => 'Repeat Password',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'maxlength' => 50,
@@ -66,7 +91,15 @@ class UserForm extends Form {
             'name' => 'firstName',
             'type' => 'text',
             'options' => array(
-                'label' => 'First Name'
+                'label' => array(
+                    'text' => 'First Name',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'maxlength' => 40,
@@ -78,7 +111,15 @@ class UserForm extends Form {
             'name' => 'lastName',
             'type' => 'text',
             'options' => array(
-                'label' => 'Last Name'
+                'label' => array(
+                    'text' => 'Last Name',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'maxlength' => 40,
@@ -90,7 +131,15 @@ class UserForm extends Form {
             'name' => 'picture',
             'type' => 'file',
             'options' => array(
-                'label' => 'Picture'
+                'label' => array(
+                    'text' => 'Picture',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
         ));
 
@@ -98,7 +147,15 @@ class UserForm extends Form {
             'name' => 'role',
             'type' => 'radio',
             'options' => array(
-                'label' => 'Role',
+                'label' => array(
+                    'text' => 'Role',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
                 'default' => 'subscriber',
                 'values' => array(
                     'Subscriber' => 'subscriber',
@@ -115,7 +172,15 @@ class UserForm extends Form {
             'name' => 'active',
             'type' => 'select',
             'options' => array(
-                'label' => 'Status',
+                'label' => array(
+                    'text' => 'Status',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
                 'values' => array(
                     'Inactive' => 0,
                     'Active' => 1
@@ -132,7 +197,10 @@ class UserForm extends Form {
             'name' => 'submit',
             'type' => 'submit',
             'options' => array(
-                'value' => 'Save'
+                'value' => 'Save',
+                'containerAttrs' => array(
+                    'class' => 'col-md-8 col-md-offset-3'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success btn-large'

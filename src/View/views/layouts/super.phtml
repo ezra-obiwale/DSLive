@@ -1,0 +1,6 @@
+<?php
+
+foreach (Util::readDir(MODULES, Util::DIRS_ONLY) as $files) {
+    echo '<pre>';
+    die(var_dump($files));
+}

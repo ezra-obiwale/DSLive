@@ -17,7 +17,15 @@ class ResetPasswordForm extends Form {
             'name' => 'email',
             'type' => 'email',
             'options' => array(
-                'label' => 'Email'
+                'label' => array(
+                    'text' => 'Email',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
@@ -29,7 +37,16 @@ class ResetPasswordForm extends Form {
             'name' => 'password',
             'type' => 'password',
             'options' => array(
-                'label' => 'Password'
+                'label' => array(
+                    'text' => 'New Password',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
+                'blockInfo' => 'Minimum 8 characters',
             ),
             'attributes' => array(
                 'autofocus' => 'autofocus',
@@ -41,7 +58,15 @@ class ResetPasswordForm extends Form {
             'name' => 'confirm',
             'type' => 'password',
             'options' => array(
-                'label' => 'Confirm Password'
+                'label' => array(
+                    'text' => 'Repeat New Password',
+                    'attrs' => array(
+                        'class' => 'col-md-3',
+                    ),
+                ),
+                'containerAttrs' => array(
+                    'class' => 'col-md-8'
+                ),
             ),
             'attributes' => array(
                 'required' => 'required',
@@ -58,6 +83,9 @@ class ResetPasswordForm extends Form {
             'type' => 'submit',
             'options' => array(
                 'value' => 'Reset Password',
+                'containerAttrs' => array(
+                    'class' => 'col-md-8 col-md-offset-3'
+                ),
             ),
             'attributes' => array(
                 'class' => 'btn btn-success'
