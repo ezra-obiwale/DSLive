@@ -1,14 +1,13 @@
-**DSLive - Extension for DScribe Framework**
+**dSLive - Extension for dScribe Framework**
 ======
 
-This is a collection of helpers that can make the it a whole lot easier and 
-faster developing with DScribe Framework.
+This is a collection of helpers to further reduce the developing process and time with dScribe Framework.
 
 
 INSTALLATION
 ============
 
-There two ways to install DSLive.
+There are two ways to install dSLive.
 
 1. COMPOSER (Recommended)
    "require": {
@@ -17,4 +16,4 @@ There two ways to install DSLive.
    
 2. MANUAL
    - Create "d-scribe/ds-live" directory in your vendor directory
-   - Copy the files of DSLive into that directory
+   - Copy the files of dSLive into that directory
