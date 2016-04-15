@@ -1,14 +1,13 @@
 <div class="row-fluid">
     <div class="col-md-5 span5">
         <div class="row-fluid" style="margin-bottom:10px">
-            <?=
-            TwBootstrap::createDropDown('Insert Template',
-                    array(
-                'Savings' => array(
-                    'link' => '#'
-                )
-                    ), 'span12', 'btn btn-inverse span12')
-            ?>
+			<?=
+			TwBootstrap::createDropDown('Insert Template', array(
+				'Savings' => array(
+					'link' => '#'
+				)
+					), 'span12', 'btn btn-inverse span12')
+			?>
         </div>
         <div class="row-fluid">
             <textarea rows="7" name="message" class="col-md-12 span12"
@@ -20,45 +19,45 @@
         </div>
     </div>
     <div class="col-md-7 span7" style="max-height:450px;overflow-y:auto">
-        <?php
-        Table::init(array('id' => 'users',
-            'class' => 'table table-striped table-condensed table-hover'));
-        $headers = array();
-        foreach ($users as $id => $user) {
-            if (!count($headers)) $headers = array_keys($user);
+		<?php
+		Table::init(array('id' => 'users',
+			'class' => 'table table-striped table-condensed table-hover'));
+		$headers = array();
+		foreach ($users as $id => $user) {
+			if (!count($headers)) $headers = array_keys($user);
 
-            Table::newRow();
-            foreach ($user as $property) {
-                Table::addRowData($property);
-            }
-        }
-        Table::setHeaders($headers);
+			Table::newRow();
+			foreach ($user as $property) {
+				Table::addRowData($property);
+			}
+		}
+		Table::setHeaders($headers);
 
-        echo Table::render();
-        ?>
+		echo Table::render();
+		?>
     </div>
 </div>
 <script>
-    $(document).ready(function () {
-        $('table#users').dsTableSearch({
-            multipleSelections: true,
-            selectedTableClass: 'table table-bordered table-condensed'
+	$(document).ready(function () {
+		$('table#users').dsTableSearch({
+			multipleSelections: true,
+			selectedTableClass: 'table table-bordered table-condensed'
 //            searchPlaceholder: 'Search members ...'
-        });
+		});
 
-        $('button#template').click(function () {
-            // do save as template
-            alert('to do');
-        });
+		$('button#template').click(function () {
+			// do save as template
+			alert('to do');
+		});
 
-        $('button#draft').click(function () {
-            // do save as draft
-            alert('to do');
-        });
+		$('button#draft').click(function () {
+			// do save as draft
+			alert('to do');
+		});
 
-        $('button#send').click(function () {
-            // do send
-            alert('to do');
-        });
-    });
+		$('button#send').click(function () {
+			// do send
+			alert('to do');
+		});
+	});
 </script>

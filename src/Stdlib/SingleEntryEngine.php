@@ -17,30 +17,30 @@ use dScribe\Core\Engine;
  */
 abstract class SingleEntryEngine extends Engine {
 
-    protected static function moduleIsActivated() {
-        
-    }
-    
-    public static function getParams() {
-        return static::getUrls();
-    }
+	protected static function moduleIsActivated() {
+		
+	}
 
-    final protected static function getControllerClass($live = true) {
-        $controller = static::getSingleEntryController();
-        return ($live) ? new $controller() : $controller;
-    }
+	public static function getParams() {
+		return static::getUrls();
+	}
 
-    final public static function getAction($exception = true) {
-        return static::getSingleEntryAction();
-    }
-    
-    /**
-     * @return string Fully Qualified Class Name of the class extending \dsLive\Controllers\SingleEntryController
-     */
-    protected abstract static function getSingleEntryController();
+	final protected static function getControllerClass($live = true) {
+		$controller = static::getSingleEntryController();
+		return ($live) ? new $controller() : $controller;
+	}
 
-    /**
-     * @return string Action to call from within the controller
-     */
-    protected abstract static function getSingleEntryAction();
+	final public static function getAction($exception = true) {
+		return static::getSingleEntryAction();
+	}
+
+	/**
+	 * @return string Fully Qualified Class Name of the class extending \dsLive\Controllers\SingleEntryController
+	 */
+	protected abstract static function getSingleEntryController();
+
+	/**
+	 * @return string Action to call from within the controller
+	 */
+	protected abstract static function getSingleEntryAction();
 }

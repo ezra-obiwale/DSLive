@@ -3,35 +3,33 @@ Table::init(array('class' => 'table table-striped table-hover'));
 
 Table::setHeaders(array('Timestamp', 'Message', 'Recipients', ''));
 foreach ($messages as $message) {
-    $viewBtn = '<a href="' . $this->url($this->module(), $this->controller(),
-                    'view', array($message['id'])) . '" class="btn btn-link">View</a>';
-    $deleteBtn = '<a href="' . $this->url($this->module(), $this->controller(),
-                    'delete', array($message['id'])) . '" title="delete" class="btn btn-link">Delete</a>';
-    Table::newRow();
-    Table::addRowData($message['timestamp']);
-    Table::addRowData($message['message']);
-    Table::addRowData($message['Recipients'] ?
-                    count(explode(',', $message['recipients'])) : 0);
-    Table::addRowData($viewBtn . ' | ' . $deleteBtn);
+	$viewBtn = '<a href="' . $this->url($this->module(), $this->controller(), 'view', array($message['id'])) . '" class="btn btn-link">View</a>';
+	$deleteBtn = '<a href="' . $this->url($this->module(), $this->controller(), 'delete', array($message['id'])) . '" title="delete" class="btn btn-link">Delete</a>';
+	Table::newRow();
+	Table::addRowData($message['timestamp']);
+	Table::addRowData($message['message']);
+	Table::addRowData($message['Recipients'] ?
+					count(explode(',', $message['recipients'])) : 0);
+	Table::addRowData($viewBtn . ' | ' . $deleteBtn);
 }
 
 echo Table::render();
 ?>
 <script>
-    $(document).ready(function () {
-        $('a[title="delete"]').click(function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            $a = $(this);
-            if (confirm('Are you sure you want to delete this message?')) {
-                $.get($a.attr('href') + '/' + '1', function (data) {
-                    $('.alert').addClass('alert-error').html(data);
-                    if (data.indexOf('success') != -1) {
-                        $a.parents('tr').remove();
-                        $('.alert').removeClass('alert-error').addClass('alert-success');
-                    }
-                });
-            }
-        });
-    });
+	$(document).ready(function () {
+		$('a[title="delete"]').click(function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			$a = $(this);
+			if (confirm('Are you sure you want to delete this message?')) {
+				$.get($a.attr('href') + '/' + '1', function (data) {
+					$('.alert').addClass('alert-error').html(data);
+					if (data.indexOf('success') != -1) {
+						$a.parents('tr').remove();
+						$('.alert').removeClass('alert-error').addClass('alert-success');
+					}
+				});
+			}
+		});
+	});
 </script>

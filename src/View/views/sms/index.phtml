@@ -14,86 +14,82 @@
     <nav class="col-md-3 span3 col-md-offset-1 offset1 col-sm-12">
         <ul class="nav nav-tabs nav-stacked">
             <li><a href="<?=
-                $this->url($this->module(), $this->controller(), 'history')
-                ?>">History</a></li>
+				$this->url($this->module(), $this->controller(), 'history')
+				?>">History</a></li>
             <li><a href="<?=
-                $this->url($this->module(), $this->controller(), 'new')
-                ?>">New Message</a></li>
+				$this->url($this->module(), $this->controller(), 'new')
+				?>">New Message</a></li>
             <li><a href="<?=
-                $this->url($this->module(), $this->controller(), 'drafts')
-                ?>">Drafts</a></li>
+				$this->url($this->module(), $this->controller(), 'drafts')
+				?>">Drafts</a></li>
             <li><a href="<?=
-                $this->url($this->module(), $this->controller(),
-                        'purchase-credit')
-                ?>">Purchase Credit</a></li>
+				$this->url($this->module(), $this->controller(), 'purchase-credit')
+				?>">Purchase Credit</a></li>
         </ul>
     </nav>
     <div class="col-md-7 span7 col-sm-12 arena">
-        <?php
-        Table::init(array('class' => 'table table-striped'));
+		<?php
+		Table::init(array('class' => 'table table-striped'));
 
-        Table::newRow();
-        Table::addRowData('Last Purchase Date', array('class' => 'header'));
-        Table::addRowData($balanceInfo['lastPurchaseDate']);
+		Table::newRow();
+		Table::addRowData('Last Purchase Date', array('class' => 'header'));
+		Table::addRowData($balanceInfo['lastPurchaseDate']);
 
-        Table::newRow();
-        Table::addRowData('Last Purchase Amount', array('class' => 'header'));
-        Table::addRowData($balanceInfo['lastPurchaseAmount'],
-                array('class' => 'money'));
+		Table::newRow();
+		Table::addRowData('Last Purchase Amount', array('class' => 'header'));
+		Table::addRowData($balanceInfo['lastPurchaseAmount'], array('class' => 'money'));
 
-        Table::newRow();
-        Table::addRowData('Last Purchase Unit', array('class' => 'header'));
-        Table::addRowData($balanceInfo['lastPurchaseUnit'],
-                array('class' => 'money'));
+		Table::newRow();
+		Table::addRowData('Last Purchase Unit', array('class' => 'header'));
+		Table::addRowData($balanceInfo['lastPurchaseUnit'], array('class' => 'money'));
 
-        Table::newRow();
-        Table::addRowData('Total Units Used', array('class' => 'header'));
-        Table::addRowData($balanceInfo['totalUnitsUsed'],
-                array('class' => 'money'));
+		Table::newRow();
+		Table::addRowData('Total Units Used', array('class' => 'header'));
+		Table::addRowData($balanceInfo['totalUnitsUsed'], array('class' => 'money'));
 
-        Table::newRow();
-        Table::addRowData('Total Units Available', array('class' => 'header'));
-        Table::addRowData($balanceInfo['unitsAvailable'],
-                array('class' => 'money'));
+		Table::newRow();
+		Table::addRowData('Total Units Available', array('class' => 'header'));
+		Table::addRowData($balanceInfo['unitsAvailable'], array('class' => 'money'));
 
-        echo Table::render();
-        ?>
+		echo Table::render();
+		?>
     </div>
 </div>
 <script>
-    function getData(e) {
-        e.preventDefault();
-        e.stopPropagation();
+	function getData(e) {
+		e.preventDefault();
+		e.stopPropagation();
 
-        $('.arena').fadeOut(function () {
-            $(this).html('<?= Admin\Stdlib\Util::loadingImage($this) ?>').fadeIn();
-        });
+		$('.arena').fadeOut(function () {
+			$(this).html('<?= Admin\Stdlib\Util::loadingImage($this) ?>').fadeIn();
+		});
 
-        $.get(e.target.href, function (data) {
-            $('.arena').fadeOut(function () {
-                $(this).html(data).fadeIn();
-            });
-        });
-    }
-    function toggleAlert(off) {
-        if (off) {
-            $('.alert').fadeOut();
-        } else {
-            $('.alert').fadeIn();
-            setTimeout(toggleAlert, 3000, true);
-        }
-    }
-    $(document).ready(function () {
-        $('ul.nav-tabs li > a').click(function (e) {
-            e.preventDefault();
-            if ($(this).parent().hasClass('active')) return;
-            
-            $('ul.nav-tabs li').removeClass('active');
-            $(this).parent().addClass('active');
+		$.get(e.target.href, function (data) {
+			$('.arena').fadeOut(function () {
+				$(this).html(data).fadeIn();
+			});
+		});
+	}
+	function toggleAlert(off) {
+		if (off) {
+			$('.alert').fadeOut();
+		} else {
+			$('.alert').fadeIn();
+			setTimeout(toggleAlert, 3000, true);
+		}
+	}
+	$(document).ready(function () {
+		$('ul.nav-tabs li > a').click(function (e) {
+			e.preventDefault();
+			if ($(this).parent().hasClass('active'))
+				return;
 
-            $('#title').html($(this).html());
-            getData(e);
-        });
-        $('a').on('click', '.arena', getData);
-    });
+			$('ul.nav-tabs li').removeClass('active');
+			$(this).parent().addClass('active');
+
+			$('#title').html($(this).html());
+			getData(e);
+		});
+		$('a').on('click', '.arena', getData);
+	});
 </script>

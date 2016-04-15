@@ -35,9 +35,9 @@ use dsLive\Models\SmsDrafts;
  */
 class SmsService extends SuperService {
 
-    protected function init() {
-        parent::init();
-        $this->setModel(new SmsDrafts());
-    }
+	protected function init() {
+		parent::init();
+		$this->setModel(new SmsDrafts());
+	}
 
 }

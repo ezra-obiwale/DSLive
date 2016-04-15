@@ -1,4 +1,5 @@
 <?php
+
 /*
  */
 
@@ -20,20 +21,23 @@ class AjaxResponse {
 	/**
 	 * Indicates the request failed
 	 */
-
 	const STATUS_FAILURE = 0;
+
 	/**
 	 * Indicates the request succeeded
 	 */
 	const STATUS_SUCCESS = 1;
+
 	/**
 	 * Indicates that the browser may continue to the next phase
 	 */
 	const ACTION_CONTINUE = 0;
+
 	/**
 	 * Indicates the browser should wait for action from user
 	 */
 	const ACTION_WAIT = 1;
+
 	/**
 	 * Indicates the browser should reset data and wait for action from user
 	 */
@@ -50,7 +54,8 @@ class AjaxResponse {
 	 * @param mixed $message Message to send in the response @see setMessage()
 	 * @param int $action Instruction to send with the response @see setAction()
 	 */
-	public function __construct($message = null, $status = self::STATUS_SUCCESS, $action = self::ACTION_CONTINUE) {
+	public function __construct($message = null, $status = self::STATUS_SUCCESS,
+							 $action = self::ACTION_CONTINUE) {
 		$this->setStatus($status)->setMessage($message)->setAction($action);
 		$this->errors = array();
 	}
@@ -134,12 +139,9 @@ class AjaxResponse {
 	 * @param int $action Instruction to send with the response
 	 */
 	public function sendJson($message = null, $status = null, $action = null) {
-		if ($message !== null)
-			$this->setMessage($message);
-		if ($status !== null)
-			$this->setStatus($status);
-		if ($action !== null)
-			$this->setAction($action);
+		if ($message !== null) $this->setMessage($message);
+		if ($status !== null) $this->setStatus($status);
+		if ($action !== null) $this->setAction($action);
 
 		// @todo find a way to send to screen even when some content has been posted
 		\Session::save('ajax', $this);
@@ -151,11 +153,11 @@ class AjaxResponse {
 
 	public function toScreen() {
 		$json = new Json(array(
-				'message' => $this->getMessage(),
-				'status' => $this->getStatus(),
-				'action' => $this->getAction(),
-				'errors' => $this->getErrors(),
-			));
+			'message' => $this->getMessage(),
+			'status' => $this->getStatus(),
+			'action' => $this->getAction(),
+			'errors' => $this->getErrors(),
+		));
 
 		return $json->toScreen(true);
 	}

@@ -27,8 +27,8 @@
 namespace dsLive\Controllers;
 
 use dbScribe\Table,
-    dsLive\Services\SmsService,
-    Object;
+	dsLive\Services\SmsService,
+	Object;
 
 /**
  * Description of SmsController
@@ -37,79 +37,78 @@ use dbScribe\Table,
  */
 abstract class SmsController extends SuperController {
 
-    public function accessRules() {
-        return array(array('allow', array('role' => 'admin')), array('deny'));
-    }
+	public function accessRules() {
+		return array(array('allow', array('role' => 'admin')), array('deny'));
+	}
 
-    public function init() {
-        parent::init();
-        $this->service = new SmsService(FALSE);
-    }
+	public function init() {
+		parent::init();
+		$this->service = new SmsService(FALSE);
+	}
 
-    protected function getViewPath($filePath) {
-        $path = str_ireplace(VENDOR, '', dirname(__DIR__));
-        return $path . DIRECTORY_SEPARATOR . 'View' . DIRECTORY_SEPARATOR . 'views'
-                . DIRECTORY_SEPARATOR
-                . str_replace('/', DIRECTORY_SEPARATOR, $filePath);
-    }
+	protected function getViewPath($filePath) {
+		$path = str_ireplace(VENDOR, '', dirname(__DIR__));
+		return $path . DIRECTORY_SEPARATOR . 'View' . DIRECTORY_SEPARATOR . 'views'
+				. DIRECTORY_SEPARATOR
+				. str_replace('/', DIRECTORY_SEPARATOR, $filePath);
+	}
 
-    public function indexAction() {
-        $this->view->variables(array(
-            'balanceInfo' => array(
-                'lastPurchaseDate' => '14-Dec-2015',
-                'lastPurchaseAmount' => 'N12000',
-                'lastPurchaseUnit' => '12000',
-                'totalUnitsUsed' => '600',
-                'unitsAvailable' => '11400'
-            )
-        ))->file($this->getViewPath('sms/index'), true);
-    }
+	public function indexAction() {
+		$this->view->variables(array(
+			'balanceInfo' => array(
+				'lastPurchaseDate' => '14-Dec-2015',
+				'lastPurchaseAmount' => 'N12000',
+				'lastPurchaseUnit' => '12000',
+				'totalUnitsUsed' => '600',
+				'unitsAvailable' => '11400'
+			)
+		))->file($this->getViewPath('sms/index'), true);
+	}
 
-    public function historyAction() {
-        $this->view->partial()->file($this->getViewPath('sms/drafts'), true);
-    }
+	public function historyAction() {
+		$this->view->partial()->file($this->getViewPath('sms/drafts'), true);
+	}
 
-    public function checkBalanceAction() {
-        $this->view->partial();
-    }
+	public function checkBalanceAction() {
+		$this->view->partial();
+	}
 
-    public function purchaseCreditAction() {
-        $this->view->partial()->file($this->getViewPath('sms/purchase-credit'),
-                true);
-    }
+	public function purchaseCreditAction() {
+		$this->view->partial()->file($this->getViewPath('sms/purchase-credit'), true);
+	}
 
-    public function draftsAction() {
-        $this->view->variables(array(
-            'messages' => $this->service->getRepository()
-                    ->orderBy('timestamp', Table::ORDER_DESC)
-                    ->notEqual(array(array('is_template' => true)))
-                    ->fetchAll(Table::RETURN_DEFAULT),
-        ))->partial()->file($this->getViewPath('sms/drafts'), true);
-    }
+	public function draftsAction() {
+		$this->view->variables(array(
+			'messages' => $this->service->getRepository()
+					->orderBy('timestamp', Table::ORDER_DESC)
+					->notEqual(array(array('is_template' => true)))
+					->fetchAll(Table::RETURN_DEFAULT),
+		))->partial()->file($this->getViewPath('sms/drafts'), true);
+	}
 
-    public function newAction($id = null) {
-        $post = new Object();
-        if ($this->request->isPost()) {
-            $post = $this->request->getPost();
-            // send message to recipients
-        }
-        else if ($id) { // initiate sending of draft
-            $post = $this->service->findOne($id);
-        }
-        $this->view->variables(array(
-            'post' => $post->toArray(),
-            'users' => $this->getUserList(),
-        ))->partial()->file($this->getViewPath('sms/new'), true);
-    }
+	public function newAction($id = null) {
+		$post = new Object();
+		if ($this->request->isPost()) {
+			$post = $this->request->getPost();
+			// send message to recipients
+		}
+		else if ($id) { // initiate sending of draft
+			$post = $this->service->findOne($id);
+		}
+		$this->view->variables(array(
+			'post' => $post->toArray(),
+			'users' => $this->getUserList(),
+		))->partial()->file($this->getViewPath('sms/new'), true);
+	}
 
-    public function viewAction($id) {
-        parent::viewAction($id)->partial()
-                ->file($this->getViewPath('sms/view'), true);
-    }
+	public function viewAction($id) {
+		parent::viewAction($id)->partial()
+				->file($this->getViewPath('sms/view'), true);
+	}
 
-    /**
-     * @return array of ids as keys, fullNames (required), phoneNumbers (required),
-     * [others] as index-based value arrays
-     */
-    abstract protected function getUserList();
+	/**
+	 * @return array of ids as keys, fullNames (required), phoneNumbers (required),
+	 * [others] as index-based value arrays
+	 */
+	abstract protected function getUserList();
 }

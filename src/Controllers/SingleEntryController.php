@@ -15,14 +15,14 @@ namespace dsLive\Controllers;
  */
 abstract class SingleEntryController extends SuperController {
 
-    public function noCache() {
-        return true;
-    }
+	public function noCache() {
+		return true;
+	}
 
-    public function accessRules() {
-        return array(
-            array('allow'),
-        );
-    }
+	public function accessRules() {
+		return array(
+			array('allow'),
+		);
+	}
 
 }

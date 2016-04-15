@@ -11,32 +11,32 @@ use dsLive\Models\Model;
  */
 class Settings extends Model {
 
-    /**
-     * @DBS\String (size=20, unique=true)
-     */
-    protected $key;
+	/**
+	 * @DBS\String (size=20, unique=true)
+	 */
+	protected $key;
 
-    /**
-     * @DBS\String
-     */
-    protected $value;
+	/**
+	 * @DBS\String
+	 */
+	protected $value;
 
-    public function getKey() {
-        return $this->key;
-    }
+	public function getKey() {
+		return $this->key;
+	}
 
-    public function getValue() {
-        return $this->value;
-    }
+	public function getValue() {
+		return $this->value;
+	}
 
-    public function setKey($key) {
-        $this->key = $key;
-        return $this;
-    }
+	public function setKey($key) {
+		$this->key = $key;
+		return $this;
+	}
 
-    public function setValue($value) {
-        $this->value = $value;
-        return $this;
-    }
+	public function setValue($value) {
+		$this->value = $value;
+		return $this;
+	}
 
 }

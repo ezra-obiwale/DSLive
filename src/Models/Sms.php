@@ -33,77 +33,75 @@ namespace dsLive\Models;
  */
 class SmsDrafts extends Model {
 
-    /**
-     * @DBS\Timestamp
-     */
-    protected $timestamp;
+	/**
+	 * @DBS\Timestamp
+	 */
+	protected $timestamp;
 
-    /**
-     * @DBS\String (size=160)
-     */
-    protected $message;
+	/**
+	 * @DBS\String (size=160)
+	 */
+	protected $message;
 
-    /**
-     * @DBS\String (nullable=true)
-     */
-    protected $recipients;
+	/**
+	 * @DBS\String (nullable=true)
+	 */
+	protected $recipients;
 
-    /**
-     * @DBS\Boolean (default=false, nullable=true)
-     */
-    protected $isTemplate;
+	/**
+	 * @DBS\Boolean (default=false, nullable=true)
+	 */
+	protected $isTemplate;
 
-    public function getTimestamp() {
-        return $this->timestamp;
-    }
+	public function getTimestamp() {
+		return $this->timestamp;
+	}
 
-    public function getMessage() {
-        return $this->message;
-    }
+	public function getMessage() {
+		return $this->message;
+	}
 
-    public function getRecipients() {
-        return $this->recipients;
-    }
+	public function getRecipients() {
+		return $this->recipients;
+	}
 
-    public function setTimestamp($timestamp) {
-        $this->timestamp = $timestamp;
-        return $this;
-    }
+	public function setTimestamp($timestamp) {
+		$this->timestamp = $timestamp;
+		return $this;
+	}
 
-    public function setMessage($message) {
-        $this->message = $message;
-        return $this;
-    }
+	public function setMessage($message) {
+		$this->message = $message;
+		return $this;
+	}
 
-    public function setRecipients($recipients) {
-        $this->recipients = $recipients;
-        return $this;
-    }
+	public function setRecipients($recipients) {
+		$this->recipients = $recipients;
+		return $this;
+	}
 
-    public function getIsTemplate() {
-        return $this->isTemplate;
-    }
+	public function getIsTemplate() {
+		return $this->isTemplate;
+	}
 
-    public function setIsTemplate($isTemplate) {
-        $this->isTemplate = $isTemplate;
-        return $this;
-    }
+	public function setIsTemplate($isTemplate) {
+		$this->isTemplate = $isTemplate;
+		return $this;
+	}
 
-    public function preSave($createId = true) {
-        $this->timestamp = \dbScribe\Util::createTimestamp();
-        if (is_array($this->recipients))
-                $this->recipients = json_encode($this->recipients);
-        parent::preSave($createId);
-    }
+	public function preSave($createId = true) {
+		$this->timestamp = \dbScribe\Util::createTimestamp();
+		if (is_array($this->recipients)) $this->recipients = json_encode($this->recipients);
+		parent::preSave($createId);
+	}
 
-    public function postFetch($property = null) {
-        parent::postFetch($property);
-        $this->afterFetch();
-    }
+	public function postFetch($property = null) {
+		parent::postFetch($property);
+		$this->afterFetch();
+	}
 
-    protected function afterFetch() {
-        if ($this->recipients)
-                $this->recipients = json_decode($this->recipients, true);
-    }
+	protected function afterFetch() {
+		if ($this->recipients) $this->recipients = json_decode($this->recipients, true);
+	}
 
 }
