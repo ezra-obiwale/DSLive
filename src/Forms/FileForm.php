@@ -15,7 +15,7 @@ use dScribe\Form\Form,
  */
 class FileForm extends Form {
 
-	public function __construct($modelOrMaxSize, $name = 'fileForm', array $attributes = array()) {
+	public function __construct($modelOrMaxSize = null, $name = 'fileForm', array $attributes = array()) {
 		parent::__construct($name, $attributes);
 
 		if (is_object($modelOrMaxSize)) {
@@ -26,7 +26,7 @@ class FileForm extends Form {
 			$modelOrMaxSize = $modelOrMaxSize->getMaxSize(false);
 		}
 		$file = new \dsLive\Stdlib\File();
-		$file->setMaxSize($modelOrMaxSize);
+		$file->setMaxSize($modelOrMaxSize ? $modelOrMaxSize : ini_get('upload_max_filesize'));
 		$this->setAttributes(array(
 			'method' => 'post',
 			'enctype' => 'multipart/form-data'

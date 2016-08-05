@@ -44,12 +44,8 @@ abstract class SuperService extends AService {
 	 * @return \DScibe\Form\Form
 	 */
 	public function getForm($param1 = null, $param2 = null, $param3 = null) {
-		if (!$this->form) {
-			if ($defaultFormName = $this->getDefaultFormName())
-					$this->form = new $defaultFormName($param1, $param2, $param3F);
-		}
-
-		return $this->form;
+		if ($defaultFormName = $this->getDefaultFormName())
+				return new $defaultFormName($param1, $param2, $param3);
 	}
 
 	/**
@@ -103,23 +99,26 @@ abstract class SuperService extends AService {
 	 * @todo Set first parameter as form so one can fetch either model or data
 	 */
 	public function create(IModel $model, Object $files = null, $flush = true) {
-		if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) && method_exists($model, 'uploadFiles') && !$upload = $model->uploadFiles($files)) {
-			$this->addErrors('File upload failed');
-			$this->addErrors($model->getErrors());
-			return false;
-		}
-		else if (!$upload && method_exists($model, 'uploadFiles')) {
-			foreach (array_keys($files->toArray(true)) as $property) {
-				$model->postFetch($property);
+		if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) && method_exists($model, 'uploadFiles')) {
+			if (!$upload = $model->uploadFiles($files)) {
+				$this->addErrors('File upload failed');
+				$this->addErrors($model->getErrors());
+				return false;
 			}
-			$this->addErrors('File upload failed');
-			$this->addErrors($model->getErrors());
-			return false;
+			else {
+				foreach (array_keys($files->toArray(true)) as $property) {
+					$model->postFetch($property);
+				}
+				$this->addErrors('File upload failed');
+				$this->addErrors($model->getErrors());
+				return false;
+			}
 		}
-		if ($this->repository->insert($model)->execute()) {
+		if ($id = $this->repository->insert($model)->execute()) {
 			if ($flush) $this->flush();
 
 			$model->postFetch();
+			if (!$model->getId()) $model->setId($id);
 			return $model;
 		}
 
@@ -179,7 +178,7 @@ abstract class SuperService extends AService {
 		else if (is_bool($model)) {
 			$flush = $model;
 		}
-
+		
 		try {
 			if (method_exists($this->model, 'unlink')) {
 				$this->model->unlink();

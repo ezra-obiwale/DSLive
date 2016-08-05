@@ -114,7 +114,7 @@ class GuestController extends AController {
 		}
 		$mediaForm = new \dsLive\Forms\MediaLoginForm();
 		$mediaForm->setAttribute('action', $this->view->url($this->getModule(), $this->getClassName(), 'media-login', array(
-					$module, $controller, $action, $parrams)));
+					$module, $controller, $action, $params)));
 		$this->view->variables(array(
 			'title' => 'Login',
 			'form' => $form,

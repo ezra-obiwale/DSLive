@@ -173,10 +173,19 @@ abstract class SuperController extends AController {
 		$form = $this->service->getForm();
 
 		if ($this->request->isPost()) {
+			if ($this->request->isAjax()) $form->remove('csrf');
 			$data = $this->request->getPost();
 			$this->checkFiles($data);
 			$form->setData($data);
-			if ($form->isValid() && $this->service->create($form->getModel(), $this->request->getFiles())) {
+			if ($form->isValid() && $model = $this->service->create($form->getModel(), $this->request->getFiles())) {
+				if ($this->request->isAjax()) {
+					$json = new Json(array(
+						'status' => true,
+						'message' => 'Save successful',
+						'data' => $model,
+					));
+					$json->toScreen(true);
+				}
 				$this->flash()->setSuccessMessage('Save successful');
 
 				if (isset($this->request->getPost()->saveAndNew)) {
@@ -187,6 +196,13 @@ abstract class SuperController extends AController {
 				}
 			}
 			else {
+				if ($this->request->isAjax()) {
+					$json = new Json(array(
+						'status' => false,
+						'message' => '<strong>Save failed!</strong><br /><ul>' . $this->service->prepareErrors() . '</ul>',
+					));
+					$json->toScreen(true);
+				}
 				$this->flash()
 						->setErrorMessage('Save failed')
 						->addErrorMessage($this->service->getErrors());
@@ -202,9 +218,6 @@ abstract class SuperController extends AController {
 		foreach ($this->request->getFiles()->toArray() as $name => $dat) {
 			if ((!is_array($dat->name) && empty($dat->name)) || (is_array($dat->name) && empty($dat->name[0]))) {
 				$this->request->getFiles()->remove($name);
-			}
-			else if (is_a($model, 'dsLive\Models\File')) {
-				$model->store($name);
 			}
 		}
 		if ($this->request->getFiles()->notEmpty()) {
@@ -229,21 +242,37 @@ abstract class SuperController extends AController {
 	 * @return View
 	 */
 	public function editAction($id, array $redirect = array()) {
+		$this->view->file('d-scribe/ds-live/src/View/views/misc/form', true);
 		$model = (is_object($id)) ? $id : $this->service->findOne($id);
 		$form = $this->service->getForm();
 
 		$form->setModel(clone $model);
 		if ($this->request->isPost()) {
+			if ($this->request->isAjax()) $form->remove('csrf');
 			$data = $this->request->getPost();
 			$this->checkFiles($data, $model);
 			$form->setModel(clone $model);
 			$form->setData($data);
-			if ($form->isValid() && $this->service->save($form->getModel(), $this->request->getFiles())) {
+			if ($form->isValid() && $model = $this->service->save($form->getModel(), $this->request->getFiles())) {
+				if ($this->request->isAjax()) {
+					$json = new Json(array(
+						'status' => true,
+						'message' => 'Save successful',
+						'data' => $model,
+					));
+					$json->toScreen(true);
+				}
 				$this->flash()->setSuccessMessage('Save successful');
-				if (!$this->request->isAjax())
-						$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
+				$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
 			}
 			else {
+				if ($this->request->isAjax()) {
+					$json = new Json(array(
+						'status' => false,
+						'message' => '<strong>Save failed!</strong><br /><ul>' . $this->service->prepareErrors() . '</ul>',
+					));
+					$json->toScreen(true);
+				}
 				$this->flash()
 						->setErrorMessage('Save failed')
 						->addErrorMessage($this->service->getErrors());
@@ -278,13 +307,21 @@ abstract class SuperController extends AController {
 		if ($confirm == 1) {
 			if ($this->service->delete($model)) {
 				if ($this->request->isAjax()) {
-					die('Delete successful. ' . $this->service->prepareErrors());
+					$json = new Json(array(
+						'status' => true,
+						'message' => 'Delete successful',
+					));
+					$json->toScreen(true);
 				}
 				$this->flash()->setSuccessMessage('Delete successful');
 			}
 			else {
 				if ($this->request->isAjax()) {
-					die('Delete failed. ' . $this->service->prepareErrors());
+					$json = new Json(array(
+						'status' => false,
+						'message' => '<strong>Delete failed!</strong><br /><ul>' . $this->service->prepareErrors() . '</ul>',
+					));
+					$json->toScreen(true);
 				}
 				$this->flash()
 						->setErrorMessage('Delete failed')

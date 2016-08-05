@@ -52,6 +52,7 @@ abstract class SuperUser extends AUser {
 		$this->stdFile = new \dsLive\Stdlib\File;
 		$this->stdFile->setExtensions('picture', array('jpg', 'jpeg', 'png', 'gif'))
 				->setMaxSize('500kb')
+				->saveSingleFile('picture')
 				->setAltNameProperty('picture', 'pictureName')
 				->withThumbnails('picture', 50)
 				->setDirectory('users')
@@ -239,7 +240,8 @@ abstract class SuperUser extends AUser {
 	public function getThumbnail($size = null) {
 		if (!$this->stdFile) $this->__construct();
 		$this->stdFile->picture = $this->picture;
-		return $this->stdFile->getThumbnails('picture', 0, $size);
+		$path = $this->stdFile->getThumbnails('picture', 0, $size);
+		return $path ? $path : '#' ;
 	}
 
 	public function parseBoolean($property, $on = 'Yes', $off = 'No') {

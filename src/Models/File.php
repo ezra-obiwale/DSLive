@@ -359,7 +359,7 @@ abstract class File extends Model {
 			$value = str_replace($info['filename'], '.thumbnails/' . $info['filename'] . $size, $value);
 		});
 
-		if ($key === null) return $thumbs;
+		if ($key === null) return count($thumbs) === 1 ? $thumbs[0] : $thumbs;
 		if (array_key_exists($key, $thumbs)) return $thumbs[$key];
 	}
 
@@ -436,7 +436,7 @@ abstract class File extends Model {
 		if (is_int($size)) return $size;
 
 		if (!is_string($size)) {
-			throw new Exception('File sizes must either be an integer or a string');
+			throw new Exception('Form error: File sizes must either be an integer or a string');
 		}
 
 		if (strtolower(substr($size, strlen($size) - 1)) === 'k' || strtolower(substr($size, strlen($size) - 2)) === 'kb') {
@@ -600,10 +600,8 @@ abstract class File extends Model {
 	}
 
 	public function getMediaPath() {
-		return ASSETS . 'media' .
-				($this->skipTableName ? '' :
-						DIRECTORY_SEPARATOR . Util::_toCamel($this->getTableName())) .
-				DIRECTORY_SEPARATOR . $this->directory;
+		return MEDIA . ($this->skipTableName ? '' : Util::_toCamel($this->getTableName()))
+				. $this->directory . DIRECTORY_SEPARATOR;
 	}
 
 	public function setProperty($property, $value) {

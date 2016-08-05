@@ -202,25 +202,21 @@ abstract class GuestService extends AService {
 	}
 
 	public function login(User $model) {
-		$this->model = $this->repository->findOneBy('email', $model->getEmail());
-		if ($this->model) {
-			if (!$this->model->getActive()) {
-				$this->addErrors('User account is not yet active')
-						->addErrors('Please click on the confirmation link sent to your email account');
-				return false;
-			}
-			else if (!$this->model->verifyPassword($model->getPassword())) {
-				return false;
-			}
-
-			$this->model->update();
-			$this->repository->update($this->model)->execute();
-			$this->flush();
-			$this->model->postFetch();
+		$_model = $this->repository->findOneBy('email', $model->getEmail());
+		if ($_model) $this->model = $_model;
+		if (!$this->model->verifyPassword($model->getPassword())) {
+			$this->addErrors('incorrect password');
+			return false;
 		}
-		else {
-			$this->addErrors('User account does not exist');
+		else if (!$this->model->getActive()) {
+			$this->addErrors('User account is not yet active')
+					->addErrors('Please click on the confirmation link sent to your email account');
+			return false;
 		}
+		$this->model->update();
+		$this->repository->update($this->model)->execute();
+		$this->flush();
+		$this->model->postFetch();
 		return $this->model;
 	}
 

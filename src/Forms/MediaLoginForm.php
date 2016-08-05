@@ -2,8 +2,7 @@
 
 namespace dsLive\Forms;
 
-use dScribe\Form\Form,
-	dsLive\Models\User;
+use dScribe\Form\Form;
 
 class MediaLoginForm extends Form {
 

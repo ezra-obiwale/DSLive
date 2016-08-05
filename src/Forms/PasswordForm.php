@@ -97,10 +97,6 @@ class PasswordForm extends Form {
 			),
 			'new' => array(
 				'required' => true,
-				'NotMatch' => array(
-					'element' => 'old',
-					'message' => 'New and old passwords cannot be the same'
-				),
 				'minLength' => array(
 					'value' => 8
 				)

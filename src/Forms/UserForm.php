@@ -156,7 +156,6 @@ class UserForm extends Form {
 				'containerAttrs' => array(
 					'class' => 'col-md-8'
 				),
-				'default' => 'subscriber',
 				'values' => array(
 					'Subscriber' => 'subscriber',
 					'Editor' => 'editor',

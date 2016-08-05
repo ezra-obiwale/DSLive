@@ -39,9 +39,12 @@ class UserController extends DataTableController {
 	}
 
 	public function editAction($id, array $redirect = array()) {
+		$this->view->file('d-scribe/ds-live/src/View/views/misc/form', true);
 		$form = parent::editAction($id, $redirect)->getVariables('form');
 		$form->remove('password')->remove('confirm');
-		return $this->view;
+		return $this->view->variables(array(
+					'title' => 'Edit Password',
+		));
 	}
 
 	public function profileAction($id = null) {
@@ -49,6 +52,7 @@ class UserController extends DataTableController {
 	}
 
 	public function editProfileAction() {
+		$this->view->file('d-scribe/ds-live/src/View/views/misc/form', true);
 		$model = $this->currentUser;
 
 		$this->service->setModel($model);
@@ -77,30 +81,35 @@ class UserController extends DataTableController {
 		return $this->view->variables(array(
 					'model' => $model,
 					'form' => $form,
+					'title' => 'Edit Profile',
 		));
 	}
 
 	public function editPasswordAction(array $redirect = array()) {
-		$redirect['module'] = !empty($redirect['module']) ? $redirect['module'] : 'guest';
-		$redirect['controller'] = !empty($redirect['controller']) ? $redirect['controller'] : 'index';
-		$redirect['action'] = !empty($redirect['action']) ? $redirect['action'] : 'logout';
+		$this->view->file('d-scribe/ds-live/src/View/views/misc/form', true);
+		$redirect = array_merge(array(
+			'module' => $this->getModule(),
+			'controller' => $this->getClassName(),
+			'action' => 'profile',
+				), $redirect);
 		$model = $this->currentUser;
 		$this->service->setModel($model);
 		$form = $this->service->getPasswordForm();
 		if ($this->request->isPost()) {
 			$form->setData($this->request->getPost());
 			if ($form->isValid() && $this->service->changePassword($form->getData())) {
-				$this->flash()->setSuccessMessage('Password changed successfully. Please login with your new password');
-				$this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], array($this->getModule(),
-					$this->getClassName(), 'profile'), $redirect['hash']);
+				$this->flash()->setSuccessMessage('Password changed successfully');
+				$this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], $redirect['params'], $redirect['hash']);
 			}
 			else {
-				$this->flash()->setErrorMessage('Change password failed');
+				$this->flash()->setErrorMessage('Change password failed')
+						->addErrorMessage($this->service->getErrors());
 			}
 		}
 		return $this->view->variables(array(
 					'model' => $model,
 					'form' => $form,
+					'title' => 'Edit Password',
 		));
 	}
 
@@ -110,6 +119,10 @@ class UserController extends DataTableController {
 		}
 		$this->flash()->setErrorMessage('Password reset failed');
 		$this->redirect($this->getModule(), $this->getClassName(), 'index');
+	}
+
+	public function welcomeAction() {
+		
 	}
 
 }
