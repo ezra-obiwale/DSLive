@@ -12,7 +12,7 @@ class User extends SuperUser {
 	protected $id;
 
 	/**
-	 * @DBS\String (size="200")
+	 * @DBS\String (size="200", unique=true)
 	 */
 	protected $email;
 
@@ -207,7 +207,7 @@ class User extends SuperUser {
 
 		$this->fullName = $this->getFullName();
 	}
-
+	
 	public function getNameOrEmail() {
 		return $this->getFirstName() ? $this->getFirstName() : $this->getEmail();
 	}

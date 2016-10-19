@@ -24,9 +24,9 @@ class UserService extends SuperService {
 	 * @param \dsLive\Models\User
 	 * return boolean
 	 */
-	public function create(User $model, $files) {
+	public function create(User $model, $files, $flush = true) {
 		$model->hashPassword();
-		return parent::create($model, $files);
+		return parent::create($model, $files, $flush);
 	}
 
 	public function delete($user = null) {
@@ -35,7 +35,7 @@ class UserService extends SuperService {
 	}
 
 	public function changePassword(Object $model, $verify = true) {
-		if ($verify && !$this->model->verifyPassword($model->old)) { 
+		if ($verify && !$this->model->verifyPassword($model->old)) {
 			$this->addErrors('Invalid password');
 			return false;
 		}

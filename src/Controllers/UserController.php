@@ -43,7 +43,7 @@ class UserController extends DataTableController {
 		$form = parent::editAction($id, $redirect)->getVariables('form');
 		$form->remove('password')->remove('confirm');
 		return $this->view->variables(array(
-					'title' => 'Edit Password',
+					'title' => 'Edit User',
 		));
 	}
 
@@ -99,7 +99,8 @@ class UserController extends DataTableController {
 			$form->setData($this->request->getPost());
 			if ($form->isValid() && $this->service->changePassword($form->getData())) {
 				$this->flash()->setSuccessMessage('Password changed successfully');
-				$this->redirect($redirect['module'], $redirect['controller'], $redirect['action'], $redirect['params'], $redirect['hash']);
+				$this->redirect($redirect['module'], $redirect['controller'], $redirect['action'],
+					$redirect['params'], $redirect['hash']);
 			}
 			else {
 				$this->flash()->setErrorMessage('Change password failed')

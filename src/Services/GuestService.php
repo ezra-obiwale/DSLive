@@ -205,7 +205,6 @@ abstract class GuestService extends AService {
 		$_model = $this->repository->findOneBy('email', $model->getEmail());
 		if ($_model) $this->model = $_model;
 		if (!$this->model->verifyPassword($model->getPassword())) {
-			$this->addErrors('incorrect password');
 			return false;
 		}
 		else if (!$this->model->getActive()) {

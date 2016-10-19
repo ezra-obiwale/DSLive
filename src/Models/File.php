@@ -299,7 +299,8 @@ abstract class File extends Model {
 						Util::resizeImage($dir . $nam, $size, $newFile, $ext);
 					}
 				}
-				$savePaths[$ppt][] = engineGet('serverPath') . str_replace(array(ROOT, '\\'), array('', '/'), $dir . $nam);
+				$savePaths[$ppt][] = engineGet('serverPath') . str_replace(array(ROOT, '\\'), array('', '/'),
+															   $dir . $nam);
 				$cnt++;
 			}
 			if ($removeOld || (is_array($this->saveSingleFile) && in_array($ppt, $this->saveSingleFile)))
@@ -353,14 +354,16 @@ abstract class File extends Model {
 		$value = $this->getOldValue($property);
 		if (!$value) $value = array();
 		$thumbs = !is_array($value) ? array($value) : $value;
-		array_walk($thumbs, function(&$value) use($size) {
+		array_walk($thumbs,
+			 function(&$value) use($size) {
 			$info = pathinfo(basename($value));
 			if ($size) $size = '-' . $size;
 			$value = str_replace($info['filename'], '.thumbnails/' . $info['filename'] . $size, $value);
 		});
 
-		if ($key === null) return count($thumbs) === 1 ? $thumbs[0] : $thumbs;
-		if (array_key_exists($key, $thumbs)) return $thumbs[$key];
+		if ($key === null) $return = count($thumbs) === 1 ? $thumbs[0] : $thumbs;
+		else if (array_key_exists($key, $thumbs)) $return = $thumbs[$key];
+		return (is_string($return)) ? $return : '';
 	}
 
 	/**
@@ -439,10 +442,12 @@ abstract class File extends Model {
 			throw new Exception('Form error: File sizes must either be an integer or a string');
 		}
 
-		if (strtolower(substr($size, strlen($size) - 1)) === 'k' || strtolower(substr($size, strlen($size) - 2)) === 'kb') {
+		if (strtolower(substr($size, strlen($size) - 1)) === 'k' || strtolower(substr($size,
+																				strlen($size) - 2)) === 'kb') {
 			return (int) $size * 1000;
 		}
-		elseif (strtolower(substr($size, strlen($size) - 1)) === 'm' || strtolower(substr($size, strlen($size) - 2)) === 'mb') {
+		elseif (strtolower(substr($size, strlen($size) - 1)) === 'm' || strtolower(substr($size,
+																					strlen($size) - 2)) === 'mb') {
 			return (int) $size * 1000000;
 		}
 	}

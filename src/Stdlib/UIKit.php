@@ -326,33 +326,29 @@ class UIKit {
 		?>
 		<fieldset <?= $fieldset->parseAttributes() ?>>
 			<?php
-			if ($label):
+			if (self::$formIsWizard && !$ignoreWitchcraft):
 				?>
 				<?php
-				if (self::$formIsWizard && !$ignoreWitchcraft):
+				if ($fieldset->options->blockInfo) {
 					?>
+					<h2 class="heading_a">
+						<?= $fieldset->options->blockInfoHeading ?>
+						<span class="sub-heading"><?= $fieldset->options->blockInfo ?></span>
+					</h2>
+					<hr />
 					<?php
-					if ($fieldset->options->blockInfo) {
-						?>
-						<h2 class="heading_a">
-							<?= $fieldset->options->blockInfoHeading ?>
-							<span class="sub-heading"><?= $fieldset->options->blockInfo ?></span>
-						</h2>
-						<hr />
-						<?php
-					}
-				endif;
-				foreach ($fieldset->options->value->getElements() as $elem) {
-					if ($elem->is('fieldset')) self::renderFieldset($elem, true);
-					else self::renderFormElement($elem);
 				}
-				if (!self::$formIsWizard || (self::$formIsWizard && $ignoreWitchcraft)):
-					?>
-					<legend> <?= $label ?> <?= $fieldset->getMultipleButton() ?></legend>
-					<?php
-				endif;
+			endif;
+			foreach ($fieldset->options->value->getElements() as $elem) {
+				if ($elem->is('fieldset')) self::renderFieldset($elem, true);
+				else self::renderFormElement($elem);
+			}
+			if (!self::$formIsWizard || (self::$formIsWizard && $ignoreWitchcraft)):
 				?>
-			<?php endif; ?>
+				<legend> <?= $label ?> <?= $fieldset->getMultipleButton() ?></legend>
+				<?php
+			endif;
+			?>
 		</fieldset>
 		<?php
 	}
@@ -411,7 +407,7 @@ class UIKit {
 					<span class="icheck-inline">
 						<label class="inline-label">
 							<input name="<?= $element->name . (($element->isCheckbox() && $element->attributes->multiple) ? '[]' : '') ?>" type="<?= $element->type ?>" data-md-icheck <?= !$cnt ? 'required="required"' : '' ?> value="<?= $value ?>" />
-							<?= $label ?>
+				<?= $label ?>
 						</label>
 					</span>
 					<?php
@@ -426,7 +422,7 @@ class UIKit {
 			<?php endif; ?>
 			<?php if ($element->options->blockInfo): ?>
 				<span class="uk-form-help-block"><?= $element->options->blockInfo ?></span>
-			<?php endif; ?>
+		<?php endif; ?>
 		</div>
 		<?php
 	}
@@ -470,7 +466,7 @@ class UIKit {
 			</div>
 			<?php if ($options['fieldName']): ?>
 				<input type="hidden" name="<?= $options['fieldName'] ?>" value="<?= $options['defaultLabel'] === $label1 ? $label1 : $label2 ?>" />
-			<?php endif; ?>
+		<?php endif; ?>
 		</div>
 		<script>
 			$(function () {

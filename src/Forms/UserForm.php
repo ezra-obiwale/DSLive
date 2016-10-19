@@ -47,47 +47,6 @@ class UserForm extends Form {
 		));
 
 		$this->add(array(
-			'name' => 'password',
-			'type' => 'password',
-			'options' => array(
-				'label' => array(
-					'text' => 'Password',
-					'attrs' => array(
-						'class' => 'col-md-3',
-					),
-				),
-				'containerAttrs' => array(
-					'class' => 'col-md-8'
-				),
-				'blockInfo' => 'Minimum 8 characters',
-			),
-			'attributes' => array(
-				'maxlength' => 50,
-				'required' => 'required',
-			)
-		));
-
-		$this->add(array(
-			'name' => 'confirm',
-			'type' => 'password',
-			'options' => array(
-				'label' => array(
-					'text' => 'Repeat Password',
-					'attrs' => array(
-						'class' => 'col-md-3',
-					),
-				),
-				'containerAttrs' => array(
-					'class' => 'col-md-8'
-				),
-			),
-			'attributes' => array(
-				'maxlength' => 50,
-				'required' => 'required',
-			)
-		));
-
-		$this->add(array(
 			'name' => 'firstName',
 			'type' => 'text',
 			'options' => array(
@@ -183,7 +142,7 @@ class UserForm extends Form {
 				'values' => array(
 					'Inactive' => 0,
 					'Active' => 1
-				)
+				),
 			)
 		));
 
@@ -212,14 +171,6 @@ class UserForm extends Form {
 			'email' => array(
 				'required' => true,
 				'Email' => array(),
-			),
-			'password' => array(
-				'required' => true,
-			),
-			'confirm' => array(
-				'Match' => array(
-					'element' => 'password'
-				)
 			),
 			'firstName' => array(
 				'required' => true,

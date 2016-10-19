@@ -9,6 +9,7 @@ use dbScribe\Repository,
 	dScribe\Core\AController,
 	dScribe\Core\AModel,
 	dScribe\Core\IModel,
+	dScribe\Form\Form,
 	dScribe\View\View,
 	dsLive\Models\User,
 	dsLive\Services\SuperService,
@@ -30,12 +31,6 @@ abstract class SuperController extends AController {
 	protected $service;
 
 	/**
-	 * A clone of the current user
-	 * @var User
-	 */
-	protected $currentUser;
-
-	/**
 	 * Inidates order which the index action should sort fetched models by. Defaults to id
 	 * @var string|array $order As string, should be a property in the model
 	 *
@@ -53,8 +48,6 @@ abstract class SuperController extends AController {
 	 * Initializes the order for indexAction() to "id"
 	 */
 	public function init() {
-		$this->currentUser = clone($this->userIdentity()->getUser());
-		$this->currentUser->setConnection(engineGet('db'));
 		$this->layout = $this->currentUser->getRole();
 		$this->order = 'id';
 
@@ -93,7 +86,10 @@ abstract class SuperController extends AController {
 				throw new Exception('You do not have the required permission to view this page');
 
 		$this->flash()->addMessage('Please login to continue');
-		$this->redirect($redirect['module'] ? $redirect['module'] : 'guest', $redirect['controller'] ? $redirect['controller'] : 'index', $redirect['action'] ? $redirect['action'] : 'login', array(
+		$this->redirect($redirect['module'] ? $redirect['module'] : 'guest',
+				  $redirect['controller'] ? $redirect['controller'] : 'index',
+				  $redirect['action'] ? $redirect['action'] : 'login',
+				  array(
 			Util::camelToHyphen($this->getModule()),
 			Util::camelToHyphen($this->getClassName()),
 			Util::camelToHyphen($action),
@@ -155,29 +151,22 @@ abstract class SuperController extends AController {
 
 	/**
 	 * Create a new model
-	 * @param array $variables Additional variables to send to the view file
-	 * @param array $modifyForm May contain the following keys:
-	 *
-	 * <b>ignoreFilters (array)</b> - Array of filters to ignore when validating the form <br />
-	 * <b>removeElements (array)</b> - Array of elements to remove from the form altogether<br />
-	 * <b>setElements (array)</b> - Array of keys as property to edit. Use (dot) to indicate
-	 *      path to actual property to edit in case value of first property is an object
-	 *      e.g. <i>'options.value' => 'no value for the element'</i>
-	 *
 	 * @param array $redirect May contain any of keys [(string) module, (string)
 	 * controller, (string) action, (array) params
+	 * @param Form $form The form to target instead of the default
 	 * @return View
 	 */
-	public function newAction(array $redirect = array()) {
+	public function newAction(array $redirect = array(), Form $form = null) {
 		$this->view->file('d-scribe/ds-live/src/View/views/misc/form', true);
-		$form = $this->service->getForm();
+		$form = $form ? $form : $this->service->getForm();
 
 		if ($this->request->isPost()) {
 			if ($this->request->isAjax()) $form->remove('csrf');
 			$data = $this->request->getPost();
 			$this->checkFiles($data);
 			$form->setData($data);
-			if ($form->isValid() && $model = $this->service->create($form->getModel(), $this->request->getFiles())) {
+			if ($form->isValid() && $model = $this->service->create($form->getModel(),
+														   $this->request->getFiles())) {
 				if ($this->request->isAjax()) {
 					$json = new Json(array(
 						'status' => true,
@@ -192,7 +181,11 @@ abstract class SuperController extends AController {
 					$form->reset();
 				}
 				else {
-					$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
+					$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()),
+																							   (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()),
+																											(isset($redirect['action'])) ? $redirect['action'] : 'index',
+								  (isset($redirect['params'])) ? $redirect['params'] : array(),
+				 (isset($redirect['hash'])) ? $redirect['hash'] : null);
 				}
 			}
 			else {
@@ -228,23 +221,15 @@ abstract class SuperController extends AController {
 	/**
 	 * Edit a model
 	 * @param string|IModel $id Id of model or a model
-	 * @param array $variables Additional variables to send to the view file
-	 * @param array $modifyForm May contain the following keys:
-	 *
-	 * <b>ignoreFilters (array)</b> - Array of filters to ignore when validating the form <br />
-	 * <b>removeElements (array)</b> - Array of elements to remove from the form altogether<br />
-	 * <b>setElements (array)</b> - Array of keys as property to edit. Use (dot) to indicate
-	 *      path to actual property to edit in case value of first property is an object
-	 *      e.g. <i>'options.value' => 'no value for the element'</i>
-	 *
 	 * @param array $redirect May contain any of keys [(string) module, (string)
 	 * controller, (string) action, (array) params
+	 * @param Form $form The form to target instead of the default
 	 * @return View
 	 */
-	public function editAction($id, array $redirect = array()) {
+	public function editAction($id, array $redirect = array(), Form $form = null) {
 		$this->view->file('d-scribe/ds-live/src/View/views/misc/form', true);
 		$model = (is_object($id)) ? $id : $this->service->findOne($id);
-		$form = $this->service->getForm();
+		$form = $form ? $form : $this->service->getForm();
 
 		$form->setModel(clone $model);
 		if ($this->request->isPost()) {
@@ -253,7 +238,8 @@ abstract class SuperController extends AController {
 			$this->checkFiles($data, $model);
 			$form->setModel(clone $model);
 			$form->setData($data);
-			if ($form->isValid() && $model = $this->service->save($form->getModel(), $this->request->getFiles())) {
+			if ($form->isValid() && $model = $this->service->save($form->getModel(),
+														 $this->request->getFiles())) {
 				if ($this->request->isAjax()) {
 					$json = new Json(array(
 						'status' => true,
@@ -263,7 +249,11 @@ abstract class SuperController extends AController {
 					$json->toScreen(true);
 				}
 				$this->flash()->setSuccessMessage('Save successful');
-				$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
+				$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()),
+																							  (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()),
+																										   (isset($redirect['action'])) ? $redirect['action'] : 'index',
+									(isset($redirect['params'])) ? $redirect['params'] : array(),
+				(isset($redirect['hash'])) ? $redirect['hash'] : null);
 			}
 			else {
 				if ($this->request->isAjax()) {
@@ -327,7 +317,15 @@ abstract class SuperController extends AController {
 						->setErrorMessage('Delete failed')
 						->addErrorMessage($this->service->getErrors());
 			}
-			$this->redirect((isset($redirect['module'])) ? $redirect['module'] : \Util::camelToHyphen($this->getModule()), (isset($redirect['controller'])) ? $redirect['controller'] : \Util::camelToHyphen($this->getClassName()), (isset($redirect['action'])) ? $redirect['action'] : 'index', (isset($redirect['params'])) ? $redirect['params'] : array(), (isset($redirect['hash'])) ? $redirect['hash'] : null);
+			$this->redirect((isset($redirect['module'])) ?
+							$redirect['module'] :
+							\Util::camelToHyphen($this->getModule()),
+							(isset($redirect['controller'])) ?
+							$redirect['controller'] :
+							\Util::camelToHyphen($this->getClassName()),
+							(isset($redirect['action'])) ? $redirect['action'] : 'index',
+			  (isset($redirect['params'])) ? $redirect['params'] : array(),
+			(isset($redirect['hash'])) ? $redirect['hash'] : null);
 		}
 
 		return $this->view->variables(array(
@@ -340,14 +338,16 @@ abstract class SuperController extends AController {
 				->delete()->execute();
 		$this->service->flush();
 		$this->redirect($redirect['module'] ? $redirect['module'] :
-						$this->getModule(), $redirect['controller'] ? $redirect['controller'] :
+						$this->getModule(),
+				  $redirect['controller'] ? $redirect['controller'] :
 						$this->getClassName(), $redirect['action'] ? $redirect['action'] :
 						'index', $redirect['params'] ? $redirect['params'] : array());
 	}
 
 	public function importAction($template_link) {
 		if (!$template_link)
-				$template_link = $this->view->url($this->getModule(), $this->getClassName(), 'download-template-file');
+				$template_link = $this->view->url($this->getModule(), $this->getClassName(),
+									  'download-template-file');
 		if ($this->request->isPost()) {
 			if ($this->service->import($this->request->getFiles(), $this->request->getPost())) {
 				$this->flash()->setSuccessMessage('Upload successful');

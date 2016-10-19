@@ -167,22 +167,22 @@ class GuestController extends AController {
 			$params));
 	}
 
-	public function resetPasswordAction($id = null, $resetId = null) {
+	public function resetPasswordAction($id = null, $reset = null) {
 		$form = $this->service->getResetPasswordForm();
-		if ($id === null || $resetId === null) { // remove password and confirm fields just get email to send notification to
+		if ($id === null || $reset === null) { // remove password and confirm fields just get email to send notification to
 			$form->remove('password')->remove('confirm');
 		}
 		else {
 			if (!$this->service->getRepository()->findOneWhere(array(array('id' => $id,
-							'reset' => $resetId)))) {
+							'reset' => $reset)))) {
 				throw new \Exception('The page you\'re looking for does not exist');
 			}
 			$form->remove('email');
 		}
 		if ($this->request->isPost()) {
 			$form->setData($this->request->getPost());
-			if ($form->isValid() && $this->service->resetPassword($form->getModel(), $id, $resetId)) {
-				$this->flash()->setSuccessMessage((isset($id) && isset($resetId)) ?
+			if ($form->isValid() && $this->service->resetPassword($form->getModel(), $id, $reset)) {
+				$this->flash()->setSuccessMessage((isset($id) && isset($reset)) ?
 								'Password reset successfully. You may now login' :
 								'Password reset initiated. Please check your email account for further instructions');
 				$this->redirect($this->getModule(), $this->getClassName(), $this->loginAction);

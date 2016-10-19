@@ -5,7 +5,9 @@ namespace dsLive\Services;
 use dbScribe\Table,
 	dbScribe\Util as DU,
 	dScribe\Core\AService,
+	dScribe\Core\AUser,
 	dScribe\Core\IModel,
+	dScribe\Form\Form,
 	dsLive\Forms\ImportForm,
 	dsLive\Models\Model,
 	Exception,
@@ -41,7 +43,7 @@ abstract class SuperService extends AService {
 
 	/**
 	 * Allows public access to form
-	 * @return \DScibe\Form\Form
+	 * @return Form
 	 */
 	public function getForm($param1 = null, $param2 = null, $param3 = null) {
 		if ($defaultFormName = $this->getDefaultFormName())
@@ -99,7 +101,8 @@ abstract class SuperService extends AService {
 	 * @todo Set first parameter as form so one can fetch either model or data
 	 */
 	public function create(IModel $model, Object $files = null, $flush = true) {
-		if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) && method_exists($model, 'uploadFiles')) {
+		if ($files && $this->checkFileIsNotEmpty($files->toArray(true)) && method_exists($model,
+																				   'uploadFiles')) {
 			if (!$upload = $model->uploadFiles($files)) {
 				$this->addErrors('File upload failed');
 				$this->addErrors($model->getErrors());
@@ -178,7 +181,7 @@ abstract class SuperService extends AService {
 		else if (is_bool($model)) {
 			$flush = $model;
 		}
-		
+
 		try {
 			if (method_exists($this->model, 'unlink')) {
 				$this->model->unlink();
@@ -244,7 +247,8 @@ abstract class SuperService extends AService {
 			}
 			fclose($file);
 			unlink($dir . 'import.csv');
-			return Util::updateConfig($importDir . $this->model->getTableName() . '.php', $temp, true, array());
+			return Util::updateConfig($importDir . $this->model->getTableName() . '.php', $temp, true,
+							 array());
 		}
 
 		return false;
